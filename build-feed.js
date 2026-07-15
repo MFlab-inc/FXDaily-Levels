@@ -114,4 +114,68 @@ ${intra ? JSON.stringify(intra, null, 1) : "未生成"}
 ${cal ? JSON.stringify(cal, null, 1) : "未生成"}
 `;
 fs.writeFileSync(path.join(dataDir, "gpt-feed.txt"), txt);
-console.log("保存完了: data/gpt-feed.html, data/gpt-feed.txt");
+
+// ---- CSV版（Googleスプレッドシート IMPORTDATA 用）----
+const csvEsc = (v) => {
+  if (v === null || v === undefined) return "";
+  const s = String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
+// 1) feed.csv: 当日スナップショット（1ペア=1行）
+{
+  const header = [
+    "pair","price","today_high","today_low","change_from_prev_close",
+    "adr_used_pct","adr_used","adr_remaining","price_zone",
+    "prev_high","prev_low","prev_close_ny",
+    "pivot","r1","r2","s1","s2",
+    "adr20","adr20_pips","atr14","atr14_pips","atr_sl_1_0","atr_sl_1_5",
+    "dxy","dxy_change_pct","us10y","us10y_change","vix","vix_change_pct",
+    "daily_as_of","intraday_as_of",
+  ];
+  const rows = [header.join(",")];
+  for (const code of PAIR_ORDER) {
+    const d = daily.pairs?.[code];
+    if (!d) continue;
+    const q = intra?.pairs?.[code] || {};
+    rows.push([
+      code, q.price, q.today_high, q.today_low, q.change_from_prev_close,
+      q.adr_used_pct, q.adr_used, q.adr_remaining, q.price_zone,
+      d.prev_high, d.prev_low, d.prev_close_ny,
+      d.pivot, d.r1, d.r2, d.s1, d.s2,
+      d.adr20, d.adr20_pips, d.atr14, d.atr14_pips, d.atr_sl_1_0, d.atr_sl_1_5,
+      ms.dxy, ms.dxy_change_pct, ms.us10y, ms.us10y_change, ms.vix, ms.vix_change_pct,
+      daily.as_of, intra?.as_of ?? "",
+    ].map(csvEsc).join(","));
+  }
+  fs.writeFileSync(path.join(dataDir, "feed.csv"), rows.join("\n") + "\n");
+}
+
+// 2) history.csv: 日次履歴（日付×ペア、確定足ベース）
+{
+  const header = [
+    "date","pair","session_date","prev_high","prev_low","close_ny",
+    "adr20","atr14","pivot","r1","r2","s1","s2",
+  ];
+  const rows = [header.join(",")];
+  const idx = readJson("index.json");
+  const dates = (idx?.dates || []).slice().sort(); // 古い順
+  for (const dt of dates) {
+    const day = readJson(`${dt}.json`);
+    if (!day?.pairs) continue;
+    for (const code of PAIR_ORDER) {
+      const p = day.pairs[code];
+      if (!p) continue;
+      const range = p.prevHigh - p.prevLow;
+      const r2 = p.r2 ?? Number((p.pivot + range).toFixed(6));
+      const s2 = p.s2 ?? Number((p.pivot - range).toFixed(6));
+      rows.push([
+        dt, code, p.sessionDate, p.prevHigh, p.prevLow, p.prevClose,
+        p.adr20, p.atr14, p.pivot, p.r1, r2, p.s1, s2,
+      ].map(csvEsc).join(","));
+    }
+  }
+  fs.writeFileSync(path.join(dataDir, "history.csv"), rows.join("\n") + "\n");
+}
+
+console.log("保存完了: gpt-feed.html / gpt-feed.txt / feed.csv / history.csv");
