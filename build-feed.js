@@ -95,4 +95,23 @@ const html = `<!DOCTYPE html>
 `;
 
 fs.writeFileSync(path.join(dataDir, "gpt-feed.html"), html);
-console.log("保存完了: data/gpt-feed.html");
+
+// ---- TXT版（フォールバック用・プレーンテキスト）----
+const txt = `FX Daily Levels - GPT Feed (plain text)
+ページ生成時刻: ${nowJst} / timezone: Asia/Tokyo
+daily as_of: ${daily.as_of} | intraday as_of: ${intra?.as_of ?? "なし"} | calendar as_of: ${cal?.as_of ?? "なし"}
+注意: 事実データのみ。トレード判定は含まない。intradayは最大1時間前の値の場合がある。
+
+===== サマリー =====
+${summary}
+===== Raw: daily-levels.json =====
+${JSON.stringify(daily, null, 1)}
+
+===== Raw: intraday.json =====
+${intra ? JSON.stringify(intra, null, 1) : "未生成"}
+
+===== Raw: economic-calendar.json =====
+${cal ? JSON.stringify(cal, null, 1) : "未生成"}
+`;
+fs.writeFileSync(path.join(dataDir, "gpt-feed.txt"), txt);
+console.log("保存完了: data/gpt-feed.html, data/gpt-feed.txt");
