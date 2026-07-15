@@ -1,0 +1,35 @@
+name: Daily FX Data
+
+on:
+  schedule:
+    # 23:30 UTC 月〜金 = 火〜土 8:30 JST
+    - cron: "30 23 * * 1-5"
+  workflow_dispatch: {}  # 手動実行も可能（初回テスト用）
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Fetch FX data
+        env:
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+        run: node fetch.js
+
+      - name: Commit and push data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet || git commit -m "data: $(TZ=Asia/Tokyo date +%Y-%m-%d)"
+          git push
