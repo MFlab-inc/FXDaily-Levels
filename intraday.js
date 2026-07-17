@@ -34,6 +34,33 @@ function jstIso(now = new Date()) {
   return s.replace(" ", "T") + "+09:00";
 }
 
+// 市場セッション判定（feed生成時点の事実。夏冬時間はタイムゾーン変換で自動対応）
+// 慣例: 東京 9:00-17:00 JST / ロンドン・NY は現地 8:00-17:00
+function sessionInfo(now = new Date()) {
+  const localInfo = (tz) => {
+    const d = new Date(now.toLocaleString("en-US", { timeZone: tz }));
+    return { h: d.getHours(), day: d.getDay(), d };
+  };
+  const jst = localInfo("Asia/Tokyo");
+  const ldn = localInfo("Europe/London");
+  const nyc = localInfo("America/New_York");
+  const isWd = (x) => x.day >= 1 && x.day <= 5;
+  // 現地8:00がJSTで何時か（時差から算出）
+  const openJst = (localDate) => {
+    const diffH = Math.round((jst.d - localDate) / 3600000);
+    const h = (((8 + diffH) % 24) + 24) % 24;
+    return String(h).padStart(2, "0") + ":00";
+  };
+  return {
+    as_of: jstIso(now),
+    tokyo: isWd(jst) && jst.h >= 9 && jst.h < 17 ? "open" : "closed",
+    london: isWd(ldn) && ldn.h >= 8 && ldn.h < 17 ? "open" : "closed",
+    new_york: isWd(nyc) && nyc.h >= 8 && nyc.h < 17 ? "open" : "closed",
+    opens_jst: { tokyo: "09:00", london: openJst(ldn.d), new_york: openJst(nyc.d) },
+    note: "feed生成時点の判定。東京9:00-17:00 JST、ロンドン/NYは現地8:00-17:00基準。現在時刻での再判定はopens_jstを使うこと。",
+  };
+}
+
 // 現在値がピボットレベルのどのゾーンにあるか（事実の区分）
 function priceZone(price, lv) {
   if (price >= lv.r2) return "above_R2";
@@ -68,6 +95,7 @@ async function main() {
     timezone: "Asia/Tokyo",
     session_date: daily.session_date || null,
     note: "事実データのみ。トレード判定は含まない。ADRはdaily-levels.jsonのADR20基準。",
+    market_session: sessionInfo(now),
     pairs: {},
     errors: [],
   };
