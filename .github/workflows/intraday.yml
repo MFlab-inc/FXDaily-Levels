@@ -3,7 +3,7 @@ name: Intraday Snapshot
 on:
   schedule:
     # 毎時0分、0〜14時 UTC 月〜金 = 9:00〜23:00 JST 月〜金（1時間ごと）
-    - cron: "13 0-14 * * 1-5"
+    - cron: "13,43 0-14 * * 1-5"
   workflow_dispatch: {}  # 手動実行も可能
 
 permissions:
