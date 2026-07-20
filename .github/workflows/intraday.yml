@@ -2,7 +2,7 @@ name: Intraday Snapshot
 
 on:
   schedule:
-    # 毎時0分、0〜14時 UTC 月〜金 = 9:00〜23:00 JST 月〜金（1時間ごと）
+    # 毎時0分、0〜14時 UTC 月〜金 = 9:00〜23:00 JST 月〜金(1時間ごと)
     - cron: "13,43 0-14 * * 1-5"
   workflow_dispatch: {}  # 手動実行も可能
 
@@ -29,7 +29,7 @@ jobs:
       - name: Build GPT feed
         run: node build-feed.js
 
-      - - name: Commit and push data
+      - name: Commit and push data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
