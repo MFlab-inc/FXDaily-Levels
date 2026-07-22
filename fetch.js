@@ -112,25 +112,53 @@ function computeIndicators(bars) {
   };
 }
 
-// ---- Twelve Data から日足取得 ----
+// ---- Twelve Data から日足を構築（1時間足→NY17:00区切りで自前集計）----
+// 理由: Twelve Dataの1day足はtimezone指定が無視され取引所ローカル時間(FX=Australia/Sydney)
+// 区切りになるため、NY17:00クローズの日足は1時間足(timezone有効)から集計する。
+// 1時間足のtimestampはバーの開始時刻。NY時間に+7hすると 17:00以降のバーが翌セッション日に入る。
+function aggregateToNySessions(hourBarsAsc) {
+  const sessions = new Map(); // sessionDate -> {open,high,low,close}
+  for (const b of hourBarsAsc) {
+    const dt = new Date(b.datetime.replace(" ", "T")); // NY表記のローカル時刻として解釈
+    const shifted = new Date(dt.getTime() + 7 * 3600000);
+    const sd = fmtDateLocal(shifted);
+    const dow = shifted.getDay();
+    if (dow === 0 || dow === 6) continue; // 土日セッションは存在しない(混入分は除外)
+    if (!sessions.has(sd)) {
+      sessions.set(sd, { date: sd, open: b.open, high: b.high, low: b.low, close: b.close, bars: 1 });
+    } else {
+      const s = sessions.get(sd);
+      s.high = Math.max(s.high, b.high);
+      s.low = Math.min(s.low, b.low);
+      s.close = b.close; // 昇順処理なので最後のバーのcloseが残る
+      s.bars += 1;
+    }
+  }
+  return [...sessions.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
 async function fetchPairBars(tdSymbol, cutoffDate) {
   const url =
     `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(tdSymbol)}` +
-    `&interval=1day&outputsize=45&timezone=America/New_York&apikey=${API_KEY}`;
+    `&interval=1h&outputsize=1500&timezone=America/New_York&apikey=${API_KEY}`;
   const res = await fetch(url);
   const json = await res.json();
   if (json.status === "error" || !json.values) {
     throw new Error(`Twelve Data エラー (${tdSymbol}): ${json.message || "no data"}`);
   }
-  return json.values
+  const hoursAsc = json.values
     .map((v) => ({
-      date: v.datetime.slice(0, 10),
+      datetime: v.datetime,
       open: parseFloat(v.open),
       high: parseFloat(v.high),
       low: parseFloat(v.low),
       close: parseFloat(v.close),
     }))
-    .filter((b) => b.date <= cutoffDate);
+    .reverse(); // APIは新しい順 → 昇順へ
+  const daily = aggregateToNySessions(hoursAsc)
+    .filter((b) => b.date <= cutoffDate)
+    .filter((b) => b.bars >= 6); // 極端に欠けたセッション(祝日の断片等)を除外
+  return daily.reverse(); // computeIndicatorsは新しい順を期待
 }
 
 // ---- Yahoo Finance から指数取得 ----
