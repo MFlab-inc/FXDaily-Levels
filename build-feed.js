@@ -26,7 +26,7 @@ if (!daily) {
 }
 
 const esc = (s) => String(s ?? "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const PAIR_ORDER = ["USDJPY","EURUSD","GBPUSD","EURJPY","AUDUSD","EURGBP","XAUUSD"];
+const PAIR_ORDER = ["USDJPY","EURUSD","GBPUSD","EURJPY","AUDUSD","EURGBP","USDCAD","XAUUSD"];
 
 // ---- サマリー（テキスト表）----
 let summary = "";
@@ -66,7 +66,8 @@ if (cal && cal.events) {
   for (const e of cal.events) {
     summary += `${e.time_jst} [${e.currency}] (${e.impact}) ${e.event}` +
       (e.forecast ? ` | 予想: ${e.forecast}` : "") +
-      (e.previous ? ` | 前回: ${e.previous}` : "") + "\n";
+      (e.previous ? ` | 前回: ${e.previous}` : "") +
+      (e.scheduled_time_passed ? " | 発表時刻経過(実績値は別ソースで確認)" : "") + "\n";
   }
 }
 
