@@ -2,8 +2,8 @@ name: Intraday Snapshot
 
 on:
   schedule:
-    # 毎時0分、0〜14時 UTC 月〜金 = 9:00〜23:00 JST 月〜金(1時間ごと)
-    - cron: "13,43 0-14 * * 1-5"
+    # 毎時0分、0〜14時 UTC 月〜金 = 9:00〜23:00 JST 月〜金（1時間ごと）
+    - cron: "0 0-14 * * 1-5"
   workflow_dispatch: {}  # 手動実行も可能
 
 permissions:
@@ -33,6 +33,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/intraday.json data/gpt-feed.html data/gpt-feed.txt data/feed.csv data/history.csv
+          git add data/intraday.json data/economic-calendar.json data/gpt-feed.html data/gpt-feed.txt data/feed.csv data/history.csv
           git diff --cached --quiet || git commit -m "intraday: $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
-          git push || (git pull --rebase -X theirs origin main && git push)
+          git push
