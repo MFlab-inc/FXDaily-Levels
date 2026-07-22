@@ -24,10 +24,62 @@ const PAIRS = [
   { code: "EURJPY", td: "EUR/JPY", digits: 3 },
   { code: "AUDUSD", td: "AUD/USD", digits: 5 },
   { code: "EURGBP", td: "EUR/GBP", digits: 5 },
+  { code: "USDCAD", td: "USD/CAD", digits: 5 },
   { code: "XAUUSD", td: "XAU/USD", digits: 2 },
 ];
 
 const round = (n, d) => Number(n.toFixed(d));
+
+// ---- 経済カレンダー再取得（日中の鮮度維持。fetch.jsと同一仕様）----
+const FF_CALENDAR_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json";
+const CAL_CURRENCIES = ["USD", "JPY", "EUR", "GBP", "AUD", "CAD", "CHF", "CNY"];
+const CAL_IMPACTS = ["High", "Medium"];
+
+function fmtDateLocal(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+async function refreshCalendar(dataDir, now) {
+  const todayJst = fmtDateLocal(new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" })));
+  const res = await fetch(FF_CALENDAR_URL, {
+    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+  });
+  if (!res.ok) throw new Error(`Forex Factory HTTP ${res.status}`);
+  const events = await res.json();
+  const out = [];
+  for (const e of events) {
+    if (!CAL_CURRENCIES.includes(e.country)) continue;
+    if (!CAL_IMPACTS.includes(e.impact)) continue;
+    const dt = new Date(e.date);
+    if (isNaN(dt.getTime())) continue;
+    const jstDate = fmtDateLocal(new Date(dt.toLocaleString("en-US", { timeZone: "Asia/Tokyo" })));
+    if (jstDate !== todayJst) continue;
+    out.push({
+      time_jst: dt.toLocaleTimeString("ja-JP", { timeZone: "Asia/Tokyo", hour: "2-digit", minute: "2-digit", hour12: false }),
+      datetime_jst: jstIso(dt),
+      currency: e.country,
+      impact: e.impact,
+      event: e.title,
+      forecast: e.forecast || null,
+      previous: e.previous || null,
+      scheduled_time_passed: dt.getTime() <= now.getTime(),
+    });
+  }
+  out.sort((a, b) => a.time_jst.localeCompare(b.time_jst));
+  fs.writeFileSync(path.join(dataDir, "economic-calendar.json"), JSON.stringify({
+    as_of: jstIso(now),
+    date: todayJst,
+    timezone: "Asia/Tokyo",
+    source: "Forex Factory calendar feed",
+    actuals_note: "本フィードのデータ源(FF公開フィード)は実績値(actual)を含まない。scheduled_time_passed=trueのイベントの実績値は別ソースで確認すること。",
+    filters: { currencies: CAL_CURRENCIES, impacts: CAL_IMPACTS },
+    events: out,
+  }, null, 2));
+  return out.length;
+}
 
 function jstIso(now = new Date()) {
   const s = now.toLocaleString("sv-SE", { timeZone: "Asia/Tokyo" });
@@ -132,6 +184,14 @@ async function main() {
 
   fs.writeFileSync(path.join(dataDir, "intraday.json"), JSON.stringify(out, null, 2));
   console.log("保存完了: data/intraday.json");
+
+  // カレンダーも再取得（失敗しても他の出力には影響させない）
+  try {
+    const n = await refreshCalendar(dataDir, now);
+    console.log(`カレンダー更新: ${n}件`);
+  } catch (e) {
+    console.error(`カレンダー更新失敗（朝の版を維持）: ${e.message}`);
+  }
   if (Object.keys(out.pairs).length === 0) process.exit(1);
 }
 
