@@ -8,18 +8,18 @@
 </head>
 <body>
 <h1>FX Daily Levels - GPT Feed</h1>
-<p>feed_generated_at: 2026-07-22T17:41:29+09:00 / timezone: Asia/Tokyo</p>
-<p>daily as_of: 2026-07-22T09:06:45+09:00 | intraday as_of: 2026-07-22T17:41:28+09:00 | calendar as_of: 2026-07-22T09:06:45+09:00</p>
+<p>feed_generated_at: 2026-07-22T17:58:04+09:00 / timezone: Asia/Tokyo</p>
+<p>daily as_of: 2026-07-22T17:57:49+09:00 | intraday as_of: 2026-07-22T17:41:28+09:00 | calendar as_of: 2026-07-22T17:57:49+09:00</p>
 <p>注意: 事実データのみ。トレード判定は含まない。intradayは最大1時間前の値の場合がある。</p>
 
 <h2>サマリー</h2>
 <pre>【Market Session】(as_of: 2026-07-22T17:41:28+09:00)
 東京: closed / ロンドン: open / NY: closed（オープンJST: 東京 09:00 / ロンドン 16:00 / NY 21:00）
 
-【Market Sentiment】(as_of: 2026-07-22T09:06:45+09:00)
-DXY: 101.18 (0.19%) | US10Y: 4.628% (+0.03) | VIX: 17.05 (-8.58%)
+【Market Sentiment】(as_of: 2026-07-22T17:57:49+09:00)
+DXY: 101.11 (-0.07%) | US10Y: 4.628% (+0.03) | VIX: 17.44 (2.29%)
 
-【Pairs】 daily levels as_of: 2026-07-22T09:06:45+09:00 / intraday as_of: 2026-07-22T17:41:28+09:00
+【Pairs】 daily levels as_of: 2026-07-22T17:57:49+09:00 / intraday as_of: 2026-07-22T17:41:28+09:00
 
 [USDJPY]
   現在値: 163.025 (前日終値比 -0.184)
@@ -75,6 +75,12 @@ DXY: 101.18 (0.19%) | US10Y: 4.628% (+0.03) | VIX: 17.05 (-8.58%)
   Pivot: 0.85174 | R1 0.85442 / R2 0.85658 | S1 0.84958 / S2 0.8469
   ADR20: 0.0031 (31p) | ATR14: 0.00314 (31p) | ATR_SL目安: 0.00314〜0.00471
 
+[USDCAD]
+  （当日データなし）
+  前日: 高値 1.41114 / 安値 1.40548 / NY終値 1.41111 | 前日レンジ/ADR: 122.5%
+  Pivot: 1.40924 | R1 1.41301 / R2 1.4149 | S1 1.40735 / S2 1.40358
+  ADR20: 0.00462 (46p) | ATR14: 0.00479 (48p) | ATR_SL目安: 0.00479〜0.00719
+
 [XAUUSD]
   現在値: 4117.22 (前日終値比 +39.39)
   当日高値: 4140.79 / 当日安値: 4075.31
@@ -84,22 +90,22 @@ DXY: 101.18 (0.19%) | US10Y: 4.628% (+0.03) | VIX: 17.05 (-8.58%)
   Pivot: 4054.83 | R1 4109.91 / R2 4142 | S1 4022.74 / S2 3967.65
   ADR20: 61.79 | ATR14: 67.17 | ATR_SL目安: 67.17〜100.75
 
-【Economic Calendar】(High/Medium, JST) as_of: 2026-07-22T09:06:45+09:00
-15:00 [GBP] (High) CPI y/y | 予想: 2.7% | 前回: 2.8%
+【Economic Calendar】(High/Medium, JST) as_of: 2026-07-22T17:57:49+09:00
+15:00 [GBP] (High) CPI y/y | 予想: 2.7% | 前回: 2.8% | 発表時刻経過(実績値は別ソースで確認)
 </pre>
 
 <h2>Raw: daily-levels.json</h2>
 <pre>{
- "as_of": "2026-07-22T09:06:45+09:00",
+ "as_of": "2026-07-22T17:57:49+09:00",
  "timezone": "Asia/Tokyo",
  "session_date": "2026-07-21",
  "market_sentiment": {
-  "dxy": 101.18,
-  "dxy_change_pct": 0.19,
+  "dxy": 101.11,
+  "dxy_change_pct": -0.07,
   "us10y": 4.628,
   "us10y_change": 0.03,
-  "vix": 17.05,
-  "vix_change_pct": -8.58
+  "vix": 17.44,
+  "vix_change_pct": 2.29
  },
  "pairs": {
   "USDJPY": {
@@ -203,6 +209,23 @@ DXY: 101.18 (0.19%) | US10Y: 4.628% (+0.03) | VIX: 17.05 (-8.58%)
    "r2": 0.85658,
    "s1": 0.84958,
    "s2": 0.8469
+  },
+  "USDCAD": {
+   "prev_high": 1.41114,
+   "prev_low": 1.40548,
+   "prev_close_ny": 1.41111,
+   "adr20": 0.00462,
+   "adr20_pips": 46,
+   "atr14": 0.00479,
+   "atr14_pips": 48,
+   "atr_sl_1_0": 0.00479,
+   "atr_sl_1_5": 0.00719,
+   "previous_day_range_pct": 122.5,
+   "pivot": 1.40924,
+   "r1": 1.41301,
+   "r2": 1.4149,
+   "s1": 1.40735,
+   "s2": 1.40358
   },
   "XAUUSD": {
    "prev_high": 4086.91,
@@ -340,10 +363,11 @@ DXY: 101.18 (0.19%) | US10Y: 4.628% (+0.03) | VIX: 17.05 (-8.58%)
 
 <h2>Raw: economic-calendar.json</h2>
 <pre>{
- "as_of": "2026-07-22T09:06:45+09:00",
+ "as_of": "2026-07-22T17:57:49+09:00",
  "date": "2026-07-22",
  "timezone": "Asia/Tokyo",
  "source": "Forex Factory calendar feed",
+ "actuals_note": "本フィードのデータ源(FF公開フィード)は実績値(actual)を含まない。scheduled_time_passed=trueのイベントの実績値は別ソースで確認すること。",
  "filters": {
   "currencies": [
    "USD",
@@ -368,7 +392,8 @@ DXY: 101.18 (0.19%) | US10Y: 4.628% (+0.03) | VIX: 17.05 (-8.58%)
    "impact": "High",
    "event": "CPI y/y",
    "forecast": "2.7%",
-   "previous": "2.8%"
+   "previous": "2.8%",
+   "scheduled_time_passed": true
   }
  ]
 }</pre>
