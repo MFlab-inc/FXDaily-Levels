@@ -76,9 +76,7 @@
     ]
   },
   "next_event_lookahead_hours": 10,
-  "quality": {
-    "_comment": "集計バケットに最低限必要なM5本数(欠損データ対策。満たさない足は不採用)",
-    "min_m5_per_m15": 2,
-    "min_m5_per_h1": 8
+  "bar_completeness": {
+    "_comment": "確定足はM5が完全に揃った足のみ(M15=3本/H1=12本、重複除去・5分刻み連続性を検証)。最新確定予定足が不完全な場合はdata_status=DEGRADED+latest_expected_bucketに欠損時刻を出力。閾値は仕様として固定(コード側)"
   }
 }
