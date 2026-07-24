@@ -25,14 +25,49 @@ const PAIRS = [
   { code: "AUDUSD", td: "AUD/USD", digits: 5 },
   { code: "EURGBP", td: "EUR/GBP", digits: 5 },
   { code: "USDCAD", td: "USD/CAD", digits: 5 },
+  { code: "USDCHF", td: "USD/CHF", digits: 5 },
+  { code: "NZDUSD", td: "NZD/USD", digits: 5 },
+  { code: "AUDNZD", td: "AUD/NZD", digits: 5 },
   { code: "XAUUSD", td: "XAU/USD", digits: 2 },
 ];
 
 const round = (n, d) => Number(n.toFixed(d));
 
+// ---- 市場心理（Yahoo Finance・fetch.jsと同一仕様）----
+const SENTIMENT = [
+  { code: "DXY",   symbol: "DX-Y.NYB", label: "ドル指数", divisor: 1,  digits: 2 },
+  { code: "US10Y", symbol: "^TNX",     label: "米10年債利回り", divisor: 10, digits: 3 },
+  { code: "VIX",   symbol: "^VIX",     label: "VIX", divisor: 1,  digits: 2 },
+];
+
+async function fetchYahoo(item) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(item.symbol)}?range=10d&interval=1d`;
+  const res = await fetch(url, {
+    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+  });
+  if (!res.ok) throw new Error(`Yahoo HTTP ${res.status} (${item.symbol})`);
+  const json = await res.json();
+  const result = json?.chart?.result?.[0];
+  if (!result) throw new Error(`Yahoo データなし (${item.symbol})`);
+  const closes = (result.indicators?.quote?.[0]?.close || []).filter(
+    (c) => c !== null && c !== undefined
+  );
+  if (closes.length < 2) throw new Error(`Yahoo 終値不足 (${item.symbol})`);
+  let value = closes[closes.length - 1] / item.divisor;
+  let prev = closes[closes.length - 2] / item.divisor;
+  if (item.code === "US10Y" && value < 1) { value *= 10; prev *= 10; }
+  return {
+    label: item.label,
+    value: round(value, item.digits),
+    prev: round(prev, item.digits),
+    change: round(value - prev, item.digits),
+    changePct: round(((value - prev) / prev) * 100, 2),
+  };
+}
+
 // ---- 経済カレンダー再取得（日中の鮮度維持。fetch.jsと同一仕様）----
 const FF_CALENDAR_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json";
-const CAL_CURRENCIES = ["USD", "JPY", "EUR", "GBP", "AUD", "CAD", "CHF", "CNY"];
+const CAL_CURRENCIES = ["USD", "JPY", "EUR", "GBP", "AUD", "NZD", "CAD", "CHF", "CNY"];
 const CAL_IMPACTS = ["High", "Medium"];
 
 function fmtDateLocal(d) {
@@ -148,6 +183,7 @@ async function main() {
     session_date: daily.session_date || null,
     note: "事実データのみ。トレード判定は含まない。ADRはdaily-levels.jsonのADR20基準。",
     market_session: sessionInfo(now),
+    sentiment: {},
     pairs: {},
     errors: [],
   };
@@ -180,6 +216,19 @@ async function main() {
     }
     out.pairs[p.code] = entry;
     console.log(`OK: ${p.code} price=${entry.price} adr_used=${entry.adr_used_pct ?? "-"}%`);
+  }
+
+  // 市場心理も毎回更新（Yahoo・クレジット消費なし）
+  for (const s of SENTIMENT) {
+    try {
+      out.sentiment[s.code] = await fetchYahoo(s);
+      console.log(`OK: ${s.code}`);
+    } catch (e) {
+      console.error(`FAIL: ${s.code} - ${e.message}`);
+      out.errors.push(`${s.code}: ${e.message}`);
+      out.sentiment[s.code] = null;
+    }
+    await new Promise((r) => setTimeout(r, 300));
   }
 
   fs.writeFileSync(path.join(dataDir, "intraday.json"), JSON.stringify(out, null, 2));
