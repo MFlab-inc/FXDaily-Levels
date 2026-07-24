@@ -74,28 +74,60 @@ async function fetchM5(tdSymbol) {
 }
 
 // ---- M5 → 上位足へ集計（JSTの区切り、確定足のみ）----
-function aggregate(m5Asc, minutes, nowJst, minBars = 1) {
+function aggregate(m5Asc, minutes, nowJst) {
+  const expected = minutes / 5;
   const buckets = new Map();
   for (const b of m5Asc) {
     const ms = b.t.getTime();
     const bucketStart = ms - (ms % (minutes * 60000));
     if (!buckets.has(bucketStart)) {
-      buckets.set(bucketStart, { t: new Date(bucketStart), o: b.o, h: b.h, l: b.l, c: b.c, n: 1 });
+      buckets.set(bucketStart, { t: new Date(bucketStart), o: b.o, h: b.h, l: b.l, c: b.c, slots: new Set([ms]) });
     } else {
       const x = buckets.get(bucketStart);
-      x.h = Math.max(x.h, b.h); x.l = Math.min(x.l, b.l); x.c = b.c; x.n += 1;
+      x.h = Math.max(x.h, b.h); x.l = Math.min(x.l, b.l);
+      if (!x.slots.has(ms)) { x.c = b.c; x.slots.add(ms); } // 重複M5は数えない
     }
   }
-  // 確定足のみ（バケット終了時刻が現在以前）+ M5本数が閾値以上（欠損検証）
-  return [...buckets.values()]
-    .filter((x) => x.t.getTime() + minutes * 60000 <= nowJst.getTime() && x.n >= minBars)
-    .sort((a, b) => a.t - b.t);
+  // 確定予定のバケット（終了時刻が現在以前）を時刻順に
+  const closed = [...buckets.values()]
+    .filter((x) => x.t.getTime() + minutes * 60000 <= nowJst.getTime())
+    .sort((a, b) => a.t - b.t)
+    .map((x) => ({ ...x, source_m5_count: x.slots.size, complete: x.slots.size === expected }));
+
+  // 完全な足のみを確定足系列として採用
+  const bars = closed.filter((x) => x.complete);
+
+  // 最新の確定予定バケット（不完全でも報告対象）
+  let latestExpected = null;
+  const last = closed[closed.length - 1];
+  if (last) {
+    const missing = [];
+    for (let k = 0; k < expected; k++) {
+      const slot = last.t.getTime() + k * 5 * 60000;
+      if (!last.slots.has(slot)) missing.push(fmtDT(new Date(slot)));
+    }
+    latestExpected = {
+      time_jst: fmtDT(last.t),
+      source_m5_count: last.source_m5_count,
+      expected_m5_count: expected,
+      missing_m5_times: missing,
+      complete: last.complete,
+    };
+  }
+  return { bars, expected, latestExpected };
 }
 
 // ---- スイング高安（左右Nフラクタル、直近のもの）----
-function lastSwings(barsAsc, left, right, digits) {
+function lastSwings(barsAsc, left, right, digits, intervalMin) {
+  const step = intervalMin * 60000;
+  const contiguous = (i) => {
+    for (let k = 1; k <= left; k++) if (barsAsc[i].t - barsAsc[i - k].t !== k * step) return false;
+    for (let k = 1; k <= right; k++) if (barsAsc[i + k].t - barsAsc[i].t !== k * step) return false;
+    return true; // 欠損をまたいだ足同士は左右比較の対象にしない
+  };
   let swingHigh = null, swingLow = null;
   for (let i = barsAsc.length - 1 - right; i >= left; i--) {
+    if (!contiguous(i)) continue;
     const b = barsAsc[i];
     if (!swingHigh) {
       let ok = true;
@@ -263,6 +295,7 @@ async function main() {
     note: "事実データと機械判定のみ。売買推奨は含まない。gateはイベント時間ルール(config/daytrade-rules.json)による判定。",
     rules_summary: {
       stale_min: RULES.stale_min,
+      bar_completeness: "strict (M15=3/H1=12のM5が揃った足のみ確定足。最新確定予定足が不完全ならDEGRADED)",
       fractal: fr,
       high_stop: RULES.stop_windows?.High,
       special_stop: (RULES.special_events || [])[0] ? { before_min: RULES.special_events[0].before_min, after_min: RULES.special_events[0].after_min } : null,
@@ -280,13 +313,19 @@ async function main() {
       const ageMin = Math.round((nJst - last.t) / 60000) - 5; // バー開始時刻+5分=確定時刻基準
       const stale = ageMin > (RULES.stale_min || 20);
 
-      const q = RULES.quality || {};
-      const m15 = aggregate(m5, 15, nJst, q.min_m5_per_m15 ?? 2);
-      const h1 = aggregate(m5, 60, nJst, q.min_m5_per_h1 ?? 8);
-      const lastBar = (arr) => {
-        const b = arr[arr.length - 1];
-        return { time_jst: fmtDT(b.t), o: round(b.o, p.digits), h: round(b.h, p.digits), l: round(b.l, p.digits), c: round(b.c, p.digits) };
+      const m15 = aggregate(m5, 15, nJst);
+      const h1 = aggregate(m5, 60, nJst);
+      const lastBar = (agg) => {
+        const b = agg.bars[agg.bars.length - 1];
+        if (!b) return null;
+        return {
+          time_jst: fmtDT(b.t), o: round(b.o, p.digits), h: round(b.h, p.digits), l: round(b.l, p.digits), c: round(b.c, p.digits),
+          source_m5_count: b.source_m5_count, expected_m5_count: agg.expected, complete: true,
+        };
       };
+      const degraded = [];
+      if (m15.latestExpected && !m15.latestExpected.complete) degraded.push(`最新M15 ${m15.latestExpected.source_m5_count}/${m15.latestExpected.expected_m5_count}本（欠損: ${m15.latestExpected.missing_m5_times.join(",")}）`);
+      if (h1.latestExpected && !h1.latestExpected.complete) degraded.push(`最新H1 ${h1.latestExpected.source_m5_count}/${h1.latestExpected.expected_m5_count}本（欠損: ${h1.latestExpected.missing_m5_times.join(",")}）`);
 
       const gate = buildGate(p.code, events, now);
       const entry = {
@@ -296,10 +335,13 @@ async function main() {
         data_status: stale ? "STALE" : "OK",
         today: todayRange(m5, nJst, p.digits),
         ...(() => { const s = sessionLevels(m5, nJst, p.digits); return { sessions_today: s.today, sessions_prev: s.prev }; })(),
-        m15: { last_closed: lastBar(m15), ...lastSwings(m15, fr.left, fr.right, p.digits) },
-        h1: { last_closed: lastBar(h1), ...lastSwings(h1, fr.left, fr.right, p.digits) },
-        gate: stale ? { ...gate, state: "NO_DATA", reasons: [`データ鮮度${ageMin}分（閾値${RULES.stale_min}分超）`, ...gate.reasons] } : gate,
+        m15: { last_closed: lastBar(m15), latest_expected_bucket: m15.latestExpected, ...lastSwings(m15.bars, fr.left, fr.right, p.digits, 15) },
+        h1: { last_closed: lastBar(h1), latest_expected_bucket: h1.latestExpected, ...lastSwings(h1.bars, fr.left, fr.right, p.digits, 60) },
+        gate: stale
+          ? { ...gate, state: "NO_DATA", reasons: [`データ鮮度${ageMin}分（閾値${RULES.stale_min}分超）`, ...gate.reasons] }
+          : (degraded.length ? { ...gate, warnings: [...degraded, ...gate.warnings] } : gate),
       };
+      if (!stale && degraded.length) entry.data_status = "DEGRADED";
       out.pairs[p.code] = entry;
       console.log(`OK: ${p.code} gate=${entry.gate.state} age=${entry.bar_age_min}分`);
     } catch (e) {
