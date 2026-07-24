@@ -79,7 +79,7 @@ for (const code of PAIR_ORDER) {
 
 // ---- デイトレコンテキスト（V2）----
 if (dt?.pairs) {
-  summary += `\n【Daytrade Context】(as_of: ${dt.as_of}) gate: TRADE_OK=取引可 / WAIT=イベント停止中 / NO_DATA=鮮度不足\n`;
+  summary += `\n【Daytrade Context】(as_of: ${dt.as_of}) gate: TRADE_OK=イベント・鮮度による機械的停止なし / WAIT=イベント停止中 / NO_DATA=鮮度不足\n`;
   const sv = (s) => (s && s.high != null) ? `H${s.high}/L${s.low}` : "-";
   const sw = (x) => x ? `${x.price}@${(x.time_jst || "").slice(11)}` : "-";
   for (const code of PAIR_ORDER) {
@@ -90,6 +90,7 @@ if (dt?.pairs) {
       continue;
     }
     summary += `[${code}] gate=${p.gate.state}`;
+    if (p.data_status && p.data_status !== "OK") summary += ` data=${p.data_status}`;
     if (p.gate.reasons?.length) summary += `（${p.gate.reasons[0]}）`;
     if (p.gate.next_gated_event) {
       const ne = p.gate.next_gated_event;
