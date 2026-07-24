@@ -74,21 +74,21 @@ async function fetchM5(tdSymbol) {
 }
 
 // ---- M5 → 上位足へ集計（JSTの区切り、確定足のみ）----
-function aggregate(m5Asc, minutes, nowJst) {
+function aggregate(m5Asc, minutes, nowJst, minBars = 1) {
   const buckets = new Map();
   for (const b of m5Asc) {
     const ms = b.t.getTime();
     const bucketStart = ms - (ms % (minutes * 60000));
     if (!buckets.has(bucketStart)) {
-      buckets.set(bucketStart, { t: new Date(bucketStart), o: b.o, h: b.h, l: b.l, c: b.c });
+      buckets.set(bucketStart, { t: new Date(bucketStart), o: b.o, h: b.h, l: b.l, c: b.c, n: 1 });
     } else {
       const x = buckets.get(bucketStart);
-      x.h = Math.max(x.h, b.h); x.l = Math.min(x.l, b.l); x.c = b.c;
+      x.h = Math.max(x.h, b.h); x.l = Math.min(x.l, b.l); x.c = b.c; x.n += 1;
     }
   }
-  // 確定足のみ（バケット終了時刻が現在以前）
+  // 確定足のみ（バケット終了時刻が現在以前）+ M5本数が閾値以上（欠損検証）
   return [...buckets.values()]
-    .filter((x) => x.t.getTime() + minutes * 60000 <= nowJst.getTime())
+    .filter((x) => x.t.getTime() + minutes * 60000 <= nowJst.getTime() && x.n >= minBars)
     .sort((a, b) => a.t - b.t);
 }
 
@@ -135,24 +135,42 @@ function sessionLevels(m5Asc, nowJst, digits) {
     ny: mk(nyOpen, nyClose),
   };
 
-  const out = {};
-  for (const [name, w] of Object.entries(defs)) {
+  const rangeIn = (start, end) => {
     let high = null, low = null;
     for (const b of m5Asc) {
-      if (b.t >= w.start && b.t < w.end) {
+      if (b.t >= start && b.t < end) {
         high = high === null ? b.h : Math.max(high, b.h);
         low = low === null ? b.l : Math.min(low, b.l);
       }
     }
+    return { high, low };
+  };
+  const mmdd = (d) => `${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+  const today = {}, prev = {};
+  for (const [name, w] of Object.entries(defs)) {
+    const { high, low } = rangeIn(w.start, w.end);
     const status = nowJst < w.start ? "not_started" : nowJst >= w.end ? "closed" : "open";
-    out[name] = {
+    today[name] = {
       high: high !== null ? round(high, digits) : null,
       low: low !== null ? round(low, digits) : null,
       status,
       window_jst: `${fmtHM(w.start)}-${fmtHM(w.end)}`,
     };
+    // 直近「完了」したセッション（今日分が完了済みならそれ、未完了なら過去に遡る。週末を跨いで最大4日）
+    prev[name] = null;
+    for (let k = status === "closed" ? 0 : 1; k <= 4; k++) {
+      const s = new Date(w.start.getTime() - k * 86400000);
+      const e = new Date(w.end.getTime() - k * 86400000);
+      if (e > nowJst) continue;
+      const r = rangeIn(s, e);
+      if (r.high !== null) {
+        prev[name] = { date: mmdd(s), high: round(r.high, digits), low: round(r.low, digits), window_jst: `${fmtHM(s)}-${fmtHM(e)}` };
+        break;
+      }
+    }
   }
-  return out;
+  return { today, prev };
 }
 
 // ---- 当日高安（NY17:00区切り・M5から自前集計）----
@@ -262,8 +280,9 @@ async function main() {
       const ageMin = Math.round((nJst - last.t) / 60000) - 5; // バー開始時刻+5分=確定時刻基準
       const stale = ageMin > (RULES.stale_min || 20);
 
-      const m15 = aggregate(m5, 15, nJst);
-      const h1 = aggregate(m5, 60, nJst);
+      const q = RULES.quality || {};
+      const m15 = aggregate(m5, 15, nJst, q.min_m5_per_m15 ?? 2);
+      const h1 = aggregate(m5, 60, nJst, q.min_m5_per_h1 ?? 8);
       const lastBar = (arr) => {
         const b = arr[arr.length - 1];
         return { time_jst: fmtDT(b.t), o: round(b.o, p.digits), h: round(b.h, p.digits), l: round(b.l, p.digits), c: round(b.c, p.digits) };
@@ -276,7 +295,7 @@ async function main() {
         bar_age_min: Math.max(ageMin, 0),
         data_status: stale ? "STALE" : "OK",
         today: todayRange(m5, nJst, p.digits),
-        sessions_today: sessionLevels(m5, nJst, p.digits),
+        ...(() => { const s = sessionLevels(m5, nJst, p.digits); return { sessions_today: s.today, sessions_prev: s.prev }; })(),
         m15: { last_closed: lastBar(m15), ...lastSwings(m15, fr.left, fr.right, p.digits) },
         h1: { last_closed: lastBar(h1), ...lastSwings(h1, fr.left, fr.right, p.digits) },
         gate: stale ? { ...gate, state: "NO_DATA", reasons: [`データ鮮度${ageMin}分（閾値${RULES.stale_min}分超）`, ...gate.reasons] } : gate,
