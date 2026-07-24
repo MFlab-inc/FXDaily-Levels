@@ -177,7 +177,7 @@ const TV_SYMBOLS = {
   USDJPY: "OANDA:USDJPY", EURUSD: "OANDA:EURUSD", GBPUSD: "OANDA:GBPUSD",
   EURJPY: "OANDA:EURJPY", AUDUSD: "OANDA:AUDUSD", EURGBP: "OANDA:EURGBP", USDCAD: "OANDA:USDCAD", USDCHF: "OANDA:USDCHF", NZDUSD: "OANDA:NZDUSD", AUDNZD: "OANDA:AUDNZD", XAUUSD: "OANDA:XAUUSD",
 };
-const SENT_ORDER = ["DXY","US10Y","VIX"];
+const SENT_ORDER = ["DXY","US2Y","US10Y","VIX"];
 const HIST_DAYS = 15;
 let historyCache = {};
 let dailyData = null;     // latest.json（前日確定データ）
@@ -213,7 +213,7 @@ function renderSentiment(data) {
     } else {
       const cls = s.change >= 0 ? "up" : "down";
       const sign = s.change >= 0 ? "+" : "";
-      const suffix = code === "US10Y" ? "%" : "";
+      const suffix = (code === "US10Y" || code === "US2Y") ? "%" : "";
       div.innerHTML = `
         <div class="label">${s.label}（${code}）</div>
         <div class="value">${s.value}${suffix}</div>
