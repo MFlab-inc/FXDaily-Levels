@@ -97,23 +97,24 @@ function aggregate(m5Asc, minutes, nowJst) {
   // 完全な足のみを確定足系列として採用
   const bars = closed.filter((x) => x.complete);
 
-  // 最新の確定予定バケット（不完全でも報告対象）
-  let latestExpected = null;
-  const last = closed[closed.length - 1];
-  if (last) {
-    const missing = [];
-    for (let k = 0; k < expected; k++) {
-      const slot = last.t.getTime() + k * 5 * 60000;
-      if (!last.slots.has(slot)) missing.push(fmtDT(new Date(slot)));
-    }
-    latestExpected = {
-      time_jst: fmtDT(last.t),
-      source_m5_count: last.source_m5_count,
-      expected_m5_count: expected,
-      missing_m5_times: missing,
-      complete: last.complete,
-    };
+  // 最新の確定予定バケット時刻を「現在時刻」から直接算出（Mapに存在しなくても報告する）
+  // 直近に終了したバケット = (nowの属するバケット開始) - 1バケット
+  const curBucketStart = nowJst.getTime() - (nowJst.getTime() % (minutes * 60000));
+  const expectedStart = curBucketStart - minutes * 60000;
+  const found = buckets.get(expectedStart); // 無ければ undefined = 全欠損
+  const missing = [];
+  for (let k = 0; k < expected; k++) {
+    const slot = expectedStart + k * 5 * 60000;
+    if (!found || !found.slots.has(slot)) missing.push(fmtDT(new Date(slot)));
   }
+  const cnt = found ? found.slots.size : 0;
+  const latestExpected = {
+    time_jst: fmtDT(new Date(expectedStart)),
+    source_m5_count: cnt,
+    expected_m5_count: expected,
+    missing_m5_times: missing,
+    complete: cnt === expected,
+  };
   return { bars, expected, latestExpected };
 }
 
