@@ -37,6 +37,8 @@ if (intra?.sentiment?.DXY) {
   ms = {
     dxy: intra.sentiment.DXY?.value ?? null,
     dxy_change_pct: intra.sentiment.DXY?.changePct ?? null,
+    us2y: intra.sentiment.US2Y?.value ?? null,
+    us2y_change: intra.sentiment.US2Y?.change ?? null,
     us10y: intra.sentiment.US10Y?.value ?? null,
     us10y_change: intra.sentiment.US10Y?.change ?? null,
     vix: intra.sentiment.VIX?.value ?? null,
@@ -51,7 +53,8 @@ if (sess) {
   summary += `（オープンJST: 東京 ${sess.opens_jst.tokyo} / ロンドン ${sess.opens_jst.london} / NY ${sess.opens_jst.new_york}）\n\n`;
 }
 summary += `【Market Sentiment】(as_of: ${msAsOf})\n`;
-summary += `DXY: ${ms.dxy} (${ms.dxy_change_pct}%) | US10Y: ${ms.us10y}% (${ms.us10y_change >= 0 ? "+" : ""}${ms.us10y_change}) | VIX: ${ms.vix} (${ms.vix_change_pct}%)\n\n`;
+const u2src = intra?.sentiment?.US2Y?.source ? `[${intra.sentiment.US2Y.source}]` : "";
+summary += `DXY: ${ms.dxy} (${ms.dxy_change_pct}%) | US2Y: ${ms.us2y ?? "-"}%${u2src} (${ms.us2y_change >= 0 ? "+" : ""}${ms.us2y_change ?? "-"}) | US10Y: ${ms.us10y}% (${ms.us10y_change >= 0 ? "+" : ""}${ms.us10y_change}) | VIX: ${ms.vix} (${ms.vix_change_pct}%)\n\n`;
 
 summary += `【Pairs】 daily levels as_of: ${daily.as_of}` + (intra ? ` / intraday as_of: ${intra.as_of}` : " / intraday: なし") + "\n";
 for (const code of PAIR_ORDER) {
@@ -151,7 +154,7 @@ const csvEsc = (v) => {
     "prev_high","prev_low","prev_close_ny",
     "pivot","r1","r2","s1","s2",
     "adr20","adr20_pips","atr14","atr14_pips","atr_sl_1_0","atr_sl_1_5","prev_day_range_pct",
-    "dxy","dxy_change_pct","us10y","us10y_change","vix","vix_change_pct",
+    "dxy","dxy_change_pct","us2y","us2y_change","us10y","us10y_change","vix","vix_change_pct",
     "daily_as_of","intraday_as_of",
   ];
   const rows = [header.join(",")];
@@ -165,7 +168,7 @@ const csvEsc = (v) => {
       d.prev_high, d.prev_low, d.prev_close_ny,
       d.pivot, d.r1, d.r2, d.s1, d.s2,
       d.adr20, d.adr20_pips, d.atr14, d.atr14_pips, d.atr_sl_1_0, d.atr_sl_1_5, d.previous_day_range_pct,
-      ms.dxy, ms.dxy_change_pct, ms.us10y, ms.us10y_change, ms.vix, ms.vix_change_pct,
+      ms.dxy, ms.dxy_change_pct, ms.us2y, ms.us2y_change, ms.us10y, ms.us10y_change, ms.vix, ms.vix_change_pct,
       daily.as_of, intra?.as_of ?? "",
     ].map(csvEsc).join(","));
   }
