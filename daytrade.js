@@ -188,7 +188,7 @@ function windowFor(ev) {
     return { before: cb.before_min, after: cb.after_min, kind: "central_bank" };
   }
   for (const sp of RULES.special_events || []) {
-    if (new RegExp(sp.match, "i").test(ev.event)) {
+    if (ev.impact === "High" && new RegExp(sp.match, "i").test(ev.event)) {
       return { before: sp.before_min, after: sp.after_min, kind: "special" };
     }
   }
