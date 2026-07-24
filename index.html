@@ -294,7 +294,7 @@ function renderPairs() {
   }
 }
 
-// ---- 当日データ（data/intraday.json を読取。30分ごとにActionsが自動更新）----
+// ---- 当日データ（data/intraday.json を読取。15分ごとにActionsが自動更新）----
 async function fetchIntraday(manual = false) {
   const btn = document.getElementById("refresh-btn");
   btn.disabled = true;
