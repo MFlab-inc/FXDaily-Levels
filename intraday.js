@@ -36,6 +36,7 @@ const round = (n, d) => Number(n.toFixed(d));
 // ---- 市場心理（Yahoo Finance・fetch.jsと同一仕様）----
 const SENTIMENT = [
   { code: "DXY",   symbol: "DX-Y.NYB", label: "ドル指数", divisor: 1,  digits: 2 },
+  { code: "US2Y",  symbol: "custom",   label: "米2年債利回り", divisor: 1,  digits: 3 }, // fetchUS2Yで特別処理
   { code: "US10Y", symbol: "^TNX",     label: "米10年債利回り", divisor: 10, digits: 3 },
   { code: "VIX",   symbol: "^VIX",     label: "VIX", divisor: 1,  digits: 2 },
 ];
@@ -64,6 +65,56 @@ async function fetchYahoo(item) {
     changePct: round(((value - prev) / prev) * 100, 2),
   };
 }
+
+// ---- 米2年債利回り（Yahoo 2YY=F → 失敗時はFRED DGS2に自動フォールバック）----
+async function fetchUS2Y() {
+  // 第1候補: Yahoo 2YY=F（CME 2年利回り先物・ほぼリアルタイム）
+  try {
+    const res = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/2YY%3DF?range=10d&interval=1d", {
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      const closes = (json?.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [])
+        .filter((c) => c !== null && c !== undefined);
+      if (closes.length >= 2) {
+        const value = closes[closes.length - 1];
+        const prev = closes[closes.length - 2];
+        if (value > 0.05 && value < 20 && prev > 0.05 && prev < 20) { // 妥当範囲チェック
+          return {
+            label: "米2年債利回り",
+            value: Number(value.toFixed(3)),
+            prev: Number(prev.toFixed(3)),
+            change: Number((value - prev).toFixed(3)),
+            changePct: Number((((value - prev) / prev) * 100).toFixed(2)),
+            source: "yahoo:2YY=F",
+          };
+        }
+      }
+    }
+  } catch (e) { /* フォールバックへ */ }
+
+  // 第2候補: FRED公式 DGS2（1営業日遅れ・確実）
+  const res2 = await fetch("https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2", {
+    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+  });
+  if (!res2.ok) throw new Error(`FRED HTTP ${res2.status}`);
+  const csv = await res2.text();
+  const vals = csv.trim().split("\n").slice(1)
+    .map((l) => parseFloat(l.split(",")[1]))
+    .filter((v) => !isNaN(v));
+  if (vals.length < 2) throw new Error("FRED DGS2 データ不足");
+  const value = vals[vals.length - 1], prev = vals[vals.length - 2];
+  return {
+    label: "米2年債利回り",
+    value: Number(value.toFixed(3)),
+    prev: Number(prev.toFixed(3)),
+    change: Number((value - prev).toFixed(3)),
+    changePct: Number((((value - prev) / prev) * 100).toFixed(2)),
+    source: "fred:DGS2(前営業日値)",
+  };
+}
+
 
 // ---- 経済カレンダー再取得（日中の鮮度維持。fetch.jsと同一仕様）----
 const FF_CALENDAR_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json";
@@ -221,7 +272,7 @@ async function main() {
   // 市場心理も毎回更新（Yahoo・クレジット消費なし）
   for (const s of SENTIMENT) {
     try {
-      out.sentiment[s.code] = await fetchYahoo(s);
+      out.sentiment[s.code] = s.code === "US2Y" ? await fetchUS2Y() : await fetchYahoo(s);
       console.log(`OK: ${s.code}`);
     } catch (e) {
       console.error(`FAIL: ${s.code} - ${e.message}`);
