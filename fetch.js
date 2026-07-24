@@ -28,7 +28,10 @@ const PAIRS = [
   { code: "AUDUSD", td: "AUD/USD", pip: 0.0001, digits: 5 },
   { code: "EURGBP", td: "EUR/GBP", pip: 0.0001, digits: 5 },
   { code: "USDCAD", td: "USD/CAD", pip: 0.0001, digits: 5 },
-  { code: "XAUUSD", td: "XAU/USD", pip: null,   digits: 2 },
+  { code: "USDCHF", td: "USD/CHF", pip: 0.0001, digits: 5 },
+  { code: "NZDUSD", td: "NZD/USD", pip: 0.0001, digits: 5 },
+  { code: "AUDNZD", td: "AUD/NZD", pip: 0.0001, digits: 5 },
+  { code: "XAUUSD", td: "XAU/USD", pip: 0.1,    digits: 2 }, // 0.1ドル=1pip
 ];
 
 // ---- 市場心理（Yahoo Finance 非公式API）----
@@ -40,7 +43,7 @@ const SENTIMENT = [
 
 // ---- 経済指標カレンダー設定 ----
 const FF_CALENDAR_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json";
-const CAL_CURRENCIES = ["USD", "JPY", "EUR", "GBP", "AUD", "CAD", "CHF", "CNY"]; // 対象通貨
+const CAL_CURRENCIES = ["USD", "JPY", "EUR", "GBP", "AUD", "NZD", "CAD", "CHF", "CNY"]; // 対象通貨
 const CAL_IMPACTS = ["High", "Medium"]; // 対象重要度
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
