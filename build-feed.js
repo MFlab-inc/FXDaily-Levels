@@ -97,7 +97,11 @@ if (dt?.pairs) {
     }
     summary += `\n`;
     summary += `  当日(NY17基準): ${sv(p.today)} | 東京: ${sv(p.sessions_today?.tokyo)}(${p.sessions_today?.tokyo?.status}) | LDN: ${sv(p.sessions_today?.london)}(${p.sessions_today?.london?.status}) | NY: ${sv(p.sessions_today?.ny)}(${p.sessions_today?.ny?.status})\n`;
-    summary += `  H1: 終値${p.h1?.last_closed?.c ?? "-"} スイング高 ${sw(p.h1?.swing_high)} / 安 ${sw(p.h1?.swing_low)} | M15: スイング高 ${sw(p.m15?.swing_high)} / 安 ${sw(p.m15?.swing_low)}\n`;
+    const pv = (x) => x ? `H${x.high}/L${x.low}(${x.date})` : "-";
+    const ohlc = (b) => b ? `[${(b.time_jst || "").slice(11)}] O${b.o} H${b.h} L${b.l} C${b.c}` : "-";
+    summary += `  前セッション: 東京 ${pv(p.sessions_prev?.tokyo)} | LDN ${pv(p.sessions_prev?.london)} | NY ${pv(p.sessions_prev?.ny)}\n`;
+    summary += `  H1確定足${ohlc(p.h1?.last_closed)} スイング高 ${sw(p.h1?.swing_high)} / 安 ${sw(p.h1?.swing_low)}\n`;
+    summary += `  M15確定足${ohlc(p.m15?.last_closed)} スイング高 ${sw(p.m15?.swing_high)} / 安 ${sw(p.m15?.swing_low)}\n`;
   }
 }
 
