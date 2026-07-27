@@ -27,7 +27,7 @@ if (!daily) {
 }
 
 const esc = (s) => String(s ?? "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const PAIR_ORDER = ["USDJPY","EURUSD","GBPUSD","EURJPY","AUDUSD","EURGBP","USDCAD","USDCHF","NZDUSD","AUDNZD","XAUUSD"];
+const PAIR_ORDER = ["USDJPY","EURUSD","GBPUSD","EURJPY","AUDUSD","EURGBP","USDCAD","USDCHF","NZDUSD","AUDNZD","XAUUSD","USOIL"];
 
 // ---- サマリー（テキスト表）----
 let summary = "";
