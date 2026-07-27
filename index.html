@@ -172,10 +172,10 @@
 </div>
 
 <script>
-const PAIR_ORDER = ["USDJPY","EURUSD","GBPUSD","EURJPY","AUDUSD","EURGBP","USDCAD","USDCHF","NZDUSD","AUDNZD","XAUUSD"];
+const PAIR_ORDER = ["USDJPY","EURUSD","GBPUSD","EURJPY","AUDUSD","EURGBP","USDCAD","USDCHF","NZDUSD","AUDNZD","XAUUSD","USOIL"];
 const TV_SYMBOLS = {
   USDJPY: "OANDA:USDJPY", EURUSD: "OANDA:EURUSD", GBPUSD: "OANDA:GBPUSD",
-  EURJPY: "OANDA:EURJPY", AUDUSD: "OANDA:AUDUSD", EURGBP: "OANDA:EURGBP", USDCAD: "OANDA:USDCAD", USDCHF: "OANDA:USDCHF", NZDUSD: "OANDA:NZDUSD", AUDNZD: "OANDA:AUDNZD", XAUUSD: "OANDA:XAUUSD",
+  EURJPY: "OANDA:EURJPY", AUDUSD: "OANDA:AUDUSD", EURGBP: "OANDA:EURGBP", USDCAD: "OANDA:USDCAD", USDCHF: "OANDA:USDCHF", NZDUSD: "OANDA:NZDUSD", AUDNZD: "OANDA:AUDNZD", XAUUSD: "OANDA:XAUUSD", USOIL: "OANDA:WTICOUSD",
 };
 const SENT_ORDER = ["DXY","US2Y","US10Y","VIX"];
 const HIST_DAYS = 15;
@@ -190,7 +190,7 @@ function fmt(n, code) {
 }
 function dec(code) {
   if (code === "USDJPY" || code === "EURJPY") return 3;
-  if (code === "XAUUSD") return 2;
+  if (code === "XAUUSD" || code === "USOIL") return 2;
   return 5;
 }
 
@@ -294,7 +294,7 @@ function renderPairs() {
   }
 }
 
-// ---- 当日データ（data/intraday.json を読取。15分ごとにActionsが自動更新）----
+// ---- 当日データ（data/intraday.json を読取。30分ごとにActionsが自動更新）----
 async function fetchIntraday(manual = false) {
   const btn = document.getElementById("refresh-btn");
   btn.disabled = true;
@@ -315,7 +315,7 @@ async function fetchIntraday(manual = false) {
     }
     if (okCount > 0) {
       const t = (j.as_of || "").slice(11, 16);
-      document.getElementById("meta-live").textContent = `当日データ: ${t} JST時点（15分ごと自動更新）`;
+      document.getElementById("meta-live").textContent = `当日データ: ${t} JST時点（30分ごと自動更新）`;
       renderPairs();
     } else {
       document.getElementById("meta-live").textContent = "（当日データなし）";
