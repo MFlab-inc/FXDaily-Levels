@@ -30,6 +30,7 @@ const PAIRS = [
   { code: "NZDUSD", td: "NZD/USD", digits: 5 },
   { code: "AUDNZD", td: "AUD/NZD", digits: 5 },
   { code: "XAUUSD", td: "XAU/USD", digits: 2 },
+  { code: "USOIL",  td: "WTI/USD", digits: 2 },
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
