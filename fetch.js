@@ -32,6 +32,7 @@ const PAIRS = [
   { code: "NZDUSD", td: "NZD/USD", pip: 0.0001, digits: 5 },
   { code: "AUDNZD", td: "AUD/NZD", pip: 0.0001, digits: 5 },
   { code: "XAUUSD", td: "XAU/USD", pip: 0.1,    digits: 2 }, // 0.1ドル=1pip
+  { code: "USOIL",  td: "WTI/USD", pip: 0.01,   digits: 2 }, // WTIスポット。0.01ドル=1pip(要ブローカー確認)
 ];
 
 // ---- 市場心理（Yahoo Finance 非公式API）----
