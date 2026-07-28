@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-07-28T22:20:49+09:00",
+  "as_of": "2026-07-28T22:56:39+09:00",
   "timezone": "Asia/Tokyo",
   "note": "事実データと機械判定のみ。売買推奨は含まない。gateはイベント時間ルール(config/daytrade-rules.json)による判定。",
   "rules_summary": {
@@ -24,9 +24,9 @@
   },
   "pairs": {
     "USDJPY": {
-      "price": 163.872,
-      "price_time_jst": "2026-07-28 22:15",
-      "bar_age_min": 1,
+      "price": 163.83,
+      "price_time_jst": "2026-07-28 22:55",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-07-28 06:00",
@@ -48,7 +48,7 @@
         },
         "ny": {
           "high": 163.942,
-          "low": 163.853,
+          "low": 163.828,
           "status": "open",
           "window_jst": "21:00-06:00"
         }
@@ -75,17 +75,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-07-28 22:00",
-          "o": 163.887,
-          "h": 163.89,
-          "l": 163.855,
-          "c": 163.879,
+          "time_jst": "2026-07-28 22:30",
+          "o": 163.874,
+          "h": 163.882,
+          "l": 163.856,
+          "c": 163.856,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-07-28 22:00",
+          "time_jst": "2026-07-28 22:30",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -130,14 +130,16 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [],
+        "warnings": [
+          "23:00 [USD] CB Consumer Confidence（Medium・参考）"
+        ],
         "next_gated_event": null
       }
     },
     "EURUSD": {
-      "price": 1.13678,
-      "price_time_jst": "2026-07-28 22:15",
-      "bar_age_min": 1,
+      "price": 1.13728,
+      "price_time_jst": "2026-07-28 22:55",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-07-28 06:00",
@@ -158,7 +160,7 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": 1.13708,
+          "high": 1.13739,
           "low": 1.13609,
           "status": "open",
           "window_jst": "21:00-06:00"
@@ -186,17 +188,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-07-28 22:00",
-          "o": 1.1367,
-          "h": 1.13708,
-          "l": 1.13656,
-          "c": 1.13673,
+          "time_jst": "2026-07-28 22:30",
+          "o": 1.13677,
+          "h": 1.13706,
+          "l": 1.13673,
+          "c": 1.13701,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-07-28 22:00",
+          "time_jst": "2026-07-28 22:30",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -241,14 +243,16 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [],
+        "warnings": [
+          "23:00 [USD] CB Consumer Confidence（Medium・参考）"
+        ],
         "next_gated_event": null
       }
     },
     "GBPUSD": {
-      "price": 1.32959,
-      "price_time_jst": "2026-07-28 22:15",
-      "bar_age_min": 1,
+      "price": 1.33,
+      "price_time_jst": "2026-07-28 22:55",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-07-28 06:00",
@@ -269,7 +273,7 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": 1.33028,
+          "high": 1.3303,
           "low": 1.32791,
           "status": "open",
           "window_jst": "21:00-06:00"
@@ -297,25 +301,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-07-28 22:00",
-          "o": 1.3298,
-          "h": 1.33028,
-          "l": 1.32959,
-          "c": 1.32962,
+          "time_jst": "2026-07-28 22:30",
+          "o": 1.32976,
+          "h": 1.32988,
+          "l": 1.32952,
+          "c": 1.32969,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-07-28 22:00",
+          "time_jst": "2026-07-28 22:30",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.32823,
-          "time_jst": "2026-07-28 19:30"
+          "price": 1.33028,
+          "time_jst": "2026-07-28 22:00"
         },
         "swing_low": {
           "price": 1.32753,
@@ -352,14 +356,16 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [],
+        "warnings": [
+          "23:00 [USD] CB Consumer Confidence（Medium・参考）"
+        ],
         "next_gated_event": null
       }
     },
     "EURJPY": {
-      "price": 186.272,
-      "price_time_jst": "2026-07-28 22:15",
-      "bar_age_min": 1,
+      "price": 186.323,
+      "price_time_jst": "2026-07-28 22:55",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-07-28 06:00",
@@ -408,17 +414,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-07-28 22:00",
-          "o": 186.289,
-          "h": 186.317,
-          "l": 186.266,
-          "c": 186.281,
+          "time_jst": "2026-07-28 22:30",
+          "o": 186.285,
+          "h": 186.325,
+          "l": 186.28,
+          "c": 186.301,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-07-28 22:00",
+          "time_jst": "2026-07-28 22:30",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -468,9 +474,9 @@
       }
     },
     "AUDUSD": {
-      "price": 0.69724,
-      "price_time_jst": "2026-07-28 22:15",
-      "bar_age_min": 1,
+      "price": 0.69706,
+      "price_time_jst": "2026-07-28 22:55",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-07-28 06:00",
@@ -491,7 +497,7 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": 0.69733,
+          "high": 0.69745,
           "low": 0.6965,
           "status": "open",
           "window_jst": "21:00-06:00"
@@ -519,17 +525,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-07-28 22:00",
-          "o": 0.69699,
-          "h": 0.69733,
-          "l": 0.69687,
-          "c": 0.69719,
+          "time_jst": "2026-07-28 22:30",
+          "o": 0.69718,
+          "h": 0.69721,
+          "l": 0.69669,
+          "c": 0.69682,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-07-28 22:00",
+          "time_jst": "2026-07-28 22:30",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -574,14 +580,16 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [],
+        "warnings": [
+          "23:00 [USD] CB Consumer Confidence（Medium・参考）"
+        ],
         "next_gated_event": null
       }
     },
     "EURGBP": {
-      "price": 0.855,
-      "price_time_jst": "2026-07-28 22:15",
-      "bar_age_min": 1,
+      "price": 0.8551,
+      "price_time_jst": "2026-07-28 22:55",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-07-28 06:00",
@@ -630,17 +638,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-07-28 22:00",
-          "o": 0.85479,
-          "h": 0.85504,
-          "l": 0.85453,
-          "c": 0.85502,
+          "time_jst": "2026-07-28 22:30",
+          "o": 0.85487,
+          "h": 0.85517,
+          "l": 0.85486,
+          "c": 0.8551,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-07-28 22:00",
+          "time_jst": "2026-07-28 22:30",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -651,8 +659,8 @@
           "time_jst": "2026-07-28 20:45"
         },
         "swing_low": {
-          "price": 0.85456,
-          "time_jst": "2026-07-28 17:00"
+          "price": 0.85453,
+          "time_jst": "2026-07-28 22:00"
         }
       },
       "h1": {
@@ -690,9 +698,9 @@
       }
     },
     "USDCAD": {
-      "price": 1.41054,
-      "price_time_jst": "2026-07-28 22:15",
-      "bar_age_min": 1,
+      "price": 1.41028,
+      "price_time_jst": "2026-07-28 22:55",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-07-28 06:00",
@@ -741,17 +749,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-07-28 22:00",
-          "o": 1.4114,
-          "h": 1.4114,
-          "l": 1.41024,
-          "c": 1.41035,
+          "time_jst": "2026-07-28 22:30",
+          "o": 1.41066,
+          "h": 1.41099,
+          "l": 1.41049,
+          "c": 1.41065,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-07-28 22:00",
+          "time_jst": "2026-07-28 22:30",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -796,14 +804,16 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [],
+        "warnings": [
+          "23:00 [USD] CB Consumer Confidence（Medium・参考）"
+        ],
         "next_gated_event": null
       }
     },
     "USDCHF": {
-      "price": 0.81946,
-      "price_time_jst": "2026-07-28 22:15",
-      "bar_age_min": 1,
+      "price": 0.81867,
+      "price_time_jst": "2026-07-28 22:55",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-07-28 06:00",
@@ -819,13 +829,13 @@
         },
         "london": {
           "high": 0.82056,
-          "low": 0.81905,
+          "low": 0.81851,
           "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
           "high": 0.82037,
-          "low": 0.81921,
+          "low": 0.81851,
           "status": "open",
           "window_jst": "21:00-06:00"
         }
@@ -852,17 +862,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-07-28 22:00",
-          "o": 0.81966,
-          "h": 0.81966,
-          "l": 0.81921,
-          "c": 0.81938,
+          "time_jst": "2026-07-28 22:30",
+          "o": 0.81937,
+          "h": 0.81941,
+          "l": 0.81893,
+          "c": 0.81893,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-07-28 22:00",
+          "time_jst": "2026-07-28 22:30",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -907,14 +917,16 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [],
+        "warnings": [
+          "23:00 [USD] CB Consumer Confidence（Medium・参考）"
+        ],
         "next_gated_event": null
       }
     },
     "NZDUSD": {
-      "price": 0.57731,
-      "price_time_jst": "2026-07-28 22:15",
-      "bar_age_min": 1,
+      "price": 0.5776,
+      "price_time_jst": "2026-07-28 22:55",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-07-28 06:00",
@@ -935,7 +947,7 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": 0.57751,
+          "high": 0.57764,
           "low": 0.57687,
           "status": "open",
           "window_jst": "21:00-06:00"
@@ -963,25 +975,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-07-28 22:00",
-          "o": 0.5773,
-          "h": 0.57746,
-          "l": 0.57723,
-          "c": 0.57729,
+          "time_jst": "2026-07-28 22:30",
+          "o": 0.57727,
+          "h": 0.57733,
+          "l": 0.57715,
+          "c": 0.57731,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-07-28 22:00",
+          "time_jst": "2026-07-28 22:30",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 0.57721,
-          "time_jst": "2026-07-28 21:00"
+          "price": 0.57751,
+          "time_jst": "2026-07-28 21:45"
         },
         "swing_low": {
           "price": 0.57642,
@@ -1018,19 +1030,21 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [],
+        "warnings": [
+          "23:00 [USD] CB Consumer Confidence（Medium・参考）"
+        ],
         "next_gated_event": null
       }
     },
     "AUDNZD": {
-      "price": 1.20779,
-      "price_time_jst": "2026-07-28 22:15",
-      "bar_age_min": 1,
+      "price": 1.20684,
+      "price_time_jst": "2026-07-28 22:55",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-07-28 06:00",
         "high": 1.21227,
-        "low": 1.20703
+        "low": 1.20668
       },
       "sessions_today": {
         "tokyo": {
@@ -1041,13 +1055,13 @@
         },
         "london": {
           "high": 1.20852,
-          "low": 1.20703,
+          "low": 1.20668,
           "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": 1.20784,
-          "low": 1.20703,
+          "high": 1.2079,
+          "low": 1.20668,
           "status": "open",
           "window_jst": "21:00-06:00"
         }
@@ -1074,17 +1088,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-07-28 22:00",
-          "o": 1.20732,
-          "h": 1.20775,
-          "l": 1.20728,
-          "c": 1.20772,
+          "time_jst": "2026-07-28 22:30",
+          "o": 1.20773,
+          "h": 1.20785,
+          "l": 1.20695,
+          "c": 1.207,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-07-28 22:00",
+          "time_jst": "2026-07-28 22:30",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1095,8 +1109,8 @@
           "time_jst": "2026-07-28 21:30"
         },
         "swing_low": {
-          "price": 1.20703,
-          "time_jst": "2026-07-28 21:00"
+          "price": 1.20716,
+          "time_jst": "2026-07-28 21:45"
         }
       },
       "h1": {
@@ -1134,9 +1148,9 @@
       }
     },
     "XAUUSD": {
-      "price": 4030.82,
-      "price_time_jst": "2026-07-28 22:15",
-      "bar_age_min": 1,
+      "price": 4027.43,
+      "price_time_jst": "2026-07-28 22:55",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-07-28 06:00",
@@ -1158,7 +1172,7 @@
         },
         "ny": {
           "high": 4037.3,
-          "low": 4023.05,
+          "low": 4021.51,
           "status": "open",
           "window_jst": "21:00-06:00"
         }
@@ -1185,25 +1199,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-07-28 22:00",
-          "o": 4029.53,
-          "h": 4035.35,
-          "l": 4027.94,
-          "c": 4033.61,
+          "time_jst": "2026-07-28 22:30",
+          "o": 4030.86,
+          "h": 4032.26,
+          "l": 4021.51,
+          "c": 4022.28,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-07-28 22:00",
+          "time_jst": "2026-07-28 22:30",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 4031.45,
-          "time_jst": "2026-07-28 20:15"
+          "price": 4037.3,
+          "time_jst": "2026-07-28 21:45"
         },
         "swing_low": {
           "price": 4023.05,
@@ -1240,14 +1254,16 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [],
+        "warnings": [
+          "23:00 [USD] CB Consumer Confidence（Medium・参考）"
+        ],
         "next_gated_event": null
       }
     },
     "USOIL": {
-      "price": 80.55,
-      "price_time_jst": "2026-07-28 22:15",
-      "bar_age_min": 1,
+      "price": 80.68,
+      "price_time_jst": "2026-07-28 22:50",
+      "bar_age_min": 2,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-07-28 06:00",
@@ -1296,17 +1312,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-07-28 22:00",
-          "o": 80.02,
-          "h": 81.35,
-          "l": 80.02,
-          "c": 80.53,
+          "time_jst": "2026-07-28 22:30",
+          "o": 80.45,
+          "h": 81.11,
+          "l": 79.94,
+          "c": 80.29,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-07-28 22:00",
+          "time_jst": "2026-07-28 22:30",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1317,8 +1333,8 @@
           "time_jst": "2026-07-28 20:45"
         },
         "swing_low": {
-          "price": 80.32,
-          "time_jst": "2026-07-28 20:15"
+          "price": 79.87,
+          "time_jst": "2026-07-28 21:45"
         }
       },
       "h1": {
@@ -1351,7 +1367,9 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [],
+        "warnings": [
+          "23:00 [USD] CB Consumer Confidence（Medium・参考）"
+        ],
         "next_gated_event": null
       }
     }
