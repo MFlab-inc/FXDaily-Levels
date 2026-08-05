@@ -280,15 +280,15 @@ async function fetchCalendar(todayJst) {
 }
 
 // ---- メイン ----
-// ---- US500（ES=F先物・Yahoo 1時間足→NY17区切り日足）----
-// h1-bars.jsonのUS500チャートと同一系列から水準を算出し、チャートとレベルの完全一致を保証する
-async function fetchUS500DailyBars(cutoffDate) {
-  const url = "https://query1.finance.yahoo.com/v8/finance/chart/ES%3DF?interval=60m&range=60d";
+// ---- 株価指数（Yahoo先物 1時間足→NY17区切り日足）----
+// US500はh1-bars.jsonのチャートと同一系列(ES=F)。US30/US100はdaily水準のみ(チャート化なし)
+async function fetchIndexDailyBars(yahooSymbol, cutoffDate) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?interval=60m&range=60d`;
   const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" } });
-  if (!res.ok) throw new Error(`Yahoo HTTP ${res.status} (ES=F)`);
+  if (!res.ok) throw new Error(`Yahoo HTTP ${res.status} (${yahooSymbol})`);
   const json = await res.json();
   const r = json?.chart?.result?.[0];
-  if (!r?.timestamp) throw new Error("Yahoo ES=F データなし");
+  if (!r?.timestamp) throw new Error(`Yahoo ${yahooSymbol} データなし`);
   const q = r.indicators.quote[0];
   const pad = (n) => String(n).padStart(2, "0");
   const hours = [];
@@ -430,34 +430,42 @@ async function main() {
       s1: d.s1, s2: d.s2,
     };
   }
-  // US500（ES=F系列・チャートh1-bars.jsonと同一ソース）
-  try {
-    const usBars = await fetchUS500DailyBars(cutoff);
-    const ind = computeIndicators(usBars);
-    const dg = 2;
-    dailyLevels.pairs["US500"] = {
-      prev_high: round(ind.prevHigh, dg),
-      prev_low: round(ind.prevLow, dg),
-      prev_close_ny: round(ind.prevClose, dg),
-      prev2_close_ny: round(ind.prev2Close, dg),
-      prev2_session_date: ind.prev2Date,
-      adr20: round(ind.adr20, dg),
-      adr20_pips: round(ind.adr20, 1), // 指数はポイント表記(1pt=1)
-      atr14: round(ind.atr14, dg),
-      atr14_pips: round(ind.atr14, 1),
-      atr_sl_1_0: round(ind.atr14 * 1.0, dg),
-      atr_sl_1_5: round(ind.atr14 * 1.5, dg),
-      previous_day_range_pct: ind.adr20 > 0 ? round(((ind.prevHigh - ind.prevLow) / ind.adr20) * 100, 1) : null,
-      pivot: round(ind.pivot, dg),
-      r1: round(ind.r1, dg), s1: round(ind.s1, dg),
-      r2: round(ind.r2, dg), s2: round(ind.s2, dg),
-      session_date: ind.sessionDate,
-      source: "yahoo:ES=F(先物)", // 12銘柄(Twelve Data)と系列が異なる旨を明示
-    };
-    console.log(`OK: US500 levels (session=${ind.sessionDate})`);
-  } catch (e) {
-    console.error(`FAIL: US500 levels - ${e.message}`);
-    out.errors.push(`US500: ${e.message}`);
+  // 株価指数3種（Yahoo先物系列・sourceで自己記述。US500はh1-bars.jsonのチャートと同一ソース）
+  const INDICES = [
+    { code: "US500", yahoo: "ES=F", digits: 2 },
+    { code: "US30",  yahoo: "YM=F", digits: 0 },
+    { code: "US100", yahoo: "NQ=F", digits: 2 },
+  ];
+  for (const ix of INDICES) {
+    try {
+      const bars = await fetchIndexDailyBars(ix.yahoo, cutoff);
+      const ind = computeIndicators(bars);
+      const dg = ix.digits;
+      dailyLevels.pairs[ix.code] = {
+        prev_high: round(ind.prevHigh, dg),
+        prev_low: round(ind.prevLow, dg),
+        prev_close_ny: round(ind.prevClose, dg),
+        prev2_close_ny: round(ind.prev2Close, dg),
+        prev2_session_date: ind.prev2Date,
+        adr20: round(ind.adr20, dg),
+        adr20_pips: round(ind.adr20, dg === 0 ? 0 : 1), // 指数はポイント表記
+        atr14: round(ind.atr14, dg),
+        atr14_pips: round(ind.atr14, dg === 0 ? 0 : 1),
+        atr_sl_1_0: round(ind.atr14 * 1.0, dg),
+        atr_sl_1_5: round(ind.atr14 * 1.5, dg),
+        previous_day_range_pct: ind.adr20 > 0 ? round(((ind.prevHigh - ind.prevLow) / ind.adr20) * 100, 1) : null,
+        pivot: round(ind.pivot, dg),
+        r1: round(ind.r1, dg), s1: round(ind.s1, dg),
+        r2: round(ind.r2, dg), s2: round(ind.s2, dg),
+        session_date: ind.sessionDate,
+        source: `yahoo:${ix.yahoo}(先物)`,
+      };
+      console.log(`OK: ${ix.code} levels (session=${ind.sessionDate})`);
+      await sleep(300);
+    } catch (e) {
+      console.error(`FAIL: ${ix.code} levels - ${e.message}`);
+      out.errors.push(`${ix.code}: ${e.message}`);
+    }
   }
 
   fs.writeFileSync(path.join(dataDir, "daily-levels.json"), JSON.stringify(dailyLevels, null, 2));
