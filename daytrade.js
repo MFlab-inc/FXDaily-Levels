@@ -60,6 +60,15 @@ function localHourInJst(tz, localHour, now = new Date()) {
   return (((localHour + diffH) % 24) + 24) % 24;
 }
 
+// ---- FX休場帯判定（金17:00 NY〜日17:00 NY。JST壁時計→真のepoch→NY時刻でDST厳密判定）----
+function isFxClosed(jstWall) {
+  const epoch = Date.UTC(jstWall.getFullYear(), jstWall.getMonth(), jstWall.getDate(),
+    jstWall.getHours(), jstWall.getMinutes()) - 9 * 3600000;
+  const ny = new Date(new Date(epoch).toLocaleString("en-US", { timeZone: "America/New_York" }));
+  const dw = ny.getDay(), h = ny.getHours();
+  return (dw === 5 && h >= 17) || dw === 6 || (dw === 0 && h < 17);
+}
+
 // ---- Twelve Data M5取得（JST表記で返させる）----
 async function fetchM5(tdSymbol) {
   const url =
@@ -74,7 +83,8 @@ async function fetchM5(tdSymbol) {
     t: new Date(v.datetime.replace(" ", "T")), // JSTローカルとして解釈
     o: parseFloat(v.open), h: parseFloat(v.high),
     l: parseFloat(v.low),  c: parseFloat(v.close),
-  })).reverse(); // 昇順へ
+  })).filter((b) => !isFxClosed(b.t)) // 休場帯の参考値バーを除外(Twelve Data既知事象)
+    .reverse(); // 昇順へ
 }
 
 // ---- チャート用H1系列（Twelve Data 1時間足を直接取得・確定足のみ・最新500本）----
@@ -82,7 +92,7 @@ async function fetchM5(tdSymbol) {
 async function fetchH1Series(tdSymbol, digits, nowJst) {
   const url =
     `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(tdSymbol)}` +
-    `&interval=1h&outputsize=520&timezone=Asia/Tokyo&apikey=${API_KEY}`;
+    `&interval=1h&outputsize=750&timezone=Asia/Tokyo&apikey=${API_KEY}`; // 休場帯除外後も500本を確保
   const res = await fetch(url);
   const json = await res.json();
   if (json.status === "error" || !json.values) {
@@ -92,6 +102,7 @@ async function fetchH1Series(tdSymbol, digits, nowJst) {
   for (const v of json.values) {
     const t = new Date(v.datetime.replace(" ", "T"));
     if (t.getTime() + 3600000 > nowJst.getTime()) continue; // 未確定の進行中バーを除外
+    if (isFxClosed(t)) continue; // 休場帯の参考値バーを除外(実取引時間のみ・先物系と統一)
     const bar = {
       time_jst: v.datetime.slice(0, 16),
       o: round(parseFloat(v.open), digits), h: round(parseFloat(v.high), digits),
