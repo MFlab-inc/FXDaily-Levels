@@ -56,6 +56,12 @@ if (sess) {
 summary += `【Market Sentiment】(as_of: ${msAsOf})\n`;
 const u2src = intra?.sentiment?.US2Y?.source ? `[${intra.sentiment.US2Y.source}]` : "";
 summary += `DXY: ${ms.dxy} (${ms.dxy_change_pct}%) | US2Y: ${ms.us2y ?? "-"}%${u2src} (${ms.us2y_change >= 0 ? "+" : ""}${ms.us2y_change ?? "-"}) | US10Y: ${ms.us10y}% (${ms.us10y_change >= 0 ? "+" : ""}${ms.us10y_change}) | VIX: ${ms.vix} (${ms.vix_change_pct}%)\n\n`;
+const ix = (c) => intra?.sentiment?.[c];
+if (ix("US500")) {
+  const f = (c) => { const s = ix(c); return s ? `${c}: ${s.value} (${s.changePct >= 0 ? "+" : ""}${s.changePct}%)` : `${c}: -`; };
+  summary += `株価指数(先物ベース): ${f("US30")} | ${f("US500")} | ${f("US100")}\n\n`;
+}
+
 
 summary += `【Pairs】 daily levels as_of: ${daily.as_of}` + (intra ? ` / intraday as_of: ${intra.as_of}` : " / intraday: なし") + "\n";
 for (const code of PAIR_ORDER) {
@@ -72,6 +78,7 @@ for (const code of PAIR_ORDER) {
     summary += `  （当日データなし）\n`;
   }
   summary += `  前日: 高値 ${d.prev_high} / 安値 ${d.prev_low} / NY終値 ${d.prev_close_ny}` +
+    (d.prev2_close_ny != null ? ` | 前々日NY終値: ${d.prev2_close_ny}` : "") +
     (d.previous_day_range_pct != null ? ` | 前日レンジ/ADR: ${d.previous_day_range_pct}%` : "") + `\n`;
   summary += `  Pivot: ${d.pivot} | R1 ${d.r1} / R2 ${d.r2} | S1 ${d.s1} / S2 ${d.s2}\n`;
   summary += `  ADR20: ${d.adr20}${d.adr20_pips ? ` (${d.adr20_pips}p)` : ""} | ATR14: ${d.atr14}${d.atr14_pips ? ` (${d.atr14_pips}p)` : ""} | ATR_SL目安: ${d.atr_sl_1_0}〜${d.atr_sl_1_5}\n`;
@@ -187,7 +194,7 @@ const csvEsc = (v) => {
   const header = [
     "pair","price","today_high","today_low","change_from_prev_close",
     "adr_used_pct","adr_used","adr_remaining","price_zone",
-    "prev_high","prev_low","prev_close_ny",
+    "prev_high","prev_low","prev_close_ny","prev2_close_ny",
     "pivot","r1","r2","s1","s2",
     "adr20","adr20_pips","atr14","atr14_pips","atr_sl_1_0","atr_sl_1_5","prev_day_range_pct",
     "dxy","dxy_change_pct","us2y","us2y_change","us10y","us10y_change","vix","vix_change_pct",
@@ -201,7 +208,7 @@ const csvEsc = (v) => {
     rows.push([
       code, q.price, q.today_high, q.today_low, q.change_from_prev_close,
       q.adr_used_pct, q.adr_used, q.adr_remaining, q.price_zone,
-      d.prev_high, d.prev_low, d.prev_close_ny,
+      d.prev_high, d.prev_low, d.prev_close_ny, d.prev2_close_ny,
       d.pivot, d.r1, d.r2, d.s1, d.s2,
       d.adr20, d.adr20_pips, d.atr14, d.atr14_pips, d.atr_sl_1_0, d.atr_sl_1_5, d.previous_day_range_pct,
       ms.dxy, ms.dxy_change_pct, ms.us2y, ms.us2y_change, ms.us10y, ms.us10y_change, ms.vix, ms.vix_change_pct,
