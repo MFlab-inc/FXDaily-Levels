@@ -43,6 +43,9 @@ function jstNow(now = new Date()) {
 function jstIso(now = new Date()) {
   return now.toLocaleString("sv-SE", { timeZone: "Asia/Tokyo" }).replace(" ", "T") + "+09:00";
 }
+function fmtDateLocal(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 function fmtHM(d) {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
@@ -72,6 +75,59 @@ async function fetchM5(tdSymbol) {
     o: parseFloat(v.open), h: parseFloat(v.high),
     l: parseFloat(v.low),  c: parseFloat(v.close),
   })).reverse(); // 昇順へ
+}
+
+// ---- チャート用H1系列（Twelve Data 1時間足を直接取得・確定足のみ・最新500本）----
+// dailyのprev_*算出(fetch.js)と同一の1時間足系列 = レポート数値とチャートが同一ソースになる
+async function fetchH1Series(tdSymbol, digits, nowJst) {
+  const url =
+    `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(tdSymbol)}` +
+    `&interval=1h&outputsize=520&timezone=Asia/Tokyo&apikey=${API_KEY}`;
+  const res = await fetch(url);
+  const json = await res.json();
+  if (json.status === "error" || !json.values) {
+    throw new Error(`Twelve Data H1エラー (${tdSymbol}): ${json.message || "no data"}`);
+  }
+  const bars = [];
+  for (const v of json.values) {
+    const t = new Date(v.datetime.replace(" ", "T"));
+    if (t.getTime() + 3600000 > nowJst.getTime()) continue; // 未確定の進行中バーを除外
+    const bar = {
+      time_jst: v.datetime.slice(0, 16),
+      o: round(parseFloat(v.open), digits), h: round(parseFloat(v.high), digits),
+      l: round(parseFloat(v.low), digits),  c: round(parseFloat(v.close), digits),
+    };
+    const vol = parseInt(v.volume, 10);
+    if (Number.isFinite(vol) && vol > 0) bar.v = vol; // 出来高は提供時のみ付与(FXは通常なし)
+    bars.push(bar);
+  }
+  return bars.reverse().slice(-500); // 昇順・最新500本ローリング
+}
+
+// ---- US500（S&P500先物 ES=F・Yahoo 1時間足・出来高付き）----
+async function fetchUS500H1(nowMs) {
+  const url = "https://query1.finance.yahoo.com/v8/finance/chart/ES%3DF?interval=60m&range=60d";
+  const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" } });
+  if (!res.ok) throw new Error(`Yahoo HTTP ${res.status} (ES=F)`);
+  const json = await res.json();
+  const r = json?.chart?.result?.[0];
+  if (!r?.timestamp) throw new Error("Yahoo ES=F データなし");
+  const q = r.indicators.quote[0];
+  const pad = (n) => String(n).padStart(2, "0");
+  const bars = [];
+  for (let i = 0; i < r.timestamp.length; i++) {
+    if (q.open[i] == null || q.close[i] == null) continue;
+    const ms = r.timestamp[i] * 1000;
+    if (ms + 3600000 > nowMs) continue; // 確定足のみ
+    const j = new Date(new Date(ms).toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
+    const bar = {
+      time_jst: `${j.getFullYear()}-${pad(j.getMonth() + 1)}-${pad(j.getDate())} ${pad(j.getHours())}:${pad(j.getMinutes())}`,
+      o: round(q.open[i], 2), h: round(q.high[i], 2), l: round(q.low[i], 2), c: round(q.close[i], 2),
+    };
+    if (Number.isFinite(q.volume[i]) && q.volume[i] > 0) bar.v = q.volume[i];
+    bars.push(bar);
+  }
+  return bars.slice(-500);
 }
 
 // ---- M5 → 上位足へ集計（JSTの区切り、確定足のみ）----
@@ -306,6 +362,8 @@ async function main() {
     pairs: {},
     errors: [],
   };
+  const h1Bars = {}; // チャート用H1確定足(C機能)
+  const h1Errors = [];
 
   for (const p of PAIRS) {
     try {
@@ -345,6 +403,12 @@ async function main() {
       };
       if (!stale && degraded.length) entry.data_status = "DEGRADED";
       out.pairs[p.code] = entry;
+      try {
+        h1Bars[p.code] = await fetchH1Series(p.td, p.digits, nJst);
+      } catch (e) {
+        console.error(`FAIL(H1系列): ${p.code} - ${e.message}`);
+        h1Errors.push(`${p.code}: ${e.message}`);
+      }
       console.log(`OK: ${p.code} gate=${entry.gate.state} age=${entry.bar_age_min}分`);
     } catch (e) {
       console.error(`FAIL: ${p.code} - ${e.message}`);
@@ -356,6 +420,63 @@ async function main() {
 
   fs.mkdirSync(dataDir, { recursive: true });
   fs.writeFileSync(path.join(dataDir, "daytrade-context.json"), JSON.stringify(out, null, 2));
+  try {
+    h1Bars["US500"] = await fetchUS500H1(now.getTime());
+    console.log(`OK: US500 H1 ${h1Bars["US500"].length}本`);
+  } catch (e) {
+    console.error(`FAIL(H1系列): US500 - ${e.message}`);
+    h1Errors.push(`US500: ${e.message}`);
+  }
+  // 受け入れassert: H1系列からNY17区切りで前営業日を再集計し、daily-levelsのprev_*と照合
+  // (同一系列なら常に一致するはず。不一致=データ異常の自動検知)
+  const consistency = { checked_against: null, results: {} };
+  try {
+    const dlPath = path.join(dataDir, "daily-levels.json");
+    if (fs.existsSync(dlPath)) {
+      const dl = JSON.parse(fs.readFileSync(dlPath, "utf8"));
+      consistency.checked_against = { daily_as_of: dl.as_of, session_date: dl.session_date };
+      const boundaryH = localHourInJst("America/New_York", 17);
+      for (const [code, bars] of Object.entries(h1Bars)) {
+        const ref = dl.pairs?.[code];
+        if (!ref || ref.prev_high == null) { consistency.results[code] = { status: "skipped", reason: "no_daily_ref" }; continue; }
+        const targetDate = ref.session_date || dl.session_date; // US500は自前のsession_dateを持つ
+        let hi = null, lo = null, cl = null, n = 0;
+        for (const b of bars) {
+          const t = new Date(b.time_jst.replace(" ", "T") + ":00");
+          const sd = fmtDateLocal(new Date(t.getTime() - boundaryH * 3600000)).slice(0, 10);
+          if (sd !== targetDate) continue;
+          hi = hi === null ? b.h : Math.max(hi, b.h);
+          lo = lo === null ? b.l : Math.min(lo, b.l);
+          cl = b.c; n++;
+        }
+        if (n < 6) { consistency.results[code] = { status: "skipped", reason: `bars_insufficient(${n})` }; continue; }
+        const eq = (a, b) => Math.abs(a - b) < 1e-9;
+        if (eq(hi, ref.prev_high) && eq(lo, ref.prev_low) && eq(cl, ref.prev_close_ny)) {
+          consistency.results[code] = { status: "match", bars: n };
+        } else {
+          consistency.results[code] = {
+            status: "mismatch", bars: n,
+            h1_derived: { high: hi, low: lo, close: cl },
+            daily_ref: { high: ref.prev_high, low: ref.prev_low, close: ref.prev_close_ny },
+          };
+          h1Errors.push(`consistency mismatch: ${code}`);
+          console.error(`整合NG: ${code} H1由来 H${hi}/L${lo}/C${cl} vs daily H${ref.prev_high}/L${ref.prev_low}/C${ref.prev_close_ny}`);
+        }
+      }
+    } else {
+      consistency.results = { all: { status: "skipped", reason: "daily-levels.json未生成" } };
+    }
+  } catch (e) {
+    consistency.results = { all: { status: "skipped", reason: e.message } };
+  }
+
+  fs.writeFileSync(path.join(dataDir, "h1-bars.json"), JSON.stringify({
+    as_of: out.as_of, timezone: "Asia/Tokyo",
+    note: "チャート描画用H1確定足(昇順・最新500本ローリング)。12銘柄はTwelve Data 1時間足(dailyレベル算出と同一系列・JST表記・FXのため出来高なし)。US500はYahoo ES=F先物(出来高v付き)。未確定の進行中バーは含まない。",
+    errors: h1Errors,
+    consistency_check: consistency,
+    pairs: h1Bars,
+  }, null, 1));
   console.log("保存完了: data/daytrade-context.json");
   if (Object.keys(out.pairs).length === 0) process.exit(1);
 }
