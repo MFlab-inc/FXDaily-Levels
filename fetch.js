@@ -85,6 +85,7 @@ function computeIndicators(bars) {
     throw new Error(`確定足が不足しています（${bars.length}本、最低21本必要）`);
   }
   const prev = bars[0];
+  const prev2 = bars[1]; // 前々日（存在は本数チェック済みで保証）
   const adr20 =
     bars.slice(0, 20).reduce((s, b) => s + (b.high - b.low), 0) / 20;
 
@@ -107,6 +108,8 @@ function computeIndicators(bars) {
     prevHigh: prev.high,
     prevLow: prev.low,
     prevClose: prev.close,
+    prev2Close: prev2.close,
+    prev2Date: prev2.date,
     adr20,
     atr14: atr,
     pivot: P,
@@ -277,6 +280,33 @@ async function fetchCalendar(todayJst) {
 }
 
 // ---- メイン ----
+// ---- US500（ES=F先物・Yahoo 1時間足→NY17区切り日足）----
+// h1-bars.jsonのUS500チャートと同一系列から水準を算出し、チャートとレベルの完全一致を保証する
+async function fetchUS500DailyBars(cutoffDate) {
+  const url = "https://query1.finance.yahoo.com/v8/finance/chart/ES%3DF?interval=60m&range=60d";
+  const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" } });
+  if (!res.ok) throw new Error(`Yahoo HTTP ${res.status} (ES=F)`);
+  const json = await res.json();
+  const r = json?.chart?.result?.[0];
+  if (!r?.timestamp) throw new Error("Yahoo ES=F データなし");
+  const q = r.indicators.quote[0];
+  const pad = (n) => String(n).padStart(2, "0");
+  const hours = [];
+  for (let i = 0; i < r.timestamp.length; i++) {
+    if (q.open[i] == null || q.close[i] == null) continue;
+    // NYローカル表記に変換してaggregateToNySessionsへ渡す（Twelve Data 1h と同形式）
+    const d = new Date(new Date(r.timestamp[i] * 1000).toLocaleString("en-US", { timeZone: "America/New_York" }));
+    hours.push({
+      datetime: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:00`,
+      open: q.open[i], high: q.high[i], low: q.low[i], close: q.close[i],
+    });
+  }
+  const daily = aggregateToNySessions(hours)
+    .filter((b) => b.date <= cutoffDate)
+    .filter((b) => b.bars >= 6);
+  return daily.reverse(); // computeIndicatorsは新しい順を期待
+}
+
 async function main() {
   const now = new Date();
   const cutoff = lastCompletedSessionDate(now);
@@ -301,6 +331,8 @@ async function main() {
         prevHigh: round(ind.prevHigh, p.digits),
         prevLow: round(ind.prevLow, p.digits),
         prevClose: round(ind.prevClose, p.digits),
+        prev2Close: round(ind.prev2Close, p.digits),
+        prev2Date: ind.prev2Date,
         adr20: round(ind.adr20, p.digits),
         atr14: round(ind.atr14, p.digits),
         pivot: round(ind.pivot, p.digits),
@@ -383,6 +415,8 @@ async function main() {
       prev_high: d.prevHigh,
       prev_low: d.prevLow,
       prev_close_ny: d.prevClose,
+      prev2_close_ny: d.prev2Close,   // 前々日NY終値
+      prev2_session_date: d.prev2Date,
       adr20: d.adr20,
       adr20_pips: d.adr20Pips,
       atr14: d.atr14,
@@ -396,6 +430,36 @@ async function main() {
       s1: d.s1, s2: d.s2,
     };
   }
+  // US500（ES=F系列・チャートh1-bars.jsonと同一ソース）
+  try {
+    const usBars = await fetchUS500DailyBars(cutoff);
+    const ind = computeIndicators(usBars);
+    const dg = 2;
+    dailyLevels.pairs["US500"] = {
+      prev_high: round(ind.prevHigh, dg),
+      prev_low: round(ind.prevLow, dg),
+      prev_close_ny: round(ind.prevClose, dg),
+      prev2_close_ny: round(ind.prev2Close, dg),
+      prev2_session_date: ind.prev2Date,
+      adr20: round(ind.adr20, dg),
+      adr20_pips: round(ind.adr20, 1), // 指数はポイント表記(1pt=1)
+      atr14: round(ind.atr14, dg),
+      atr14_pips: round(ind.atr14, 1),
+      atr_sl_1_0: round(ind.atr14 * 1.0, dg),
+      atr_sl_1_5: round(ind.atr14 * 1.5, dg),
+      previous_day_range_pct: ind.adr20 > 0 ? round(((ind.prevHigh - ind.prevLow) / ind.adr20) * 100, 1) : null,
+      pivot: round(ind.pivot, dg),
+      r1: round(ind.r1, dg), s1: round(ind.s1, dg),
+      r2: round(ind.r2, dg), s2: round(ind.s2, dg),
+      session_date: ind.sessionDate,
+      source: "yahoo:ES=F(先物)", // 12銘柄(Twelve Data)と系列が異なる旨を明示
+    };
+    console.log(`OK: US500 levels (session=${ind.sessionDate})`);
+  } catch (e) {
+    console.error(`FAIL: US500 levels - ${e.message}`);
+    out.errors.push(`US500: ${e.message}`);
+  }
+
   fs.writeFileSync(path.join(dataDir, "daily-levels.json"), JSON.stringify(dailyLevels, null, 2));
 
   // 3) GPT用 economic-calendar.json
