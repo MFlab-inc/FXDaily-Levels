@@ -102,7 +102,7 @@ async function fetchH1Series(tdSymbol, digits, nowJst) {
   for (const v of json.values) {
     const t = new Date(v.datetime.replace(" ", "T"));
     if (t.getTime() + 3600000 > nowJst.getTime()) continue; // 未確定の進行中バーを除外
-    if (isFxClosed(t)) continue; // 休場帯の参考値バーを除外(実取引時間のみ・先物系と統一)
+    if (isFxClosed(t)) continue; // FX休場帯(金17:00 NY〜日17:00 NY)の参考値バーを除外。実取引時間のみ残す
     const bar = {
       time_jst: v.datetime.slice(0, 16),
       o: round(parseFloat(v.open), digits), h: round(parseFloat(v.high), digits),
@@ -115,14 +115,16 @@ async function fetchH1Series(tdSymbol, digits, nowJst) {
   return bars.reverse().slice(-500); // 昇順・最新500本ローリング
 }
 
-// ---- US500（S&P500先物 ES=F・Yahoo 1時間足・出来高付き）----
+// ---- US500（S&P500現物 ^GSPC・Yahoo 1時間足）----
+// 現物は米国立会時間(9:30-16:00 ET)のみのため1日約7本。500本を満たすには
+// 約72立会日≒100暦日が必要なため range=180d とする（先物時代は60dで足りていた）。
 async function fetchUS500H1(nowMs) {
-  const url = "https://query1.finance.yahoo.com/v8/finance/chart/ES%3DF?interval=60m&range=60d";
+  const url = "https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=60m&range=180d";
   const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" } });
-  if (!res.ok) throw new Error(`Yahoo HTTP ${res.status} (ES=F)`);
+  if (!res.ok) throw new Error(`Yahoo HTTP ${res.status} (^GSPC)`);
   const json = await res.json();
   const r = json?.chart?.result?.[0];
-  if (!r?.timestamp) throw new Error("Yahoo ES=F データなし");
+  if (!r?.timestamp) throw new Error("Yahoo ^GSPC データなし");
   const q = r.indicators.quote[0];
   const pad = (n) => String(n).padStart(2, "0");
   const bars = [];
@@ -483,7 +485,7 @@ async function main() {
 
   fs.writeFileSync(path.join(dataDir, "h1-bars.json"), JSON.stringify({
     as_of: out.as_of, timezone: "Asia/Tokyo",
-    note: "チャート描画用H1確定足(昇順・最新500本ローリング)。12銘柄はTwelve Data 1時間足(dailyレベル算出と同一系列・JST表記・FXのため出来高なし)。US500はYahoo ES=F先物(出来高v付き)。未確定の進行中バーは含まない。",
+    note: "チャート描画用H1確定足(昇順・最新500本ローリング)。12銘柄はTwelve Data 1時間足(dailyレベル算出と同一系列・JST表記・FXのため出来高なし)。US500はYahoo ^GSPC現物(米国立会時間9:30-16:00 ETのみのため1日約7本・週約35本)。未確定の進行中バーは含まない。",
     errors: h1Errors,
     consistency_check: consistency,
     pairs: h1Bars,
