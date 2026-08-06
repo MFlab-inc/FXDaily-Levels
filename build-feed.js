@@ -59,7 +59,7 @@ summary += `DXY: ${ms.dxy} (${ms.dxy_change_pct}%) | US2Y: ${ms.us2y ?? "-"}%${u
 const ix = (c) => intra?.sentiment?.[c];
 if (ix("US500")) {
   const f = (c) => { const s = ix(c); return s ? `${c}: ${s.value} (${s.changePct >= 0 ? "+" : ""}${s.changePct}%)` : `${c}: -`; };
-  summary += `株価指数(先物ベース): ${f("US30")} | ${f("US500")} | ${f("US100")}\n\n`;
+  summary += `株価指数(現物ベース): ${f("US30")} | ${f("US500")} | ${f("US100")}\n\n`;
 }
 
 
