@@ -31,8 +31,12 @@ const PAIRS = [
   { code: "USDCHF", td: "USD/CHF", pip: 0.0001, digits: 5 },
   { code: "NZDUSD", td: "NZD/USD", pip: 0.0001, digits: 5 },
   { code: "AUDNZD", td: "AUD/NZD", pip: 0.0001, digits: 5 },
-  { code: "XAUUSD", td: "XAU/USD", pip: 0.1,    digits: 2 }, // 0.1ドル=1pip
-  { code: "USOIL",  td: "WTI/USD", pip: 0.01,   digits: 2 }, // WTIスポット。0.01ドル=1pip(要ブローカー確認)
+  // 金と原油は「スポット」の意味が異なるため srcNote で明示的に区別する。
+  //   金  : 実物の連続市場（ロンドン現物・LBMA のOTC）が存在し、その価格そのもの。COMEX金先物とは別物。
+  //   原油: 実物WTIに連続的な取引レートは存在せず、期近先物から作られた連続価格。
+  //         MT4/MT5 の USOIL と同性質。限月指定の NYMEX CL1!（清算値）とは別物。
+  { code: "XAUUSD", td: "XAU/USD", pip: 0.1,    digits: 2, srcNote: "ロンドン現物スポット" }, // 0.1ドル=1pip
+  { code: "USOIL",  td: "WTI/USD", pip: 0.01,   digits: 2, srcNote: "WTI期近先物連動" },     // 0.01ドル=1pip（MT4/MT5と誤差0.01ドルで実測検証済み）
 ];
 
 // ---- 市場心理（Yahoo Finance 非公式API）----
@@ -280,8 +284,9 @@ async function fetchCalendar(todayJst) {
 }
 
 // ---- メイン ----
-// ---- 株価指数（Yahoo先物 1時間足→NY17区切り日足）----
-// US500はh1-bars.jsonのチャートと同一系列(ES=F)。US30/US100はdaily水準のみ(チャート化なし)
+// ---- 株価指数（Yahoo現物 1時間足→NY17区切り日足）----
+// US500はh1-bars.jsonのチャートと同一系列(^GSPC)。US30/US100はdaily水準のみ(チャート化なし)
+// 現物は米国立会時間(9:30-16:00 ET)のみのため1日約7本。60d≒42立会日で日足集計には十分。
 async function fetchIndexDailyBars(yahooSymbol, cutoffDate) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?interval=60m&range=60d`;
   const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" } });
@@ -428,13 +433,16 @@ async function main() {
       pivot: d.pivot,
       r1: d.r1, r2: d.r2,
       s1: d.s1, s2: d.s2,
+      // 出典の自己記述（株価指数と同形式）。金・原油は系列の性質を srcNote で併記する
+      source: `twelvedata:${p.td}${p.srcNote ? `(${p.srcNote})` : ""}`,
     };
   }
-  // 株価指数3種（Yahoo先物系列・sourceで自己記述。US500はh1-bars.jsonのチャートと同一ソース）
+  // 株価指数3種（Yahoo現物系列・sourceで自己記述。US500はh1-bars.jsonのチャートと同一ソース）
+  // ^DJI/^GSPC/^NDX はそれぞれ YM=F/ES=F/NQ=F と同一指数の現物。^IXIC(ナスダック総合)は別指数のため使用しない。
   const INDICES = [
-    { code: "US500", yahoo: "ES=F", digits: 2 },
-    { code: "US30",  yahoo: "YM=F", digits: 0 },
-    { code: "US100", yahoo: "NQ=F", digits: 2 },
+    { code: "US500", yahoo: "^GSPC", digits: 2 },
+    { code: "US30",  yahoo: "^DJI",  digits: 0 },
+    { code: "US100", yahoo: "^NDX",  digits: 2 },
   ];
   for (const ix of INDICES) {
     try {
@@ -458,7 +466,7 @@ async function main() {
         r1: round(ind.r1, dg), s1: round(ind.s1, dg),
         r2: round(ind.r2, dg), s2: round(ind.s2, dg),
         session_date: ind.sessionDate,
-        source: `yahoo:${ix.yahoo}(先物)`,
+        source: `yahoo:${ix.yahoo}(現物)`,
       };
       console.log(`OK: ${ix.code} levels (session=${ind.sessionDate})`);
       await sleep(300);
