@@ -215,7 +215,7 @@ function renderSentiment(data) {
       const sign = s.change >= 0 ? "+" : "";
       const suffix = (code === "US10Y" || code === "US2Y") ? "%" : "";
       div.innerHTML = `
-        <div class="label">${s.label}（${code}）</div>
+        <div class="label">${s.label.includes(code) ? s.label : `${s.label}（${code}）`}</div>
         <div class="value">${s.value}${suffix}</div>
         <div class="chg ${cls}">${sign}${s.change}（${sign}${s.changePct}%）</div>`;
     }
