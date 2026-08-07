@@ -42,9 +42,11 @@ const SENTIMENT = [
   { code: "VIX",   symbol: "^VIX",     label: "VIX", divisor: 1,  digits: 2 },
   // 株価指数は現物系列。^DJI/^GSPC/^NDX は YM=F/ES=F/NQ=F と同一指数の現物。
   // ^IXIC(ナスダック総合)はナスダック100とは別指数のため使用しない。
-  { code: "US30",  symbol: "^DJI",     label: "US30(ダウ現物)", divisor: 1, digits: 0 },
-  { code: "US500", symbol: "^GSPC",    label: "US500(S&P現物)", divisor: 1, digits: 2 },
-  { code: "US100", symbol: "^NDX",     label: "US100(NQ100現物)", divisor: 1, digits: 2 },
+  // label にコード名(US30等)を含めないこと。ダッシュボードが「ラベル（コード）」形式で
+  // 描画するため、含めると US100(NQ100現物)（US100）のように二重表示になる。
+  { code: "US30",  symbol: "^DJI",     label: "ダウ平均・現物", divisor: 1, digits: 0 },
+  { code: "US500", symbol: "^GSPC",    label: "S&P500・現物", divisor: 1, digits: 2 },
+  { code: "US100", symbol: "^NDX",     label: "ナスダック100・現物", divisor: 1, digits: 2 },
 ];
 
 async function fetchYahoo(item) {
