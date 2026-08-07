@@ -287,6 +287,10 @@ function renderPairs() {
         <tr><td class="pv">Pivot</td><td class="pv">${fmt(p.pivot, code)}</td></tr>
         <tr><td class="s1">S1</td><td class="s1">${fmt(p.s1, code)}</td></tr>
         <tr><td class="s2">S2</td><td class="s2">${fmt(s2, code)}</td></tr>
+        ${p.weeklyPivot != null ? `
+        <tr><td class="r1" style="border-top:1px solid rgba(128,128,128,.35)">週R1</td><td class="r1" style="border-top:1px solid rgba(128,128,128,.35)">${fmt(p.weeklyR1, code)}</td></tr>
+        <tr><td class="pv">週Pivot</td><td class="pv">${fmt(p.weeklyPivot, code)}</td></tr>
+        <tr><td class="s1">週S1</td><td class="s1">${fmt(p.weeklyS1, code)}</td></tr>` : ""}
         <tr><td>ADR(20)</td><td>${fmt(p.adr20, code)}${pips(p.adr20Pips)}</td></tr>
         <tr><td>ATR(14)</td><td>${fmt(p.atr14, code)}${pips(p.atr14Pips)}</td></tr>
       </table>`;
