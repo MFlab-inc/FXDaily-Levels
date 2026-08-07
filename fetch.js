@@ -124,6 +124,51 @@ function computeIndicators(bars) {
   };
 }
 
+// ---- 週足ピボット（前週のH/L/Cから算出。日足と同じクラシック方式）----
+// 週の区切りはFX週（日17:00 NY〜金17:00 NY）。日足セッションが既にNY17:00区切りで
+// 月〜金ラベルになっているため、同一週の月曜ラベル〜金曜ラベルが1週間に対応する。
+function mondayOf(dateStr) {
+  const d = new Date(`${dateStr}T00:00:00`);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // 月曜まで戻す
+  return fmtDateLocal(d);
+}
+
+// NY現在時刻がFX休場帯（金17:00〜日17:00）にあるか。
+// 休場帯 = 直近セッションが属する週は既に閉じている、と判定できる。
+// 曜日ではなく時刻で判定するため、金曜が休場（グッドフライデー等）でも正しく切り替わる。
+function isFxWeekClosed(now) {
+  const ny = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+  const dow = ny.getDay(), h = ny.getHours();
+  return (dow === 5 && h >= 17) || dow === 6 || (dow === 0 && h < 17);
+}
+
+// barsDesc: 新しい順の日足セッション（computeIndicatorsと同じ入力）
+function computeWeeklyPivot(barsDesc, weekClosed) {
+  if (!barsDesc.length) return null;
+  const latestWeek = mondayOf(barsDesc[0].date);
+  let targetWeek = latestWeek;
+  if (!weekClosed) {
+    // 週の途中は今週が未確定のため、1つ前の週を対象にする
+    const prev = barsDesc.find((b) => mondayOf(b.date) !== latestWeek);
+    if (!prev) return null; // 前週分のデータが無い
+    targetWeek = mondayOf(prev.date);
+  }
+  const week = barsDesc.filter((b) => mondayOf(b.date) === targetWeek);
+  if (!week.length) return null;
+  const high = Math.max(...week.map((b) => b.high));
+  const low = Math.min(...week.map((b) => b.low));
+  const close = week[0].close; // 新しい順なので週内の最終セッション終値
+  const P = (high + low + close) / 3;
+  return {
+    pivot: P,
+    r1: 2 * P - low,
+    s1: 2 * P - high,
+    from: week[week.length - 1].date,
+    to: week[0].date,
+    sessions: week.length, // 祝日等で4日以下になることがある
+  };
+}
+
 // ---- Twelve Data から日足を構築（1時間足→NY17:00区切りで自前集計）----
 // 理由: Twelve Dataの1day足はtimezone指定が無視され取引所ローカル時間(FX=Australia/Sydney)
 // 区切りになるため、NY17:00クローズの日足は1時間足(timezone有効)から集計する。
@@ -316,7 +361,9 @@ async function main() {
   const now = new Date();
   const cutoff = lastCompletedSessionDate(now);
   const today = jstToday(now);
-  console.log(`実行日(JST): ${today} / 確定セッション: ${cutoff}`);
+  // 週足ピボットの対象週判定に使用（休場帯なら直近セッションの週が確定済み）
+  const weekClosed = isFxWeekClosed(now);
+  console.log(`実行日(JST): ${today} / 確定セッション: ${cutoff} / FX週確定: ${weekClosed}`);
 
   const out = {
     date: today,
@@ -331,8 +378,13 @@ async function main() {
     try {
       const bars = await fetchPairBars(p.td, cutoff);
       const ind = computeIndicators(bars);
+      const wk = computeWeeklyPivot(bars, weekClosed);
       out.pairs[p.code] = {
         sessionDate: ind.sessionDate,
+        weeklyPivot: wk ? round(wk.pivot, p.digits) : null,
+        weeklyR1: wk ? round(wk.r1, p.digits) : null,
+        weeklyS1: wk ? round(wk.s1, p.digits) : null,
+        weeklyBaseWeek: wk ? `${wk.from}〜${wk.to}` : null,
         prevHigh: round(ind.prevHigh, p.digits),
         prevLow: round(ind.prevLow, p.digits),
         prevClose: round(ind.prevClose, p.digits),
@@ -433,6 +485,11 @@ async function main() {
       pivot: d.pivot,
       r1: d.r1, r2: d.r2,
       s1: d.s1, s2: d.s2,
+      // 週足ピボット（前週H/L/Cのクラシック方式・R1/Pivot/S1の3点）
+      weekly_pivot: d.weeklyPivot,
+      weekly_r1: d.weeklyR1,
+      weekly_s1: d.weeklyS1,
+      weekly_base_week: d.weeklyBaseWeek, // 算出根拠の週（監査用）
       // 出典の自己記述（株価指数と同形式）。金・原油は系列の性質を srcNote で併記する
       source: `twelvedata:${p.td}${p.srcNote ? `(${p.srcNote})` : ""}`,
     };
@@ -448,6 +505,7 @@ async function main() {
     try {
       const bars = await fetchIndexDailyBars(ix.yahoo, cutoff);
       const ind = computeIndicators(bars);
+      const wk = computeWeeklyPivot(bars, weekClosed);
       const dg = ix.digits;
       dailyLevels.pairs[ix.code] = {
         prev_high: round(ind.prevHigh, dg),
@@ -465,6 +523,11 @@ async function main() {
         pivot: round(ind.pivot, dg),
         r1: round(ind.r1, dg), s1: round(ind.s1, dg),
         r2: round(ind.r2, dg), s2: round(ind.s2, dg),
+        // 週足ピボット（前週H/L/Cのクラシック方式・R1/Pivot/S1の3点）
+        weekly_pivot: wk ? round(wk.pivot, dg) : null,
+        weekly_r1: wk ? round(wk.r1, dg) : null,
+        weekly_s1: wk ? round(wk.s1, dg) : null,
+        weekly_base_week: wk ? `${wk.from}〜${wk.to}` : null,
         session_date: ind.sessionDate,
         source: `yahoo:${ix.yahoo}(現物)`,
       };
