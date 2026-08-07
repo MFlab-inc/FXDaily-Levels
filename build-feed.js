@@ -81,6 +81,10 @@ for (const code of PAIR_ORDER) {
     (d.prev2_close_ny != null ? ` | 前々日NY終値: ${d.prev2_close_ny}` : "") +
     (d.previous_day_range_pct != null ? ` | 前日レンジ/ADR: ${d.previous_day_range_pct}%` : "") + `\n`;
   summary += `  Pivot: ${d.pivot} | R1 ${d.r1} / R2 ${d.r2} | S1 ${d.s1} / S2 ${d.s2}\n`;
+  if (d.weekly_pivot != null) {
+    summary += `  週足 Pivot: ${d.weekly_pivot} | R1 ${d.weekly_r1} | S1 ${d.weekly_s1}` +
+      (d.weekly_base_week ? ` (対象週: ${d.weekly_base_week})` : "") + `\n`;
+  }
   summary += `  ADR20: ${d.adr20}${d.adr20_pips ? ` (${d.adr20_pips}p)` : ""} | ATR14: ${d.atr14}${d.atr14_pips ? ` (${d.atr14_pips}p)` : ""} | ATR_SL目安: ${d.atr_sl_1_0}〜${d.atr_sl_1_5}\n`;
 }
 
