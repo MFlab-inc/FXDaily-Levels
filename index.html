@@ -279,6 +279,7 @@ function renderPairs() {
       ${todayHtml}
       ${adrHtml}
       <table class="levels">
+        ${p.prevOpen != null ? `<tr><td>前日始値</td><td>${fmt(p.prevOpen, code)}</td></tr>` : ""}
         <tr><td>前日高値</td><td>${fmt(p.prevHigh, code)}</td></tr>
         <tr><td>前日安値</td><td>${fmt(p.prevLow, code)}</td></tr>
         <tr><td>NY終値</td><td>${fmt(p.prevClose, code)}</td></tr>
@@ -288,7 +289,8 @@ function renderPairs() {
         <tr><td class="s1">S1</td><td class="s1">${fmt(p.s1, code)}</td></tr>
         <tr><td class="s2">S2</td><td class="s2">${fmt(s2, code)}</td></tr>
         ${p.weeklyPivot != null ? `
-        <tr><td class="r1" style="border-top:1px solid rgba(128,128,128,.35)">週R1</td><td class="r1" style="border-top:1px solid rgba(128,128,128,.35)">${fmt(p.weeklyR1, code)}</td></tr>
+        <tr><td style="border-top:1px solid rgba(128,128,128,.35)">週始値</td><td style="border-top:1px solid rgba(128,128,128,.35)">${fmt(p.weeklyOpen, code)}</td></tr>
+        <tr><td class="r1">週R1</td><td class="r1">${fmt(p.weeklyR1, code)}</td></tr>
         <tr><td class="pv">週Pivot</td><td class="pv">${fmt(p.weeklyPivot, code)}</td></tr>
         <tr><td class="s1">週S1</td><td class="s1">${fmt(p.weeklyS1, code)}</td></tr>` : ""}
         <tr><td>ADR(20)</td><td>${fmt(p.adr20, code)}${pips(p.adr20Pips)}</td></tr>
