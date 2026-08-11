@@ -109,6 +109,7 @@ function computeIndicators(bars) {
   const range = prev.high - prev.low;
   return {
     sessionDate: prev.date,
+    prevOpen: prev.open,
     prevHigh: prev.high,
     prevLow: prev.low,
     prevClose: prev.close,
@@ -158,8 +159,10 @@ function computeWeeklyPivot(barsDesc, weekClosed) {
   const high = Math.max(...week.map((b) => b.high));
   const low = Math.min(...week.map((b) => b.low));
   const close = week[0].close; // 新しい順なので週内の最終セッション終値
+  const open = week[week.length - 1].open; // 新しい順なので配列末尾が週内の最初のセッション始値
   const P = (high + low + close) / 3;
   return {
+    open,
     pivot: P,
     r1: 2 * P - low,
     s1: 2 * P - high,
@@ -381,10 +384,12 @@ async function main() {
       const wk = computeWeeklyPivot(bars, weekClosed);
       out.pairs[p.code] = {
         sessionDate: ind.sessionDate,
+        weeklyOpen: wk ? round(wk.open, p.digits) : null,
         weeklyPivot: wk ? round(wk.pivot, p.digits) : null,
         weeklyR1: wk ? round(wk.r1, p.digits) : null,
         weeklyS1: wk ? round(wk.s1, p.digits) : null,
         weeklyBaseWeek: wk ? `${wk.from}〜${wk.to}` : null,
+        prevOpen: round(ind.prevOpen, p.digits),
         prevHigh: round(ind.prevHigh, p.digits),
         prevLow: round(ind.prevLow, p.digits),
         prevClose: round(ind.prevClose, p.digits),
@@ -469,6 +474,7 @@ async function main() {
     const d = out.pairs[p.code];
     if (!d) continue;
     dailyLevels.pairs[p.code] = {
+      prev_open: d.prevOpen,
       prev_high: d.prevHigh,
       prev_low: d.prevLow,
       prev_close_ny: d.prevClose,
@@ -485,7 +491,8 @@ async function main() {
       pivot: d.pivot,
       r1: d.r1, r2: d.r2,
       s1: d.s1, s2: d.s2,
-      // 週足ピボット（前週H/L/Cのクラシック方式・R1/Pivot/S1の3点）
+      // 週足ピボット（前週H/L/Cのクラシック方式・R1/Pivot/S1の3点）+ 週の始値
+      weekly_open: d.weeklyOpen,
       weekly_pivot: d.weeklyPivot,
       weekly_r1: d.weeklyR1,
       weekly_s1: d.weeklyS1,
@@ -508,6 +515,7 @@ async function main() {
       const wk = computeWeeklyPivot(bars, weekClosed);
       const dg = ix.digits;
       dailyLevels.pairs[ix.code] = {
+        prev_open: round(ind.prevOpen, dg),
         prev_high: round(ind.prevHigh, dg),
         prev_low: round(ind.prevLow, dg),
         prev_close_ny: round(ind.prevClose, dg),
@@ -523,7 +531,8 @@ async function main() {
         pivot: round(ind.pivot, dg),
         r1: round(ind.r1, dg), s1: round(ind.s1, dg),
         r2: round(ind.r2, dg), s2: round(ind.s2, dg),
-        // 週足ピボット（前週H/L/Cのクラシック方式・R1/Pivot/S1の3点）
+        // 週足ピボット（前週H/L/Cのクラシック方式・R1/Pivot/S1の3点）+ 週の始値
+        weekly_open: wk ? round(wk.open, dg) : null,
         weekly_pivot: wk ? round(wk.pivot, dg) : null,
         weekly_r1: wk ? round(wk.r1, dg) : null,
         weekly_s1: wk ? round(wk.s1, dg) : null,
