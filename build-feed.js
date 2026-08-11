@@ -223,10 +223,14 @@ const csvEsc = (v) => {
 }
 
 // 2) history.csv: 日次履歴（日付×ペア、確定足ベース）
+// prev_open以降は末尾に追加した列（既存A〜N列の位置は変えない。既存のシート連携・列参照を壊さないため）。
+// weekly_*は週足のため月〜金で同じ値が続く（仕様どおり。集計ミスではない）。
+// 2026-08-08以前の日付は本機能追加前のデータのため空欄になる。
 {
   const header = [
     "date","pair","session_date","prev_high","prev_low","close_ny",
     "adr20","atr14","pivot","r1","r2","s1","s2","range_pct",
+    "prev_open","weekly_open","weekly_pivot","weekly_r1","weekly_s1","weekly_base_week",
   ];
   const rows = [header.join(",")];
   const idx = readJson("index.json");
@@ -244,6 +248,7 @@ const csvEsc = (v) => {
       rows.push([
         dt, code, p.sessionDate, p.prevHigh, p.prevLow, p.prevClose,
         p.adr20, p.atr14, p.pivot, p.r1, r2, p.s1, s2, rangePct,
+        p.prevOpen ?? "", p.weeklyOpen ?? "", p.weeklyPivot ?? "", p.weeklyR1 ?? "", p.weeklyS1 ?? "", p.weeklyBaseWeek ?? "",
       ].map(csvEsc).join(","));
     }
   }
