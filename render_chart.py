@@ -172,15 +172,70 @@ def main():
     h1 = json.loads(Path('data/h1-bars.json').read_text())
 
     # ゲート1: フィード側assert（errors空 かつ 全銘柄status=match を必須）
-    errs = h1.get('errors') or []
-    if errs:
-        sys.exit(f'[GATE1] h1-bars.json の errors が空でないため中止: {errs}')
     results = h1.get('consistency_check', {}).get('results', {})
     if not results:
         sys.exit('[GATE1] consistency_check.results が存在しないため中止')
-    not_match = {k: v.get('status') for k, v in results.items() if v.get('status') != 'match'}
+
+    # 現物指数（US500/US30/US100）は「公式終値＝クロージング・オークションの約定値」であり、
+    # 1時間足の最終バーの終値からは原理的に再現できない（例：2026-08-12 の US500 は
+    # 高値・安値が完全一致で終値のみ 7727.41 対 7728.2＝0.010% ずれ）。
+    # これを一律 mismatch として扱うと、チャート化していない銘柄が毎朝パイプライン全体を
+    # 止めることになる。恒久対策はフィード側で現物指数を検算対象から外すこと。
+    # それまでの措置として、チャート非対象銘柄に限り小さな乖離を許容する。
+    # ※チャートを描く12銘柄（REQUIRED_H1）は24時間取引で終値が一意に決まるため、
+    #   従来どおり乖離ゼロを要求する（緩めない）。
+    NON_CHART_TOL_PCT = 0.05
+
+    def _tolerable(sym):
+        """チャート非対象銘柄の不一致が、終値の丸め相当の乖離に収まっているか。"""
+        if sym in REQUIRED_H1:
+            return False, 'チャート対象銘柄'
+        v = results.get(sym, {})
+        # 許容するのは「検算した結果わずかにずれた」場合だけ。
+        # skipped 等の「そもそも検算していない」状態は、乖離が算出できてしまう場合でも必ず止める。
+        if v.get('status') != 'mismatch':
+            return False, f"status={v.get('status')}（検算されていない）"
+        d, ref = v.get('h1_derived'), v.get('daily_ref')
+        if not isinstance(d, dict) or not isinstance(ref, dict):
+            return False, '乖離を数値で確認できない'
+        worst, worst_k = 0.0, ''
+        for k in ('high', 'low', 'close'):
+            a, b = d.get(k), ref.get(k)
+            if not isinstance(a, (int, float)) or not isinstance(b, (int, float)) or not b:
+                return False, f'{k} が数値でない'
+            r = abs(a - b) / abs(b) * 100
+            if r > worst: worst, worst_k = r, k
+        if worst > NON_CHART_TOL_PCT:
+            return False, f'{worst_k} の乖離 {worst:.4f}% が許容 {NON_CHART_TOL_PCT}% 超'
+        return True, f'最大乖離 {worst:.4f}%（{worst_k}）'
+
+    warned = []
+    not_match = {}
+    for k, v in results.items():
+        if v.get('status') == 'match':
+            continue
+        okay, why = _tolerable(k)
+        if okay:
+            warned.append(f'{k}: {why}')
+        else:
+            not_match[k] = f"{v.get('status')} — {why}"
     if not_match:
         sys.exit(f'[GATE1] status!=match の銘柄があるため中止（skipped等も不可）: {not_match}')
+
+    # 上記で許容した銘柄しか errors に載っていないなら継続する（載っていれば止める）。
+    # 判定できない形式の行は必ず止める（fail closed）。
+    errs = [str(e) for e in (h1.get('errors') or [])]
+    tolerated = {w.split(':')[0] for w in warned}
+    blocking = [e for e in errs
+                if not (tolerated and any(s in e for s in tolerated)
+                        and not any(s in e for s in REQUIRED_H1))]
+    if blocking:
+        sys.exit(f'[GATE1] h1-bars.json の errors が空でないため中止: {blocking}')
+    for w in warned:
+        print(f'[GATE1] 警告（継続）: チャート非対象銘柄の検算不一致 — {w}。'
+              f'現物指数は公式終値をH1から再現できないための既知事象。'
+              f'フィード側で検算対象から外すのが恒久対策')
+
     missing = [s for s in h1.get('pairs', {}) if s not in results]
     if missing:
         sys.exit(f'[GATE1] 検算されていない銘柄があるため中止: {missing}')
