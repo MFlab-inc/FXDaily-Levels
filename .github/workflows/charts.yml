@@ -1,0 +1,78 @@
+# ============================================================
+# .github/workflows/charts.yml
+#
+# 【設置先】mflab-inc/FXDaily-Levels の .github/workflows/charts.yml
+#          （davinci-autopost ではない。このファイルは雛形の保管場所）
+#
+# 火〜土の朝、レポート3銘柄の1時間足チャートPNGを自動生成して
+# リポジトリの charts/ へコミットする（固定URL配信）。
+#
+# 【同時に必要なもの】
+#   1. render_chart.py を FXDaily-Levels のリポジトリ直下へ配置する
+#      （davinci-autopost の fx-report-v3/render_chart.py をそのままコピー。
+#        data/daily-levels.json・data/h1-bars.json を相対パスで読み、
+#        charts/ へ書き出すため、FXDaily-Levels の構成のまま動く）
+#   2. GitHub Pages を有効化する
+#      レポートは https://mflab-inc.github.io/FXDaily-Levels/charts/USDJPY.png?d=YYYYMMDD
+#      を参照する。Pages が無効だと生成しても404のまま
+#
+# 推奨: 既存の「フィード更新ワークフロー」の後続ジョブとして
+#       needs: で連結する（データ生成→チャート生成の順序保証）。
+#       単独運用する場合のみ下記 schedule を使用。
+# ============================================================
+name: render-charts
+
+on:
+  workflow_dispatch:
+  schedule:
+    # JST 火〜土 08:30 = UTC 月〜金 23:30（フィード更新の後を想定）
+    # 土曜号（金曜セッション対象）もチャート3枚を使うため、UTC金曜=JST土曜を必ず含める。
+    # ※単独schedule運用でも安全：render_chart.py内の3ゲート（整合性mismatch／
+    #   スナップショット世代不一致／session_date≠実行日前日）が古データ実行を必ず停止する。
+    # 推奨はフィード更新ワークフローとの連結（どちらか一方）:
+    #   A) フィード側workflowの最終ジョブに本ジョブを needs: で追加
+    #   B) 本ファイルのトリガーを workflow_run（フィード側workflow名を指定・completed時）へ変更
+    - cron: "30 23 * * 1-5"
+
+permissions:
+  contents: write
+
+jobs:
+  charts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install mplfinance
+
+      - name: Install JP font (チャート内の日本語表示用)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
+
+      - name: Render charts
+        # 第3銘柄はrender_chart.pyが「前日変動率が最大」で自動選定し、
+        # 結果を charts/selection.json へ出力する。
+        # 固定値フォールバック・引数での銘柄指定は禁止（仕様を無効化するため）。
+        run: python render_chart.py
+
+      - name: Commit & push
+        run: |
+          git config user.name  "chart-bot"
+          git config user.email "chart-bot@users.noreply.github.com"
+          git add charts/*.png charts/selection.json
+          git diff --cached --quiet && echo "変更なし" && exit 0
+          git commit -m "charts: $(date -u +'%Y-%m-%d') auto render"
+          # フィード更新ワークフローと実行時刻が近く、同じリポジトリへ押し合う。
+          # 素の push だと非fast-forwardで失敗し、チャートが前日のまま残る
+          # （＝レポートに古いチャートが載る）ため、rebaseして数回まで再試行する。
+          for i in 1 2 3; do
+            git push && exit 0
+            echo "push失敗（$i回目）。rebaseして再試行"
+            git pull --rebase origin "${GITHUB_REF_NAME}" || exit 1
+          done
+          echo "::error::チャートのpushに3回失敗しました。チャートが更新されていません"
+          exit 1
