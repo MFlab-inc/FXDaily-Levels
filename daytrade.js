@@ -442,6 +442,12 @@ async function main() {
   }
   // 受け入れassert: H1系列からNY17区切りで前営業日を再集計し、daily-levelsのprev_*と照合
   // (同一系列なら常に一致するはず。不一致=データ異常の自動検知)
+  //
+  // 例外: US500(現物指数)の終値のみ。現物株価指数の公式終値はクロージング・オークションの
+  // 約定値であり、1時間足の最終バーの終値からは原理的に再現できない
+  // （例: 2026-08-11セッション 高値/安値は完全一致、終値のみ h1=7727.41 対 daily=7728.2＝0.0102%ずれ）。
+  // 高値・安値はデータ異常の検知力を落とさないため引き続き完全一致を要求し、緩めるのは終値のみ。
+  const CLOSE_TOL_PCT = { US500: 0.1 };
   const consistency = { checked_against: null, results: {} };
   try {
     const dlPath = path.join(dataDir, "daily-levels.json");
@@ -464,8 +470,16 @@ async function main() {
         }
         if (n < 6) { consistency.results[code] = { status: "skipped", reason: `bars_insufficient(${n})` }; continue; }
         const eq = (a, b) => Math.abs(a - b) < 1e-9;
-        if (eq(hi, ref.prev_high) && eq(lo, ref.prev_low) && eq(cl, ref.prev_close_ny)) {
+        const closeDiffPct = ref.prev_close_ny ? Math.abs(cl - ref.prev_close_ny) / Math.abs(ref.prev_close_ny) * 100 : null;
+        const closeTolPct = CLOSE_TOL_PCT[code];
+        const closeOk = eq(cl, ref.prev_close_ny) ||
+          (closeTolPct != null && closeDiffPct !== null && closeDiffPct <= closeTolPct);
+        if (eq(hi, ref.prev_high) && eq(lo, ref.prev_low) && closeOk) {
           consistency.results[code] = { status: "match", bars: n };
+          // 許容幅内でも実測の乖離は監視用に残す（完全一致した場合は付与しない）
+          if (closeTolPct != null && !eq(cl, ref.prev_close_ny)) {
+            consistency.results[code].close_diff_pct = round(closeDiffPct, 4);
+          }
         } else {
           consistency.results[code] = {
             status: "mismatch", bars: n,

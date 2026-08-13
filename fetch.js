@@ -245,6 +245,7 @@ async function fetchYahoo(item) {
     prev: round(prev, item.digits),
     change: round(value - prev, item.digits),
     changePct: round(((value - prev) / prev) * 100, 2),
+    source: `yahoo:${item.symbol}`,
   };
 }
 
@@ -467,6 +468,14 @@ async function main() {
       us10y_change: s("US10Y")?.change ?? null,
       vix: s("VIX")?.value ?? null,
       vix_change_pct: s("VIX")?.changePct ?? null,
+      // 取得元の自己記述（pairsのsourceと同形式）。us2yはYahoo先物とFRED公式のどちらから
+      // 取れたかで実行のたびに変わり得るため、fetchUS2Y()が実際に使った経路をそのまま反映する。
+      source: {
+        dxy: s("DXY")?.source ?? null,
+        us2y: s("US2Y")?.source ?? null,
+        us10y: s("US10Y")?.source ?? null,
+        vix: s("VIX")?.source ?? null,
+      },
     },
     pairs: {},
   };
