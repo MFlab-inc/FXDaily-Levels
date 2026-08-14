@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-08-15T06:02:52+09:00",
+  "as_of": "2026-08-15T06:39:13+09:00",
   "timezone": "Asia/Tokyo",
   "note": "事実データと機械判定のみ。売買推奨は含まない。gateはイベント時間ルール(config/daytrade-rules.json)による判定。",
   "rules_summary": {
@@ -26,8 +26,8 @@
     "USDJPY": {
       "price": 159.321,
       "price_time_jst": "2026-08-15 05:55",
-      "bar_age_min": 3,
-      "data_status": "OK",
+      "bar_age_min": 39,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-15 06:00",
         "high": null,
@@ -85,11 +85,15 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-15 05:45",
-          "source_m5_count": 3,
+          "time_jst": "2026-08-15 06:15",
+          "source_m5_count": 0,
           "expected_m5_count": 3,
-          "missing_m5_times": [],
-          "complete": true
+          "missing_m5_times": [
+            "2026-08-15 06:15",
+            "2026-08-15 06:20",
+            "2026-08-15 06:25"
+          ],
+          "complete": false
         },
         "swing_high": {
           "price": 159.405,
@@ -128,8 +132,10 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度39分（閾値20分超）"
+        ],
         "warnings": [],
         "next_gated_event": null
       }
@@ -137,8 +143,8 @@
     "EURUSD": {
       "price": 1.15705,
       "price_time_jst": "2026-08-15 05:55",
-      "bar_age_min": 3,
-      "data_status": "OK",
+      "bar_age_min": 39,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-15 06:00",
         "high": null,
@@ -196,11 +202,15 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-15 05:45",
-          "source_m5_count": 3,
+          "time_jst": "2026-08-15 06:15",
+          "source_m5_count": 0,
           "expected_m5_count": 3,
-          "missing_m5_times": [],
-          "complete": true
+          "missing_m5_times": [
+            "2026-08-15 06:15",
+            "2026-08-15 06:20",
+            "2026-08-15 06:25"
+          ],
+          "complete": false
         },
         "swing_high": {
           "price": 1.15853,
@@ -239,8 +249,10 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度39分（閾値20分超）"
+        ],
         "warnings": [],
         "next_gated_event": null
       }
@@ -248,8 +260,8 @@
     "GBPUSD": {
       "price": 1.35341,
       "price_time_jst": "2026-08-15 05:55",
-      "bar_age_min": 3,
-      "data_status": "OK",
+      "bar_age_min": 39,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-15 06:00",
         "high": null,
@@ -307,11 +319,15 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-15 05:45",
-          "source_m5_count": 3,
+          "time_jst": "2026-08-15 06:15",
+          "source_m5_count": 0,
           "expected_m5_count": 3,
-          "missing_m5_times": [],
-          "complete": true
+          "missing_m5_times": [
+            "2026-08-15 06:15",
+            "2026-08-15 06:20",
+            "2026-08-15 06:25"
+          ],
+          "complete": false
         },
         "swing_high": {
           "price": 1.35373,
@@ -350,8 +366,10 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度39分（閾値20分超）"
+        ],
         "warnings": [],
         "next_gated_event": null
       }
@@ -359,8 +377,8 @@
     "EURJPY": {
       "price": 184.344,
       "price_time_jst": "2026-08-15 05:55",
-      "bar_age_min": 3,
-      "data_status": "OK",
+      "bar_age_min": 39,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-15 06:00",
         "high": null,
@@ -418,11 +436,15 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-15 05:45",
-          "source_m5_count": 3,
+          "time_jst": "2026-08-15 06:15",
+          "source_m5_count": 0,
           "expected_m5_count": 3,
-          "missing_m5_times": [],
-          "complete": true
+          "missing_m5_times": [
+            "2026-08-15 06:15",
+            "2026-08-15 06:20",
+            "2026-08-15 06:25"
+          ],
+          "complete": false
         },
         "swing_high": {
           "price": 184.39,
@@ -461,8 +483,10 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度39分（閾値20分超）"
+        ],
         "warnings": [],
         "next_gated_event": null
       }
@@ -470,8 +494,8 @@
     "AUDUSD": {
       "price": 0.70844,
       "price_time_jst": "2026-08-15 05:55",
-      "bar_age_min": 3,
-      "data_status": "OK",
+      "bar_age_min": 39,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-15 06:00",
         "high": null,
@@ -529,11 +553,15 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-15 05:45",
-          "source_m5_count": 3,
+          "time_jst": "2026-08-15 06:15",
+          "source_m5_count": 0,
           "expected_m5_count": 3,
-          "missing_m5_times": [],
-          "complete": true
+          "missing_m5_times": [
+            "2026-08-15 06:15",
+            "2026-08-15 06:20",
+            "2026-08-15 06:25"
+          ],
+          "complete": false
         },
         "swing_high": {
           "price": 0.70844,
@@ -572,8 +600,10 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度39分（閾値20分超）"
+        ],
         "warnings": [],
         "next_gated_event": null
       }
@@ -581,8 +611,8 @@
     "EURGBP": {
       "price": 0.85491,
       "price_time_jst": "2026-08-15 05:55",
-      "bar_age_min": 3,
-      "data_status": "OK",
+      "bar_age_min": 39,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-15 06:00",
         "high": null,
@@ -640,11 +670,15 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-15 05:45",
-          "source_m5_count": 3,
+          "time_jst": "2026-08-15 06:15",
+          "source_m5_count": 0,
           "expected_m5_count": 3,
-          "missing_m5_times": [],
-          "complete": true
+          "missing_m5_times": [
+            "2026-08-15 06:15",
+            "2026-08-15 06:20",
+            "2026-08-15 06:25"
+          ],
+          "complete": false
         },
         "swing_high": {
           "price": 0.8549,
@@ -683,8 +717,10 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度39分（閾値20分超）"
+        ],
         "warnings": [],
         "next_gated_event": null
       }
@@ -692,8 +728,8 @@
     "USDCAD": {
       "price": 1.38753,
       "price_time_jst": "2026-08-15 05:55",
-      "bar_age_min": 3,
-      "data_status": "OK",
+      "bar_age_min": 39,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-15 06:00",
         "high": null,
@@ -751,11 +787,15 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-15 05:45",
-          "source_m5_count": 3,
+          "time_jst": "2026-08-15 06:15",
+          "source_m5_count": 0,
           "expected_m5_count": 3,
-          "missing_m5_times": [],
-          "complete": true
+          "missing_m5_times": [
+            "2026-08-15 06:15",
+            "2026-08-15 06:20",
+            "2026-08-15 06:25"
+          ],
+          "complete": false
         },
         "swing_high": {
           "price": 1.38781,
@@ -794,8 +834,10 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度39分（閾値20分超）"
+        ],
         "warnings": [],
         "next_gated_event": null
       }
@@ -803,8 +845,8 @@
     "USDCHF": {
       "price": 0.81334,
       "price_time_jst": "2026-08-15 05:55",
-      "bar_age_min": 3,
-      "data_status": "OK",
+      "bar_age_min": 39,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-15 06:00",
         "high": null,
@@ -862,11 +904,15 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-15 05:45",
-          "source_m5_count": 3,
+          "time_jst": "2026-08-15 06:15",
+          "source_m5_count": 0,
           "expected_m5_count": 3,
-          "missing_m5_times": [],
-          "complete": true
+          "missing_m5_times": [
+            "2026-08-15 06:15",
+            "2026-08-15 06:20",
+            "2026-08-15 06:25"
+          ],
+          "complete": false
         },
         "swing_high": {
           "price": 0.81358,
@@ -905,8 +951,10 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度39分（閾値20分超）"
+        ],
         "warnings": [],
         "next_gated_event": null
       }
@@ -914,8 +962,8 @@
     "NZDUSD": {
       "price": 0.58909,
       "price_time_jst": "2026-08-15 05:55",
-      "bar_age_min": 3,
-      "data_status": "OK",
+      "bar_age_min": 39,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-15 06:00",
         "high": null,
@@ -973,11 +1021,15 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-15 05:45",
-          "source_m5_count": 3,
+          "time_jst": "2026-08-15 06:15",
+          "source_m5_count": 0,
           "expected_m5_count": 3,
-          "missing_m5_times": [],
-          "complete": true
+          "missing_m5_times": [
+            "2026-08-15 06:15",
+            "2026-08-15 06:20",
+            "2026-08-15 06:25"
+          ],
+          "complete": false
         },
         "swing_high": {
           "price": 0.58903,
@@ -1016,8 +1068,10 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度39分（閾値20分超）"
+        ],
         "warnings": [],
         "next_gated_event": null
       }
@@ -1025,8 +1079,8 @@
     "AUDNZD": {
       "price": 1.20262,
       "price_time_jst": "2026-08-15 05:55",
-      "bar_age_min": 3,
-      "data_status": "OK",
+      "bar_age_min": 39,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-15 06:00",
         "high": null,
@@ -1084,11 +1138,15 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-15 05:45",
-          "source_m5_count": 3,
+          "time_jst": "2026-08-15 06:15",
+          "source_m5_count": 0,
           "expected_m5_count": 3,
-          "missing_m5_times": [],
-          "complete": true
+          "missing_m5_times": [
+            "2026-08-15 06:15",
+            "2026-08-15 06:20",
+            "2026-08-15 06:25"
+          ],
+          "complete": false
         },
         "swing_high": {
           "price": 1.20312,
@@ -1127,8 +1185,10 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度39分（閾値20分超）"
+        ],
         "warnings": [],
         "next_gated_event": null
       }
@@ -1136,8 +1196,8 @@
     "XAUUSD": {
       "price": 4376.56,
       "price_time_jst": "2026-08-15 05:55",
-      "bar_age_min": 3,
-      "data_status": "OK",
+      "bar_age_min": 39,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-15 06:00",
         "high": null,
@@ -1195,11 +1255,15 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-15 05:45",
-          "source_m5_count": 3,
+          "time_jst": "2026-08-15 06:15",
+          "source_m5_count": 0,
           "expected_m5_count": 3,
-          "missing_m5_times": [],
-          "complete": true
+          "missing_m5_times": [
+            "2026-08-15 06:15",
+            "2026-08-15 06:20",
+            "2026-08-15 06:25"
+          ],
+          "complete": false
         },
         "swing_high": {
           "price": 4382.45,
@@ -1238,8 +1302,10 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度39分（閾値20分超）"
+        ],
         "warnings": [],
         "next_gated_event": null
       }
@@ -1247,8 +1313,8 @@
     "USOIL": {
       "price": 81.53,
       "price_time_jst": "2026-08-15 05:55",
-      "bar_age_min": 3,
-      "data_status": "OK",
+      "bar_age_min": 39,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-15 06:00",
         "high": null,
@@ -1306,11 +1372,15 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-15 05:45",
-          "source_m5_count": 3,
+          "time_jst": "2026-08-15 06:15",
+          "source_m5_count": 0,
           "expected_m5_count": 3,
-          "missing_m5_times": [],
-          "complete": true
+          "missing_m5_times": [
+            "2026-08-15 06:15",
+            "2026-08-15 06:20",
+            "2026-08-15 06:25"
+          ],
+          "complete": false
         },
         "swing_high": {
           "price": 81.68,
@@ -1349,8 +1419,10 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度39分（閾値20分超）"
+        ],
         "warnings": [],
         "next_gated_event": null
       }
