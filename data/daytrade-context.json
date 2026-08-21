@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-08-22T06:19:46+09:00",
+  "as_of": "2026-08-22T06:48:02+09:00",
   "timezone": "Asia/Tokyo",
   "note": "事実データと機械判定のみ。売買推奨は含まない。gateはイベント時間ルール(config/daytrade-rules.json)による判定。",
   "rules_summary": {
@@ -26,8 +26,8 @@
     "USDJPY": {
       "price": 158.979,
       "price_time_jst": "2026-08-22 05:55",
-      "bar_age_min": 20,
-      "data_status": "DEGRADED",
+      "bar_age_min": 48,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-22 06:00",
         "high": null,
@@ -85,13 +85,13 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-22 06:00",
+          "time_jst": "2026-08-22 06:30",
           "source_m5_count": 0,
           "expected_m5_count": 3,
           "missing_m5_times": [
-            "2026-08-22 06:00",
-            "2026-08-22 06:05",
-            "2026-08-22 06:10"
+            "2026-08-22 06:30",
+            "2026-08-22 06:35",
+            "2026-08-22 06:40"
           ],
           "complete": false
         },
@@ -132,19 +132,19 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
-        "warnings": [
-          "最新M15 0/3本（欠損: 2026-08-22 06:00,2026-08-22 06:05,2026-08-22 06:10）"
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度48分（閾値20分超）"
         ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "EURUSD": {
       "price": 1.16764,
       "price_time_jst": "2026-08-22 05:55",
-      "bar_age_min": 20,
-      "data_status": "DEGRADED",
+      "bar_age_min": 48,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-22 06:00",
         "high": null,
@@ -202,13 +202,13 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-22 06:00",
+          "time_jst": "2026-08-22 06:30",
           "source_m5_count": 0,
           "expected_m5_count": 3,
           "missing_m5_times": [
-            "2026-08-22 06:00",
-            "2026-08-22 06:05",
-            "2026-08-22 06:10"
+            "2026-08-22 06:30",
+            "2026-08-22 06:35",
+            "2026-08-22 06:40"
           ],
           "complete": false
         },
@@ -249,19 +249,19 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
-        "warnings": [
-          "最新M15 0/3本（欠損: 2026-08-22 06:00,2026-08-22 06:05,2026-08-22 06:10）"
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度48分（閾値20分超）"
         ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "GBPUSD": {
       "price": 1.36453,
       "price_time_jst": "2026-08-22 05:55",
-      "bar_age_min": 20,
-      "data_status": "DEGRADED",
+      "bar_age_min": 48,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-22 06:00",
         "high": null,
@@ -319,13 +319,13 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-22 06:00",
+          "time_jst": "2026-08-22 06:30",
           "source_m5_count": 0,
           "expected_m5_count": 3,
           "missing_m5_times": [
-            "2026-08-22 06:00",
-            "2026-08-22 06:05",
-            "2026-08-22 06:10"
+            "2026-08-22 06:30",
+            "2026-08-22 06:35",
+            "2026-08-22 06:40"
           ],
           "complete": false
         },
@@ -366,19 +366,19 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
-        "warnings": [
-          "最新M15 0/3本（欠損: 2026-08-22 06:00,2026-08-22 06:05,2026-08-22 06:10）"
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度48分（閾値20分超）"
         ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "EURJPY": {
       "price": 185.631,
       "price_time_jst": "2026-08-22 05:55",
-      "bar_age_min": 20,
-      "data_status": "DEGRADED",
+      "bar_age_min": 48,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-22 06:00",
         "high": null,
@@ -436,13 +436,13 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-22 06:00",
+          "time_jst": "2026-08-22 06:30",
           "source_m5_count": 0,
           "expected_m5_count": 3,
           "missing_m5_times": [
-            "2026-08-22 06:00",
-            "2026-08-22 06:05",
-            "2026-08-22 06:10"
+            "2026-08-22 06:30",
+            "2026-08-22 06:35",
+            "2026-08-22 06:40"
           ],
           "complete": false
         },
@@ -483,19 +483,19 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
-        "warnings": [
-          "最新M15 0/3本（欠損: 2026-08-22 06:00,2026-08-22 06:05,2026-08-22 06:10）"
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度48分（閾値20分超）"
         ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "AUDUSD": {
       "price": 0.71708,
       "price_time_jst": "2026-08-22 05:55",
-      "bar_age_min": 20,
-      "data_status": "DEGRADED",
+      "bar_age_min": 48,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-22 06:00",
         "high": null,
@@ -553,13 +553,13 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-22 06:00",
+          "time_jst": "2026-08-22 06:30",
           "source_m5_count": 0,
           "expected_m5_count": 3,
           "missing_m5_times": [
-            "2026-08-22 06:00",
-            "2026-08-22 06:05",
-            "2026-08-22 06:10"
+            "2026-08-22 06:30",
+            "2026-08-22 06:35",
+            "2026-08-22 06:40"
           ],
           "complete": false
         },
@@ -600,19 +600,19 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
-        "warnings": [
-          "最新M15 0/3本（欠損: 2026-08-22 06:00,2026-08-22 06:05,2026-08-22 06:10）"
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度48分（閾値20分超）"
         ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "EURGBP": {
       "price": 0.85571,
       "price_time_jst": "2026-08-22 05:55",
-      "bar_age_min": 20,
-      "data_status": "DEGRADED",
+      "bar_age_min": 48,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-22 06:00",
         "high": null,
@@ -670,13 +670,13 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-22 06:00",
+          "time_jst": "2026-08-22 06:30",
           "source_m5_count": 0,
           "expected_m5_count": 3,
           "missing_m5_times": [
-            "2026-08-22 06:00",
-            "2026-08-22 06:05",
-            "2026-08-22 06:10"
+            "2026-08-22 06:30",
+            "2026-08-22 06:35",
+            "2026-08-22 06:40"
           ],
           "complete": false
         },
@@ -717,19 +717,19 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
-        "warnings": [
-          "最新M15 0/3本（欠損: 2026-08-22 06:00,2026-08-22 06:05,2026-08-22 06:10）"
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度48分（閾値20分超）"
         ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "USDCAD": {
       "price": 1.37669,
       "price_time_jst": "2026-08-22 05:55",
-      "bar_age_min": 20,
-      "data_status": "DEGRADED",
+      "bar_age_min": 48,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-22 06:00",
         "high": null,
@@ -787,13 +787,13 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-22 06:00",
+          "time_jst": "2026-08-22 06:30",
           "source_m5_count": 0,
           "expected_m5_count": 3,
           "missing_m5_times": [
-            "2026-08-22 06:00",
-            "2026-08-22 06:05",
-            "2026-08-22 06:10"
+            "2026-08-22 06:30",
+            "2026-08-22 06:35",
+            "2026-08-22 06:40"
           ],
           "complete": false
         },
@@ -834,19 +834,19 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
-        "warnings": [
-          "最新M15 0/3本（欠損: 2026-08-22 06:00,2026-08-22 06:05,2026-08-22 06:10）"
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度48分（閾値20分超）"
         ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "USDCHF": {
       "price": 0.80134,
       "price_time_jst": "2026-08-22 05:55",
-      "bar_age_min": 20,
-      "data_status": "DEGRADED",
+      "bar_age_min": 48,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-22 06:00",
         "high": null,
@@ -904,13 +904,13 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-22 06:00",
+          "time_jst": "2026-08-22 06:30",
           "source_m5_count": 0,
           "expected_m5_count": 3,
           "missing_m5_times": [
-            "2026-08-22 06:00",
-            "2026-08-22 06:05",
-            "2026-08-22 06:10"
+            "2026-08-22 06:30",
+            "2026-08-22 06:35",
+            "2026-08-22 06:40"
           ],
           "complete": false
         },
@@ -951,19 +951,19 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
-        "warnings": [
-          "最新M15 0/3本（欠損: 2026-08-22 06:00,2026-08-22 06:05,2026-08-22 06:10）"
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度48分（閾値20分超）"
         ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "NZDUSD": {
       "price": 0.59795,
       "price_time_jst": "2026-08-22 05:55",
-      "bar_age_min": 20,
-      "data_status": "DEGRADED",
+      "bar_age_min": 48,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-22 06:00",
         "high": null,
@@ -1021,13 +1021,13 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-22 06:00",
+          "time_jst": "2026-08-22 06:30",
           "source_m5_count": 0,
           "expected_m5_count": 3,
           "missing_m5_times": [
-            "2026-08-22 06:00",
-            "2026-08-22 06:05",
-            "2026-08-22 06:10"
+            "2026-08-22 06:30",
+            "2026-08-22 06:35",
+            "2026-08-22 06:40"
           ],
           "complete": false
         },
@@ -1068,19 +1068,19 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
-        "warnings": [
-          "最新M15 0/3本（欠損: 2026-08-22 06:00,2026-08-22 06:05,2026-08-22 06:10）"
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度48分（閾値20分超）"
         ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "AUDNZD": {
       "price": 1.19918,
       "price_time_jst": "2026-08-22 05:55",
-      "bar_age_min": 20,
-      "data_status": "DEGRADED",
+      "bar_age_min": 48,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-22 06:00",
         "high": null,
@@ -1138,13 +1138,13 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-22 06:00",
+          "time_jst": "2026-08-22 06:30",
           "source_m5_count": 0,
           "expected_m5_count": 3,
           "missing_m5_times": [
-            "2026-08-22 06:00",
-            "2026-08-22 06:05",
-            "2026-08-22 06:10"
+            "2026-08-22 06:30",
+            "2026-08-22 06:35",
+            "2026-08-22 06:40"
           ],
           "complete": false
         },
@@ -1185,19 +1185,19 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
-        "warnings": [
-          "最新M15 0/3本（欠損: 2026-08-22 06:00,2026-08-22 06:05,2026-08-22 06:10）"
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度48分（閾値20分超）"
         ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "XAUUSD": {
       "price": 4603.92,
       "price_time_jst": "2026-08-22 05:55",
-      "bar_age_min": 20,
-      "data_status": "DEGRADED",
+      "bar_age_min": 48,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-22 06:00",
         "high": null,
@@ -1255,13 +1255,13 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-22 06:00",
+          "time_jst": "2026-08-22 06:30",
           "source_m5_count": 0,
           "expected_m5_count": 3,
           "missing_m5_times": [
-            "2026-08-22 06:00",
-            "2026-08-22 06:05",
-            "2026-08-22 06:10"
+            "2026-08-22 06:30",
+            "2026-08-22 06:35",
+            "2026-08-22 06:40"
           ],
           "complete": false
         },
@@ -1302,19 +1302,19 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
-        "warnings": [
-          "最新M15 0/3本（欠損: 2026-08-22 06:00,2026-08-22 06:05,2026-08-22 06:10）"
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度48分（閾値20分超）"
         ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "USOIL": {
       "price": 86.37,
       "price_time_jst": "2026-08-22 05:55",
-      "bar_age_min": 20,
-      "data_status": "DEGRADED",
+      "bar_age_min": 48,
+      "data_status": "STALE",
       "today": {
         "session_start_jst": "2026-08-22 06:00",
         "high": null,
@@ -1372,13 +1372,13 @@
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-22 06:00",
+          "time_jst": "2026-08-22 06:30",
           "source_m5_count": 0,
           "expected_m5_count": 3,
           "missing_m5_times": [
-            "2026-08-22 06:00",
-            "2026-08-22 06:05",
-            "2026-08-22 06:10"
+            "2026-08-22 06:30",
+            "2026-08-22 06:35",
+            "2026-08-22 06:40"
           ],
           "complete": false
         },
@@ -1419,11 +1419,11 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
-        "warnings": [
-          "最新M15 0/3本（欠損: 2026-08-22 06:00,2026-08-22 06:05,2026-08-22 06:10）"
+        "state": "NO_DATA",
+        "reasons": [
+          "データ鮮度48分（閾値20分超）"
         ],
+        "warnings": [],
         "next_gated_event": null
       }
     }
