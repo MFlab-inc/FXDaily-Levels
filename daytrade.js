@@ -440,6 +440,20 @@ async function main() {
     console.error(`FAIL(H1系列): US500 - ${e.message}`);
     h1Errors.push(`US500: ${e.message}`);
   }
+
+  // あるべき銘柄の欠落検知。個別ペアのH1取得は上のループ内でouter try(M5取得)が
+  // 先に失敗すると、そのペアはh1Barsへ一切代入されないままcatchがdaytrade-context.json側の
+  // out.errorsにだけ積んで握りつぶす（h1Errorsには何も残らない）。結果、h1-bars.jsonの
+  // errors/consistency_checkの両方から銘柄が静かに消える経路があったため、期待銘柄リスト
+  // (Twelve Data 11ペア+XAUUSD+US500)を固定で持ち、欠けをここでerrorsに積む。
+  const REQUIRED_H1_SYMBOLS = [...PAIRS.map((p) => p.code), "US500"];
+  for (const code of REQUIRED_H1_SYMBOLS) {
+    if (!(code in h1Bars)) {
+      h1Errors.push(`${code}: h1Barsに存在しません（取得失敗の可能性。daytrade-context.jsonのerrorsを確認）`);
+      console.error(`欠落検知: ${code} が h1Bars に存在しません`);
+    }
+  }
+
   // 受け入れassert: H1系列からNY17区切りで前営業日を再集計し、daily-levelsのprev_*と照合
   // (同一系列なら常に一致するはず。不一致=データ異常の自動検知)
   //
@@ -499,7 +513,7 @@ async function main() {
 
   fs.writeFileSync(path.join(dataDir, "h1-bars.json"), JSON.stringify({
     as_of: out.as_of, timezone: "Asia/Tokyo",
-    note: "チャート描画用H1確定足(昇順・最新500本ローリング)。12銘柄はTwelve Data 1時間足(dailyレベル算出と同一系列・JST表記・FXのため出来高なし)。US500はYahoo ^GSPC現物(米国立会時間9:30-16:00 ETのみのため1日約7本・週約35本)。未確定の進行中バーは含まない。",
+    note: "チャート描画用H1確定足(昇順・最新500本ローリング)。12銘柄はTwelve Data 1時間足(dailyレベル算出と同一系列・JST表記・FXのため出来高なし)。US500はYahoo ^GSPC現物(米国立会時間9:30-16:00 ETのみのため1日約7本・週約35本)。US30/US100はdaily-levels.jsonには含まれるがチャート対象外のため、このH1フィードには意図的に含めていない。未確定の進行中バーは含まない。",
     errors: h1Errors,
     consistency_check: consistency,
     pairs: h1Bars,
