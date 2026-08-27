@@ -7,12 +7,25 @@ on:
     # 月曜早朝カバー: 日曜UTC夜 = 月曜6:02〜8:47 JST
     - cron: "2,17,32,47 21-23 * * 0"
   workflow_dispatch: {}  # 手動実行も可能
+  # Daily FX Data（daily-levels.json生成）完了直後にも1回実行する。
+  # dailyは通常8:30 JST頃だが遅延することがあり、そのタイミングでこのスケジュールの
+  # 定期実行と交錯すると、h1-bars.jsonのconsistency_check.checked_against（照合時点の
+  # daily as_of/session_date）が古いdailyのまま残り、次の15分間隔の実行まで新しいdaily
+  # と世代が合わない状態になる（実例: 2026-08-27朝、daily完了8/27 10:33の7分前にintraday
+  # が8/26版dailyを参照して実行され、突合記録が1世代古いまま残った）。
+  # dailyの完了を直接のトリガーにすることで、この不整合ウィンドウを最短化する。
+  workflow_run:
+    workflows: ["Daily FX Data"]
+    types: [completed]
 
 permissions:
   contents: write
 
 jobs:
   snapshot:
+    # workflow_run経由はdailyが成功した時のみ（失敗直後に古いdailyへ再突合しても無意味なため）。
+    # schedule/workflow_dispatch経由は従来通り常に実行する。
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
