@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-08-28T12:34:39+09:00",
+  "as_of": "2026-08-28T15:06:19+09:00",
   "timezone": "Asia/Tokyo",
   "note": "事実データと機械判定のみ。売買推奨は含まない。gateはイベント時間ルール(config/daytrade-rules.json)による判定。",
   "rules_summary": {
@@ -24,18 +24,18 @@
   },
   "pairs": {
     "USDJPY": {
-      "price": 159.44,
-      "price_time_jst": "2026-08-28 12:30",
+      "price": 159.54,
+      "price_time_jst": "2026-08-28 15:05",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-08-28 06:00",
-        "high": 159.469,
+        "high": 159.564,
         "low": 159.305
       },
       "sessions_today": {
         "tokyo": {
-          "high": 159.469,
+          "high": 159.564,
           "low": 159.305,
           "status": "open",
           "window_jst": "09:00-17:00"
@@ -75,44 +75,44 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-08-28 12:15",
-          "o": 159.455,
-          "h": 159.467,
-          "l": 159.439,
-          "c": 159.44,
+          "time_jst": "2026-08-28 14:45",
+          "o": 159.549,
+          "h": 159.552,
+          "l": 159.506,
+          "c": 159.515,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 12:15",
+          "time_jst": "2026-08-28 14:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 159.386,
-          "time_jst": "2026-08-28 10:00"
+          "price": 159.564,
+          "time_jst": "2026-08-28 14:15"
         },
         "swing_low": {
-          "price": 159.305,
-          "time_jst": "2026-08-28 09:00"
+          "price": 159.437,
+          "time_jst": "2026-08-28 12:30"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-08-28 11:00",
-          "o": 159.427,
-          "h": 159.465,
-          "l": 159.398,
-          "c": 159.444,
+          "time_jst": "2026-08-28 14:00",
+          "o": 159.51,
+          "h": 159.564,
+          "l": 159.506,
+          "c": 159.515,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 11:00",
+          "time_jst": "2026-08-28 14:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -131,23 +131,31 @@
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-08-28T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "Fed Chairman Warsh Speaks",
+          "stop_from_jst": "22:45",
+          "stop_until_jst": "23:15"
+        }
       }
     },
     "EURUSD": {
-      "price": 1.16512,
-      "price_time_jst": "2026-08-28 12:30",
+      "price": 1.16451,
+      "price_time_jst": "2026-08-28 15:05",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-08-28 06:00",
         "high": 1.16558,
-        "low": 1.16467
+        "low": 1.16427
       },
       "sessions_today": {
         "tokyo": {
           "high": 1.16557,
-          "low": 1.16467,
+          "low": 1.16427,
           "status": "open",
           "window_jst": "09:00-17:00"
         },
@@ -186,52 +194,52 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-08-28 12:15",
-          "o": 1.16504,
-          "h": 1.16515,
-          "l": 1.1649,
-          "c": 1.16511,
+          "time_jst": "2026-08-28 14:45",
+          "o": 1.16432,
+          "h": 1.16459,
+          "l": 1.16427,
+          "c": 1.16458,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 12:15",
+          "time_jst": "2026-08-28 14:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
+          "missing_m5_times": [],
+          "complete": true
+        },
+        "swing_high": {
+          "price": 1.16517,
+          "time_jst": "2026-08-28 12:00"
+        },
+        "swing_low": {
+          "price": 1.1645,
+          "time_jst": "2026-08-28 13:00"
+        }
+      },
+      "h1": {
+        "last_closed": {
+          "time_jst": "2026-08-28 14:00",
+          "o": 1.16454,
+          "h": 1.16462,
+          "l": 1.16427,
+          "c": 1.16458,
+          "source_m5_count": 12,
+          "expected_m5_count": 12,
+          "complete": true
+        },
+        "latest_expected_bucket": {
+          "time_jst": "2026-08-28 14:00",
+          "source_m5_count": 12,
+          "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
           "price": 1.16557,
-          "time_jst": "2026-08-28 10:30"
-        },
-        "swing_low": {
-          "price": 1.16467,
-          "time_jst": "2026-08-28 11:15"
-        }
-      },
-      "h1": {
-        "last_closed": {
-          "time_jst": "2026-08-28 11:00",
-          "o": 1.16499,
-          "h": 1.16511,
-          "l": 1.16467,
-          "c": 1.16508,
-          "source_m5_count": 12,
-          "expected_m5_count": 12,
-          "complete": true
-        },
-        "latest_expected_bucket": {
-          "time_jst": "2026-08-28 11:00",
-          "source_m5_count": 12,
-          "expected_m5_count": 12,
-          "missing_m5_times": [],
-          "complete": true
-        },
-        "swing_high": {
-          "price": 1.16558,
-          "time_jst": "2026-08-28 06:00"
+          "time_jst": "2026-08-28 10:00"
         },
         "swing_low": {
           "price": 1.16459,
@@ -242,23 +250,31 @@
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-08-28T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "Fed Chairman Warsh Speaks",
+          "stop_from_jst": "22:45",
+          "stop_until_jst": "23:15"
+        }
       }
     },
     "GBPUSD": {
-      "price": 1.35939,
-      "price_time_jst": "2026-08-28 12:30",
+      "price": 1.35899,
+      "price_time_jst": "2026-08-28 15:05",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-08-28 06:00",
         "high": 1.36013,
-        "low": 1.35884
+        "low": 1.35871
       },
       "sessions_today": {
         "tokyo": {
           "high": 1.35983,
-          "low": 1.35884,
+          "low": 1.35871,
           "status": "open",
           "window_jst": "09:00-17:00"
         },
@@ -297,44 +313,44 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-08-28 12:15",
-          "o": 1.35936,
-          "h": 1.35945,
-          "l": 1.35917,
-          "c": 1.35942,
+          "time_jst": "2026-08-28 14:45",
+          "o": 1.35874,
+          "h": 1.35915,
+          "l": 1.35874,
+          "c": 1.35914,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 12:15",
+          "time_jst": "2026-08-28 14:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.35983,
-          "time_jst": "2026-08-28 10:00"
+          "price": 1.35949,
+          "time_jst": "2026-08-28 12:00"
         },
         "swing_low": {
-          "price": 1.35884,
-          "time_jst": "2026-08-28 11:15"
+          "price": 1.35871,
+          "time_jst": "2026-08-28 14:15"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-08-28 11:00",
-          "o": 1.35911,
-          "h": 1.3594,
-          "l": 1.35884,
-          "c": 1.35937,
+          "time_jst": "2026-08-28 14:00",
+          "o": 1.35887,
+          "h": 1.35915,
+          "l": 1.35871,
+          "c": 1.35914,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 11:00",
+          "time_jst": "2026-08-28 14:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -353,22 +369,30 @@
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-08-28T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "Fed Chairman Warsh Speaks",
+          "stop_from_jst": "22:45",
+          "stop_until_jst": "23:15"
+        }
       }
     },
     "EURJPY": {
-      "price": 185.77,
-      "price_time_jst": "2026-08-28 12:30",
+      "price": 185.782,
+      "price_time_jst": "2026-08-28 15:05",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-08-28 06:00",
-        "high": 185.791,
+        "high": 185.804,
         "low": 185.635
       },
       "sessions_today": {
         "tokyo": {
-          "high": 185.791,
+          "high": 185.804,
           "low": 185.635,
           "status": "open",
           "window_jst": "09:00-17:00"
@@ -408,44 +432,44 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-08-28 12:15",
-          "o": 185.771,
-          "h": 185.788,
-          "l": 185.742,
-          "c": 185.762,
+          "time_jst": "2026-08-28 14:45",
+          "o": 185.767,
+          "h": 185.768,
+          "l": 185.74,
+          "c": 185.764,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 12:15",
+          "time_jst": "2026-08-28 14:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 185.782,
-          "time_jst": "2026-08-28 10:45"
+          "price": 185.804,
+          "time_jst": "2026-08-28 14:15"
         },
         "swing_low": {
-          "price": 185.667,
-          "time_jst": "2026-08-28 11:15"
+          "price": 185.695,
+          "time_jst": "2026-08-28 12:45"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-08-28 11:00",
-          "o": 185.732,
-          "h": 185.771,
-          "l": 185.667,
-          "c": 185.766,
+          "time_jst": "2026-08-28 14:00",
+          "o": 185.756,
+          "h": 185.804,
+          "l": 185.74,
+          "c": 185.764,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 11:00",
+          "time_jst": "2026-08-28 14:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -468,8 +492,8 @@
       }
     },
     "AUDUSD": {
-      "price": 0.72048,
-      "price_time_jst": "2026-08-28 12:30",
+      "price": 0.71968,
+      "price_time_jst": "2026-08-28 15:05",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -480,7 +504,7 @@
       "sessions_today": {
         "tokyo": {
           "high": 0.72051,
-          "low": 0.7195,
+          "low": 0.71932,
           "status": "open",
           "window_jst": "09:00-17:00"
         },
@@ -519,52 +543,52 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-08-28 12:15",
-          "o": 0.72048,
-          "h": 0.72051,
-          "l": 0.72039,
-          "c": 0.72042,
+          "time_jst": "2026-08-28 14:45",
+          "o": 0.71941,
+          "h": 0.71966,
+          "l": 0.71941,
+          "c": 0.71963,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 12:15",
+          "time_jst": "2026-08-28 14:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 0.72004,
-          "time_jst": "2026-08-28 10:00"
+          "price": 0.72027,
+          "time_jst": "2026-08-28 13:15"
         },
         "swing_low": {
-          "price": 0.71958,
-          "time_jst": "2026-08-28 10:45"
+          "price": 0.71998,
+          "time_jst": "2026-08-28 12:45"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-08-28 11:00",
-          "o": 0.71968,
-          "h": 0.72048,
-          "l": 0.71968,
-          "c": 0.72045,
+          "time_jst": "2026-08-28 14:00",
+          "o": 0.71981,
+          "h": 0.71993,
+          "l": 0.71932,
+          "c": 0.71963,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 11:00",
+          "time_jst": "2026-08-28 14:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 0.71969,
-          "time_jst": "2026-08-28 05:00"
+          "price": 0.72051,
+          "time_jst": "2026-08-28 12:00"
         },
         "swing_low": {
           "price": 0.71902,
@@ -575,23 +599,31 @@
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-08-28T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "Fed Chairman Warsh Speaks",
+          "stop_from_jst": "22:45",
+          "stop_until_jst": "23:15"
+        }
       }
     },
     "EURGBP": {
-      "price": 0.85711,
-      "price_time_jst": "2026-08-28 12:30",
+      "price": 0.85692,
+      "price_time_jst": "2026-08-28 15:05",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-08-28 06:00",
         "high": 0.85754,
-        "low": 0.85694
+        "low": 0.85681
       },
       "sessions_today": {
         "tokyo": {
           "high": 0.85732,
-          "low": 0.85694,
+          "low": 0.85681,
           "status": "open",
           "window_jst": "09:00-17:00"
         },
@@ -630,52 +662,52 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-08-28 12:15",
-          "o": 0.85705,
-          "h": 0.85713,
-          "l": 0.85698,
-          "c": 0.85709,
+          "time_jst": "2026-08-28 14:45",
+          "o": 0.85691,
+          "h": 0.85697,
+          "l": 0.85681,
+          "c": 0.8569,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 12:15",
+          "time_jst": "2026-08-28 14:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
+          "missing_m5_times": [],
+          "complete": true
+        },
+        "swing_high": {
+          "price": 0.85709,
+          "time_jst": "2026-08-28 13:30"
+        },
+        "swing_low": {
+          "price": 0.85692,
+          "time_jst": "2026-08-28 13:15"
+        }
+      },
+      "h1": {
+        "last_closed": {
+          "time_jst": "2026-08-28 14:00",
+          "o": 0.85699,
+          "h": 0.85708,
+          "l": 0.85681,
+          "c": 0.8569,
+          "source_m5_count": 12,
+          "expected_m5_count": 12,
+          "complete": true
+        },
+        "latest_expected_bucket": {
+          "time_jst": "2026-08-28 14:00",
+          "source_m5_count": 12,
+          "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
           "price": 0.85732,
-          "time_jst": "2026-08-28 10:45"
-        },
-        "swing_low": {
-          "price": 0.85695,
-          "time_jst": "2026-08-28 11:15"
-        }
-      },
-      "h1": {
-        "last_closed": {
-          "time_jst": "2026-08-28 11:00",
-          "o": 0.85717,
-          "h": 0.85729,
-          "l": 0.85695,
-          "c": 0.85709,
-          "source_m5_count": 12,
-          "expected_m5_count": 12,
-          "complete": true
-        },
-        "latest_expected_bucket": {
-          "time_jst": "2026-08-28 11:00",
-          "source_m5_count": 12,
-          "expected_m5_count": 12,
-          "missing_m5_times": [],
-          "complete": true
-        },
-        "swing_high": {
-          "price": 0.85754,
-          "time_jst": "2026-08-28 06:00"
+          "time_jst": "2026-08-28 10:00"
         },
         "swing_low": {
           "price": 0.85694,
@@ -690,8 +722,8 @@
       }
     },
     "USDCAD": {
-      "price": 1.38481,
-      "price_time_jst": "2026-08-28 12:30",
+      "price": 1.38502,
+      "price_time_jst": "2026-08-28 15:05",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -741,17 +773,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-08-28 12:15",
-          "o": 1.38489,
-          "h": 1.38499,
-          "l": 1.38483,
-          "c": 1.38493,
+          "time_jst": "2026-08-28 14:45",
+          "o": 1.38546,
+          "h": 1.38548,
+          "l": 1.38506,
+          "c": 1.38508,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 12:15",
+          "time_jst": "2026-08-28 14:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -762,31 +794,31 @@
           "time_jst": "2026-08-28 10:45"
         },
         "swing_low": {
-          "price": 1.38478,
-          "time_jst": "2026-08-28 11:45"
+          "price": 1.3848,
+          "time_jst": "2026-08-28 12:30"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-08-28 11:00",
-          "o": 1.38544,
-          "h": 1.38554,
-          "l": 1.38478,
-          "c": 1.38498,
+          "time_jst": "2026-08-28 14:00",
+          "o": 1.38532,
+          "h": 1.38551,
+          "l": 1.38506,
+          "c": 1.38508,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 11:00",
+          "time_jst": "2026-08-28 14:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.38618,
-          "time_jst": "2026-08-28 03:00"
+          "price": 1.38556,
+          "time_jst": "2026-08-28 10:00"
         },
         "swing_low": {
           "price": 1.38531,
@@ -809,18 +841,18 @@
       }
     },
     "USDCHF": {
-      "price": 0.80434,
-      "price_time_jst": "2026-08-28 12:30",
+      "price": 0.80522,
+      "price_time_jst": "2026-08-28 15:05",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-08-28 06:00",
-        "high": 0.80462,
+        "high": 0.80529,
         "low": 0.80376
       },
       "sessions_today": {
         "tokyo": {
-          "high": 0.80462,
+          "high": 0.80529,
           "low": 0.80382,
           "status": "open",
           "window_jst": "09:00-17:00"
@@ -860,17 +892,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-08-28 12:15",
-          "o": 0.80436,
-          "h": 0.80448,
-          "l": 0.80436,
-          "c": 0.80438,
+          "time_jst": "2026-08-28 14:45",
+          "o": 0.80521,
+          "h": 0.80529,
+          "l": 0.80506,
+          "c": 0.80507,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 12:15",
+          "time_jst": "2026-08-28 14:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -881,23 +913,23 @@
           "time_jst": "2026-08-28 11:45"
         },
         "swing_low": {
-          "price": 0.80382,
-          "time_jst": "2026-08-28 10:00"
+          "price": 0.80426,
+          "time_jst": "2026-08-28 12:00"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-08-28 11:00",
-          "o": 0.80442,
-          "h": 0.80462,
-          "l": 0.80432,
-          "c": 0.80437,
+          "time_jst": "2026-08-28 14:00",
+          "o": 0.80498,
+          "h": 0.80529,
+          "l": 0.80476,
+          "c": 0.80507,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 11:00",
+          "time_jst": "2026-08-28 14:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -916,12 +948,20 @@
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-08-28T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "Fed Chairman Warsh Speaks",
+          "stop_from_jst": "22:45",
+          "stop_until_jst": "23:15"
+        }
       }
     },
     "NZDUSD": {
-      "price": 0.59661,
-      "price_time_jst": "2026-08-28 12:30",
+      "price": 0.5957,
+      "price_time_jst": "2026-08-28 15:05",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -971,52 +1011,52 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-08-28 12:15",
-          "o": 0.5965,
-          "h": 0.59652,
-          "l": 0.59643,
-          "c": 0.59648,
+          "time_jst": "2026-08-28 14:45",
+          "o": 0.59554,
+          "h": 0.5957,
+          "l": 0.59548,
+          "c": 0.5957,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 12:15",
+          "time_jst": "2026-08-28 14:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 0.59628,
-          "time_jst": "2026-08-28 10:30"
+          "price": 0.59648,
+          "time_jst": "2026-08-28 13:15"
         },
         "swing_low": {
-          "price": 0.59577,
-          "time_jst": "2026-08-28 11:00"
+          "price": 0.59608,
+          "time_jst": "2026-08-28 12:45"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-08-28 11:00",
-          "o": 0.59585,
-          "h": 0.59645,
-          "l": 0.59577,
-          "c": 0.59642,
+          "time_jst": "2026-08-28 14:00",
+          "o": 0.59599,
+          "h": 0.59599,
+          "l": 0.59548,
+          "c": 0.5957,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 11:00",
+          "time_jst": "2026-08-28 14:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 0.59566,
-          "time_jst": "2026-08-28 06:00"
+          "price": 0.59662,
+          "time_jst": "2026-08-28 12:00"
         },
         "swing_low": {
           "price": 0.59477,
@@ -1027,23 +1067,31 @@
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-08-28T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "Fed Chairman Warsh Speaks",
+          "stop_from_jst": "22:45",
+          "stop_until_jst": "23:15"
+        }
       }
     },
     "AUDNZD": {
-      "price": 1.2076,
-      "price_time_jst": "2026-08-28 12:30",
+      "price": 1.20824,
+      "price_time_jst": "2026-08-28 15:05",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-08-28 06:00",
         "high": 1.20937,
-        "low": 1.20731
+        "low": 1.20728
       },
       "sessions_today": {
         "tokyo": {
           "high": 1.20864,
-          "low": 1.20731,
+          "low": 1.20728,
           "status": "open",
           "window_jst": "09:00-17:00"
         },
@@ -1082,44 +1130,44 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-08-28 12:15",
-          "o": 1.20786,
-          "h": 1.20799,
-          "l": 1.20773,
-          "c": 1.20785,
+          "time_jst": "2026-08-28 14:45",
+          "o": 1.208,
+          "h": 1.20832,
+          "l": 1.208,
+          "c": 1.20804,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 12:15",
+          "time_jst": "2026-08-28 14:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.2083,
-          "time_jst": "2026-08-28 11:15"
+          "price": 1.20834,
+          "time_jst": "2026-08-28 14:00"
         },
         "swing_low": {
-          "price": 1.20752,
-          "time_jst": "2026-08-28 11:45"
+          "price": 1.20728,
+          "time_jst": "2026-08-28 13:45"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-08-28 11:00",
-          "o": 1.20782,
-          "h": 1.2083,
-          "l": 1.20752,
-          "c": 1.20797,
+          "time_jst": "2026-08-28 14:00",
+          "o": 1.20775,
+          "h": 1.20834,
+          "l": 1.20746,
+          "c": 1.20804,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 11:00",
+          "time_jst": "2026-08-28 14:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -1130,8 +1178,8 @@
           "time_jst": "2026-08-28 03:00"
         },
         "swing_low": {
-          "price": 1.20755,
-          "time_jst": "2026-08-27 20:00"
+          "price": 1.20731,
+          "time_jst": "2026-08-28 10:00"
         }
       },
       "gate": {
@@ -1142,19 +1190,19 @@
       }
     },
     "XAUUSD": {
-      "price": 4585.06,
-      "price_time_jst": "2026-08-28 12:30",
+      "price": 4576.98,
+      "price_time_jst": "2026-08-28 15:05",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-08-28 06:00",
         "high": 4611.35,
-        "low": 4574.64
+        "low": 4572.24
       },
       "sessions_today": {
         "tokyo": {
           "high": 4602.57,
-          "low": 4574.64,
+          "low": 4572.24,
           "status": "open",
           "window_jst": "09:00-17:00"
         },
@@ -1193,44 +1241,44 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-08-28 12:15",
-          "o": 4585.64,
-          "h": 4590.77,
-          "l": 4583.58,
-          "c": 4588,
+          "time_jst": "2026-08-28 14:45",
+          "o": 4573.26,
+          "h": 4577.08,
+          "l": 4572.24,
+          "c": 4576.54,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 12:15",
+          "time_jst": "2026-08-28 14:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 4589.26,
-          "time_jst": "2026-08-28 11:30"
+          "price": 4585.89,
+          "time_jst": "2026-08-28 14:15"
         },
         "swing_low": {
-          "price": 4574.64,
-          "time_jst": "2026-08-28 11:00"
+          "price": 4577.92,
+          "time_jst": "2026-08-28 13:00"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-08-28 11:00",
-          "o": 4576.48,
-          "h": 4589.26,
-          "l": 4574.64,
-          "c": 4586.04,
+          "time_jst": "2026-08-28 14:00",
+          "o": 4584.78,
+          "h": 4585.89,
+          "l": 4572.24,
+          "c": 4576.54,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 11:00",
+          "time_jst": "2026-08-28 14:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -1241,31 +1289,39 @@
           "time_jst": "2026-08-28 08:00"
         },
         "swing_low": {
-          "price": 4567.5,
-          "time_jst": "2026-08-27 23:00"
+          "price": 4574.64,
+          "time_jst": "2026-08-28 11:00"
         }
       },
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-08-28T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "Fed Chairman Warsh Speaks",
+          "stop_from_jst": "22:45",
+          "stop_until_jst": "23:15"
+        }
       }
     },
     "USOIL": {
-      "price": 82.57,
-      "price_time_jst": "2026-08-28 12:30",
-      "bar_age_min": 0,
+      "price": 82.58,
+      "price_time_jst": "2026-08-28 15:00",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-08-28 06:00",
         "high": 83.13,
-        "low": 82.36
+        "low": 82.19
       },
       "sessions_today": {
         "tokyo": {
           "high": 82.9,
-          "low": 82.36,
+          "low": 82.19,
           "status": "open",
           "window_jst": "09:00-17:00"
         },
@@ -1304,44 +1360,44 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-08-28 12:15",
-          "o": 82.55,
+          "time_jst": "2026-08-28 14:45",
+          "o": 82.59,
           "h": 82.63,
-          "l": 82.47,
-          "c": 82.52,
+          "l": 82.41,
+          "c": 82.51,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 12:15",
+          "time_jst": "2026-08-28 14:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 82.86,
-          "time_jst": "2026-08-28 11:30"
+          "price": 82.72,
+          "time_jst": "2026-08-28 14:00"
         },
         "swing_low": {
-          "price": 82.36,
-          "time_jst": "2026-08-28 10:30"
+          "price": 82.41,
+          "time_jst": "2026-08-28 13:15"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-08-28 11:00",
-          "o": 82.48,
-          "h": 82.86,
-          "l": 82.4,
-          "c": 82.46,
+          "time_jst": "2026-08-28 14:00",
+          "o": 82.62,
+          "h": 82.72,
+          "l": 82.19,
+          "c": 82.51,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-08-28 11:00",
+          "time_jst": "2026-08-28 14:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -1352,15 +1408,23 @@
           "time_jst": "2026-08-28 03:00"
         },
         "swing_low": {
-          "price": 81.41,
-          "time_jst": "2026-08-28 00:00"
+          "price": 82.36,
+          "time_jst": "2026-08-28 10:00"
         }
       },
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-08-28T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "Fed Chairman Warsh Speaks",
+          "stop_from_jst": "22:45",
+          "stop_until_jst": "23:15"
+        }
       }
     }
   },
