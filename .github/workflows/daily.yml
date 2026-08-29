@@ -34,5 +34,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/
-          git diff --cached --quiet || git commit -m "data: $(TZ=Asia/Tokyo date +%Y-%m-%d)"
-          git push
+          git diff --cached --quiet && echo "変更なし" && exit 0
+          git commit -m "data: $(TZ=Asia/Tokyo date +%Y-%m-%d)"
+          # intraday.yml等と同じリポジトリへ押し合うことがある。素のpushだと
+          # 非fast-forwardで失敗し、せっかく取得したdaily-levels.jsonが
+          # 一切保存されないまま実行全体が失敗する（charts.ymlと同じ対策）。
+          for i in 1 2 3; do
+            git push && exit 0
+            echo "push失敗（${i}回目）。rebaseして再試行"
+            git pull --rebase origin "${GITHUB_REF_NAME}" || exit 1
+          done
+          echo "::error::data/のpushに3回失敗しました。daily-levels.jsonが更新されていません"
+          exit 1
