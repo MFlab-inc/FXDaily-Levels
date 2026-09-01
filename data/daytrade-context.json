@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-09-01T10:17:42+09:00",
+  "as_of": "2026-09-01T20:38:00+09:00",
   "timezone": "Asia/Tokyo",
   "note": "事実データと機械判定のみ。売買推奨は含まない。gateはイベント時間ルール(config/daytrade-rules.json)による判定。",
   "rules_summary": {
@@ -24,26 +24,26 @@
   },
   "pairs": {
     "USDJPY": {
-      "price": 159.821,
-      "price_time_jst": "2026-09-01 10:15",
+      "price": 160.084,
+      "price_time_jst": "2026-09-01 20:35",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-09-01 06:00",
-        "high": 159.837,
+        "high": 160.157,
         "low": 159.641
       },
       "sessions_today": {
         "tokyo": {
-          "high": 159.837,
+          "high": 160.028,
           "low": 159.641,
-          "status": "open",
+          "status": "closed",
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 160.157,
+          "low": 159.894,
+          "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
@@ -55,9 +55,9 @@
       },
       "sessions_prev": {
         "tokyo": {
-          "date": "08-31",
-          "high": 160.148,
-          "low": 159.547,
+          "date": "09-01",
+          "high": 160.028,
+          "low": 159.641,
           "window_jst": "09:00-17:00"
         },
         "london": {
@@ -75,86 +75,94 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-09-01 10:00",
-          "o": 159.79,
-          "h": 159.8,
-          "l": 159.757,
-          "c": 159.762,
+          "time_jst": "2026-09-01 20:15",
+          "o": 160.122,
+          "h": 160.157,
+          "l": 160.064,
+          "c": 160.067,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 10:00",
+          "time_jst": "2026-09-01 20:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 159.837,
-          "time_jst": "2026-09-01 09:00"
+          "price": 160.028,
+          "time_jst": "2026-09-01 16:30"
         },
         "swing_low": {
-          "price": 159.641,
-          "time_jst": "2026-09-01 09:15"
+          "price": 159.894,
+          "time_jst": "2026-09-01 18:15"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-09-01 09:00",
-          "o": 159.756,
-          "h": 159.837,
-          "l": 159.641,
-          "c": 159.794,
+          "time_jst": "2026-09-01 19:00",
+          "o": 160.02,
+          "h": 160.116,
+          "l": 159.988,
+          "c": 160.099,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 09:00",
+          "time_jst": "2026-09-01 19:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 159.811,
-          "time_jst": "2026-09-01 04:00"
+          "price": 159.856,
+          "time_jst": "2026-09-01 10:00"
         },
         "swing_low": {
-          "price": 159.661,
-          "time_jst": "2026-09-01 01:00"
+          "price": 159.641,
+          "time_jst": "2026-09-01 09:00"
         }
       },
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-09-01T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "ISM Manufacturing PMI",
+          "stop_from_jst": "22:30",
+          "stop_until_jst": "23:30"
+        }
       }
     },
     "EURUSD": {
-      "price": 1.16139,
-      "price_time_jst": "2026-09-01 10:15",
+      "price": 1.15948,
+      "price_time_jst": "2026-09-01 20:35",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-09-01 06:00",
         "high": 1.16245,
-        "low": 1.16125
+        "low": 1.15888
       },
       "sessions_today": {
         "tokyo": {
           "high": 1.16245,
-          "low": 1.16137,
-          "status": "open",
+          "low": 1.15916,
+          "status": "closed",
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 1.16072,
+          "low": 1.15888,
+          "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
@@ -166,9 +174,9 @@
       },
       "sessions_prev": {
         "tokyo": {
-          "date": "08-31",
-          "high": 1.16034,
-          "low": 1.15847,
+          "date": "09-01",
+          "high": 1.16245,
+          "low": 1.15916,
           "window_jst": "09:00-17:00"
         },
         "london": {
@@ -186,86 +194,94 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-09-01 10:00",
-          "o": 1.16181,
-          "h": 1.16189,
-          "l": 1.1614,
-          "c": 1.16141,
+          "time_jst": "2026-09-01 20:15",
+          "o": 1.15931,
+          "h": 1.15953,
+          "l": 1.15911,
+          "c": 1.1595,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 10:00",
+          "time_jst": "2026-09-01 20:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.16193,
-          "time_jst": "2026-09-01 06:45"
+          "price": 1.16012,
+          "time_jst": "2026-09-01 18:45"
         },
         "swing_low": {
-          "price": 1.16125,
-          "time_jst": "2026-09-01 08:00"
+          "price": 1.15888,
+          "time_jst": "2026-09-01 17:00"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-09-01 09:00",
-          "o": 1.16176,
-          "h": 1.16245,
-          "l": 1.16156,
-          "c": 1.16184,
+          "time_jst": "2026-09-01 19:00",
+          "o": 1.15948,
+          "h": 1.15955,
+          "l": 1.15898,
+          "c": 1.15923,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 09:00",
+          "time_jst": "2026-09-01 19:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.16194,
-          "time_jst": "2026-09-01 06:00"
+          "price": 1.16105,
+          "time_jst": "2026-09-01 14:00"
         },
         "swing_low": {
-          "price": 1.15922,
-          "time_jst": "2026-08-31 21:00"
+          "price": 1.15888,
+          "time_jst": "2026-09-01 17:00"
         }
       },
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-09-01T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "ISM Manufacturing PMI",
+          "stop_from_jst": "22:30",
+          "stop_until_jst": "23:30"
+        }
       }
     },
     "GBPUSD": {
-      "price": 1.35478,
-      "price_time_jst": "2026-09-01 10:15",
+      "price": 1.3538,
+      "price_time_jst": "2026-09-01 20:35",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-09-01 06:00",
         "high": 1.35597,
-        "low": 1.35439
+        "low": 1.35289
       },
       "sessions_today": {
         "tokyo": {
           "high": 1.35597,
-          "low": 1.35463,
-          "status": "open",
+          "low": 1.35323,
+          "status": "closed",
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 1.35488,
+          "low": 1.35289,
+          "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
@@ -277,9 +293,9 @@
       },
       "sessions_prev": {
         "tokyo": {
-          "date": "08-31",
-          "high": 1.35503,
-          "low": 1.35342,
+          "date": "09-01",
+          "high": 1.35597,
+          "low": 1.35323,
           "window_jst": "09:00-17:00"
         },
         "london": {
@@ -297,86 +313,94 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-09-01 10:00",
-          "o": 1.35529,
-          "h": 1.35535,
-          "l": 1.35474,
-          "c": 1.35484,
+          "time_jst": "2026-09-01 20:15",
+          "o": 1.35353,
+          "h": 1.35377,
+          "l": 1.35326,
+          "c": 1.35372,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 10:00",
+          "time_jst": "2026-09-01 20:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.35597,
-          "time_jst": "2026-09-01 09:15"
+          "price": 1.35488,
+          "time_jst": "2026-09-01 18:30"
         },
         "swing_low": {
-          "price": 1.35439,
-          "time_jst": "2026-09-01 08:00"
+          "price": 1.35289,
+          "time_jst": "2026-09-01 17:00"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-09-01 09:00",
-          "o": 1.35482,
-          "h": 1.35597,
-          "l": 1.35463,
-          "c": 1.35532,
+          "time_jst": "2026-09-01 19:00",
+          "o": 1.35419,
+          "h": 1.35439,
+          "l": 1.35336,
+          "c": 1.35354,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 09:00",
+          "time_jst": "2026-09-01 19:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.35539,
-          "time_jst": "2026-09-01 06:00"
+          "price": 1.355,
+          "time_jst": "2026-09-01 14:00"
         },
         "swing_low": {
-          "price": 1.35356,
-          "time_jst": "2026-08-31 21:00"
+          "price": 1.35289,
+          "time_jst": "2026-09-01 17:00"
         }
       },
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-09-01T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "ISM Manufacturing PMI",
+          "stop_from_jst": "22:30",
+          "stop_until_jst": "23:30"
+        }
       }
     },
     "EURJPY": {
-      "price": 185.624,
-      "price_time_jst": "2026-09-01 10:15",
+      "price": 185.61,
+      "price_time_jst": "2026-09-01 20:35",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-09-01 06:00",
         "high": 185.713,
-        "low": 185.546
+        "low": 185.398
       },
       "sessions_today": {
         "tokyo": {
           "high": 185.713,
-          "low": 185.546,
-          "status": "open",
+          "low": 185.449,
+          "status": "closed",
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 185.678,
+          "low": 185.398,
+          "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
@@ -388,9 +412,9 @@
       },
       "sessions_prev": {
         "tokyo": {
-          "date": "08-31",
-          "high": 185.581,
-          "low": 184.954,
+          "date": "09-01",
+          "high": 185.713,
+          "low": 185.449,
           "window_jst": "09:00-17:00"
         },
         "london": {
@@ -408,56 +432,56 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-09-01 10:00",
-          "o": 185.648,
-          "h": 185.665,
-          "l": 185.546,
-          "c": 185.552,
+          "time_jst": "2026-09-01 20:15",
+          "o": 185.631,
+          "h": 185.678,
+          "l": 185.584,
+          "c": 185.589,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 10:00",
+          "time_jst": "2026-09-01 20:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 185.713,
-          "time_jst": "2026-09-01 09:00"
+          "price": 185.608,
+          "time_jst": "2026-09-01 18:45"
         },
         "swing_low": {
-          "price": 185.556,
-          "time_jst": "2026-09-01 09:15"
+          "price": 185.494,
+          "time_jst": "2026-09-01 19:15"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-09-01 09:00",
-          "o": 185.6,
-          "h": 185.713,
-          "l": 185.556,
-          "c": 185.656,
+          "time_jst": "2026-09-01 19:00",
+          "o": 185.543,
+          "h": 185.617,
+          "l": 185.494,
+          "c": 185.6,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 09:00",
+          "time_jst": "2026-09-01 19:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 185.644,
-          "time_jst": "2026-09-01 06:00"
+          "price": 185.658,
+          "time_jst": "2026-09-01 16:00"
         },
         "swing_low": {
-          "price": 185.175,
-          "time_jst": "2026-08-31 20:00"
+          "price": 185.398,
+          "time_jst": "2026-09-01 17:00"
         }
       },
       "gate": {
@@ -468,26 +492,26 @@
       }
     },
     "AUDUSD": {
-      "price": 0.71683,
-      "price_time_jst": "2026-09-01 10:15",
+      "price": 0.71446,
+      "price_time_jst": "2026-09-01 20:35",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-09-01 06:00",
         "high": 0.71807,
-        "low": 0.71642
+        "low": 0.71398
       },
       "sessions_today": {
         "tokyo": {
           "high": 0.71807,
-          "low": 0.71674,
-          "status": "open",
+          "low": 0.71534,
+          "status": "closed",
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 0.71662,
+          "low": 0.71398,
+          "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
@@ -499,9 +523,9 @@
       },
       "sessions_prev": {
         "tokyo": {
-          "date": "08-31",
-          "high": 0.71705,
-          "low": 0.71546,
+          "date": "09-01",
+          "high": 0.71807,
+          "low": 0.71534,
           "window_jst": "09:00-17:00"
         },
         "london": {
@@ -519,52 +543,52 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-09-01 10:00",
-          "o": 0.71709,
-          "h": 0.71709,
-          "l": 0.71674,
-          "c": 0.71684,
+          "time_jst": "2026-09-01 20:15",
+          "o": 0.7145,
+          "h": 0.71464,
+          "l": 0.71434,
+          "c": 0.71453,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 10:00",
+          "time_jst": "2026-09-01 20:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
+          "missing_m5_times": [],
+          "complete": true
+        },
+        "swing_high": {
+          "price": 0.71469,
+          "time_jst": "2026-09-01 19:30"
+        },
+        "swing_low": {
+          "price": 0.71398,
+          "time_jst": "2026-09-01 18:30"
+        }
+      },
+      "h1": {
+        "last_closed": {
+          "time_jst": "2026-09-01 19:00",
+          "o": 0.71444,
+          "h": 0.71469,
+          "l": 0.71422,
+          "c": 0.71441,
+          "source_m5_count": 12,
+          "expected_m5_count": 12,
+          "complete": true
+        },
+        "latest_expected_bucket": {
+          "time_jst": "2026-09-01 19:00",
+          "source_m5_count": 12,
+          "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
           "price": 0.71807,
-          "time_jst": "2026-09-01 09:15"
-        },
-        "swing_low": {
-          "price": 0.71642,
-          "time_jst": "2026-09-01 06:15"
-        }
-      },
-      "h1": {
-        "last_closed": {
-          "time_jst": "2026-09-01 09:00",
-          "o": 0.71704,
-          "h": 0.71807,
-          "l": 0.71704,
-          "c": 0.71707,
-          "source_m5_count": 12,
-          "expected_m5_count": 12,
-          "complete": true
-        },
-        "latest_expected_bucket": {
-          "time_jst": "2026-09-01 09:00",
-          "source_m5_count": 12,
-          "expected_m5_count": 12,
-          "missing_m5_times": [],
-          "complete": true
-        },
-        "swing_high": {
-          "price": 0.71698,
-          "time_jst": "2026-08-31 23:00"
+          "time_jst": "2026-09-01 09:00"
         },
         "swing_low": {
           "price": 0.71634,
@@ -575,30 +599,38 @@
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-09-01T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "ISM Manufacturing PMI",
+          "stop_from_jst": "22:30",
+          "stop_until_jst": "23:30"
+        }
       }
     },
     "EURGBP": {
-      "price": 0.85725,
-      "price_time_jst": "2026-09-01 10:15",
+      "price": 0.8565,
+      "price_time_jst": "2026-09-01 20:35",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-09-01 06:00",
         "high": 0.85759,
-        "low": 0.85714
+        "low": 0.85598
       },
       "sessions_today": {
         "tokyo": {
           "high": 0.85758,
-          "low": 0.85714,
-          "status": "open",
+          "low": 0.85651,
+          "status": "closed",
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 0.85712,
+          "low": 0.85598,
+          "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
@@ -610,9 +642,9 @@
       },
       "sessions_prev": {
         "tokyo": {
-          "date": "08-31",
-          "high": 0.85655,
-          "low": 0.85532,
+          "date": "09-01",
+          "high": 0.85758,
+          "low": 0.85651,
           "window_jst": "09:00-17:00"
         },
         "london": {
@@ -630,52 +662,52 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-09-01 10:00",
-          "o": 0.85724,
-          "h": 0.85735,
-          "l": 0.85715,
-          "c": 0.85725,
+          "time_jst": "2026-09-01 20:15",
+          "o": 0.85651,
+          "h": 0.85661,
+          "l": 0.85638,
+          "c": 0.85655,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 10:00",
+          "time_jst": "2026-09-01 20:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 0.85759,
-          "time_jst": "2026-09-01 08:45"
+          "price": 0.85644,
+          "time_jst": "2026-09-01 18:45"
         },
         "swing_low": {
-          "price": 0.85714,
-          "time_jst": "2026-09-01 09:30"
+          "price": 0.85599,
+          "time_jst": "2026-09-01 19:15"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-09-01 09:00",
-          "o": 0.8575,
-          "h": 0.85758,
-          "l": 0.85714,
-          "c": 0.85728,
+          "time_jst": "2026-09-01 19:00",
+          "o": 0.85622,
+          "h": 0.85652,
+          "l": 0.85599,
+          "c": 0.85644,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 09:00",
+          "time_jst": "2026-09-01 19:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 0.85751,
-          "time_jst": "2026-09-01 00:00"
+          "price": 0.85721,
+          "time_jst": "2026-09-01 15:00"
         },
         "swing_low": {
           "price": 0.85604,
@@ -690,26 +722,26 @@
       }
     },
     "USDCAD": {
-      "price": 1.386,
-      "price_time_jst": "2026-09-01 10:15",
+      "price": 1.38801,
+      "price_time_jst": "2026-09-01 20:35",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-09-01 06:00",
-        "high": 1.38612,
+        "high": 1.38803,
         "low": 1.38453
       },
       "sessions_today": {
         "tokyo": {
-          "high": 1.38612,
+          "high": 1.38756,
           "low": 1.38453,
-          "status": "open",
+          "status": "closed",
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 1.38803,
+          "low": 1.38637,
+          "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
@@ -721,9 +753,9 @@
       },
       "sessions_prev": {
         "tokyo": {
-          "date": "08-31",
-          "high": 1.3908,
-          "low": 1.38889,
+          "date": "09-01",
+          "high": 1.38756,
+          "low": 1.38453,
           "window_jst": "09:00-17:00"
         },
         "london": {
@@ -741,86 +773,94 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-09-01 10:00",
-          "o": 1.38542,
-          "h": 1.38612,
-          "l": 1.38534,
-          "c": 1.38602,
+          "time_jst": "2026-09-01 20:15",
+          "o": 1.38745,
+          "h": 1.38778,
+          "l": 1.38744,
+          "c": 1.38766,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 10:00",
+          "time_jst": "2026-09-01 20:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.38579,
-          "time_jst": "2026-09-01 08:15"
+          "price": 1.3877,
+          "time_jst": "2026-09-01 17:30"
         },
         "swing_low": {
-          "price": 1.38453,
-          "time_jst": "2026-09-01 09:15"
+          "price": 1.38665,
+          "time_jst": "2026-09-01 18:45"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-09-01 09:00",
-          "o": 1.38534,
-          "h": 1.38548,
-          "l": 1.38453,
-          "c": 1.38545,
+          "time_jst": "2026-09-01 19:00",
+          "o": 1.38675,
+          "h": 1.38749,
+          "l": 1.38666,
+          "c": 1.38737,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 09:00",
+          "time_jst": "2026-09-01 19:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.38609,
-          "time_jst": "2026-09-01 05:00"
+          "price": 1.3877,
+          "time_jst": "2026-09-01 17:00"
         },
         "swing_low": {
-          "price": 1.38526,
-          "time_jst": "2026-09-01 05:00"
+          "price": 1.38605,
+          "time_jst": "2026-09-01 15:00"
         }
       },
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-09-01T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "ISM Manufacturing PMI",
+          "stop_from_jst": "22:30",
+          "stop_until_jst": "23:30"
+        }
       }
     },
     "USDCHF": {
-      "price": 0.80906,
-      "price_time_jst": "2026-09-01 10:15",
+      "price": 0.80967,
+      "price_time_jst": "2026-09-01 20:35",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-09-01 06:00",
-        "high": 0.80911,
+        "high": 0.81091,
         "low": 0.80765
       },
       "sessions_today": {
         "tokyo": {
-          "high": 0.80911,
+          "high": 0.81045,
           "low": 0.80793,
-          "status": "open",
+          "status": "closed",
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 0.81091,
+          "low": 0.80925,
+          "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
@@ -832,9 +872,9 @@
       },
       "sessions_prev": {
         "tokyo": {
-          "date": "08-31",
-          "high": 0.80971,
-          "low": 0.80761,
+          "date": "09-01",
+          "high": 0.81045,
+          "low": 0.80793,
           "window_jst": "09:00-17:00"
         },
         "london": {
@@ -852,86 +892,94 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-09-01 10:00",
-          "o": 0.8086,
-          "h": 0.80911,
-          "l": 0.8086,
-          "c": 0.809,
+          "time_jst": "2026-09-01 20:15",
+          "o": 0.81,
+          "h": 0.81023,
+          "l": 0.80961,
+          "c": 0.80963,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 10:00",
+          "time_jst": "2026-09-01 20:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 0.80878,
-          "time_jst": "2026-09-01 08:00"
+          "price": 0.81037,
+          "time_jst": "2026-09-01 19:45"
         },
         "swing_low": {
-          "price": 0.80793,
-          "time_jst": "2026-09-01 09:30"
+          "price": 0.80925,
+          "time_jst": "2026-09-01 18:45"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-09-01 09:00",
-          "o": 0.80839,
-          "h": 0.80863,
-          "l": 0.80793,
-          "c": 0.80862,
+          "time_jst": "2026-09-01 19:00",
+          "o": 0.80977,
+          "h": 0.81037,
+          "l": 0.80976,
+          "c": 0.81018,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 09:00",
+          "time_jst": "2026-09-01 19:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 0.80859,
-          "time_jst": "2026-09-01 04:00"
+          "price": 0.81091,
+          "time_jst": "2026-09-01 17:00"
         },
         "swing_low": {
-          "price": 0.80765,
-          "time_jst": "2026-09-01 06:00"
+          "price": 0.80915,
+          "time_jst": "2026-09-01 15:00"
         }
       },
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-09-01T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "ISM Manufacturing PMI",
+          "stop_from_jst": "22:30",
+          "stop_until_jst": "23:30"
+        }
       }
     },
     "NZDUSD": {
-      "price": 0.5913,
-      "price_time_jst": "2026-09-01 10:15",
+      "price": 0.5895,
+      "price_time_jst": "2026-09-01 20:35",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-09-01 06:00",
         "high": 0.59291,
-        "low": 0.59122
+        "low": 0.58928
       },
       "sessions_today": {
         "tokyo": {
           "high": 0.59291,
-          "low": 0.59129,
-          "status": "open",
+          "low": 0.59005,
+          "status": "closed",
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 0.59109,
+          "low": 0.58928,
+          "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
@@ -943,9 +991,9 @@
       },
       "sessions_prev": {
         "tokyo": {
-          "date": "08-31",
-          "high": 0.59221,
-          "low": 0.59016,
+          "date": "09-01",
+          "high": 0.59291,
+          "low": 0.59005,
           "window_jst": "09:00-17:00"
         },
         "london": {
@@ -963,52 +1011,52 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-09-01 10:00",
-          "o": 0.592,
-          "h": 0.59212,
-          "l": 0.59138,
-          "c": 0.59151,
+          "time_jst": "2026-09-01 20:15",
+          "o": 0.58955,
+          "h": 0.58966,
+          "l": 0.58933,
+          "c": 0.58964,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 10:00",
+          "time_jst": "2026-09-01 20:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 0.59291,
-          "time_jst": "2026-09-01 09:15"
+          "price": 0.58992,
+          "time_jst": "2026-09-01 19:30"
         },
         "swing_low": {
-          "price": 0.59147,
-          "time_jst": "2026-09-01 08:15"
+          "price": 0.58928,
+          "time_jst": "2026-09-01 18:30"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-09-01 09:00",
-          "o": 0.59214,
-          "h": 0.59291,
-          "l": 0.59185,
-          "c": 0.59201,
+          "time_jst": "2026-09-01 19:00",
+          "o": 0.5896,
+          "h": 0.58992,
+          "l": 0.5894,
+          "c": 0.58956,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 09:00",
+          "time_jst": "2026-09-01 19:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 0.59203,
-          "time_jst": "2026-09-01 02:00"
+          "price": 0.5914,
+          "time_jst": "2026-09-01 14:00"
         },
         "swing_low": {
           "price": 0.59122,
@@ -1019,30 +1067,38 @@
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-09-01T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "ISM Manufacturing PMI",
+          "stop_from_jst": "22:30",
+          "stop_until_jst": "23:30"
+        }
       }
     },
     "AUDNZD": {
-      "price": 1.21229,
-      "price_time_jst": "2026-09-01 10:15",
+      "price": 1.212,
+      "price_time_jst": "2026-09-01 20:35",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-09-01 06:00",
-        "high": 1.21233,
+        "high": 1.21377,
         "low": 1.21058
       },
       "sessions_today": {
         "tokyo": {
-          "high": 1.21233,
+          "high": 1.21377,
           "low": 1.21058,
-          "status": "open",
+          "status": "closed",
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 1.21291,
+          "low": 1.21129,
+          "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
@@ -1054,9 +1110,9 @@
       },
       "sessions_prev": {
         "tokyo": {
-          "date": "08-31",
-          "high": 1.21346,
-          "low": 1.20944,
+          "date": "09-01",
+          "high": 1.21377,
+          "low": 1.21058,
           "window_jst": "09:00-17:00"
         },
         "london": {
@@ -1074,56 +1130,56 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-09-01 10:00",
-          "o": 1.21131,
-          "h": 1.21219,
-          "l": 1.21122,
-          "c": 1.21196,
+          "time_jst": "2026-09-01 20:15",
+          "o": 1.21195,
+          "h": 1.21214,
+          "l": 1.21172,
+          "c": 1.21176,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 10:00",
+          "time_jst": "2026-09-01 20:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.21172,
-          "time_jst": "2026-09-01 08:15"
+          "price": 1.21201,
+          "time_jst": "2026-09-01 19:00"
         },
         "swing_low": {
-          "price": 1.21058,
-          "time_jst": "2026-09-01 09:00"
+          "price": 1.21135,
+          "time_jst": "2026-09-01 19:45"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-09-01 09:00",
-          "o": 1.21092,
-          "h": 1.21193,
-          "l": 1.21058,
-          "c": 1.21127,
+          "time_jst": "2026-09-01 19:00",
+          "o": 1.21173,
+          "h": 1.21201,
+          "l": 1.21135,
+          "c": 1.21178,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 09:00",
+          "time_jst": "2026-09-01 19:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.21209,
-          "time_jst": "2026-09-01 06:00"
+          "price": 1.21377,
+          "time_jst": "2026-09-01 13:00"
         },
         "swing_low": {
-          "price": 1.21069,
-          "time_jst": "2026-09-01 04:00"
+          "price": 1.21058,
+          "time_jst": "2026-09-01 09:00"
         }
       },
       "gate": {
@@ -1134,26 +1190,26 @@
       }
     },
     "XAUUSD": {
-      "price": 4444.92,
-      "price_time_jst": "2026-09-01 10:15",
+      "price": 4379.98,
+      "price_time_jst": "2026-09-01 20:35",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-09-01 06:00",
         "high": 4462.06,
-        "low": 4442.08
+        "low": 4364
       },
       "sessions_today": {
         "tokyo": {
           "high": 4462.06,
-          "low": 4444.62,
-          "status": "open",
+          "low": 4415.08,
+          "status": "closed",
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 4435.38,
+          "low": 4364,
+          "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
@@ -1165,9 +1221,9 @@
       },
       "sessions_prev": {
         "tokyo": {
-          "date": "08-31",
-          "high": 4470.87,
-          "low": 4400.1,
+          "date": "09-01",
+          "high": 4462.06,
+          "low": 4415.08,
           "window_jst": "09:00-17:00"
         },
         "london": {
@@ -1185,86 +1241,94 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-09-01 10:00",
-          "o": 4453.99,
-          "h": 4455.93,
-          "l": 4446.22,
-          "c": 4448.95,
+          "time_jst": "2026-09-01 20:15",
+          "o": 4381.04,
+          "h": 4381.04,
+          "l": 4375.22,
+          "c": 4380.64,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 10:00",
+          "time_jst": "2026-09-01 20:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 4462.06,
-          "time_jst": "2026-09-01 09:15"
+          "price": 4386.26,
+          "time_jst": "2026-09-01 19:30"
         },
         "swing_low": {
-          "price": 4442.08,
-          "time_jst": "2026-09-01 08:15"
+          "price": 4375.19,
+          "time_jst": "2026-09-01 19:45"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-09-01 09:00",
-          "o": 4451.12,
-          "h": 4462.06,
-          "l": 4448,
-          "c": 4453.58,
+          "time_jst": "2026-09-01 19:00",
+          "o": 4368.36,
+          "h": 4386.26,
+          "l": 4364,
+          "c": 4378.79,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 09:00",
+          "time_jst": "2026-09-01 19:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 4464.49,
-          "time_jst": "2026-08-31 20:00"
+          "price": 4446.06,
+          "time_jst": "2026-09-01 14:00"
         },
         "swing_low": {
-          "price": 4416.76,
-          "time_jst": "2026-08-31 23:00"
+          "price": 4425.65,
+          "time_jst": "2026-09-01 13:00"
         }
       },
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-09-01T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "ISM Manufacturing PMI",
+          "stop_from_jst": "22:30",
+          "stop_until_jst": "23:30"
+        }
       }
     },
     "USOIL": {
-      "price": 85.65,
-      "price_time_jst": "2026-09-01 10:15",
+      "price": 86.53,
+      "price_time_jst": "2026-09-01 20:35",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-09-01 06:00",
-        "high": 85.77,
+        "high": 87.11,
         "low": 85.17
       },
       "sessions_today": {
         "tokyo": {
-          "high": 85.77,
-          "low": 85.45,
-          "status": "open",
+          "high": 86.3,
+          "low": 85.24,
+          "status": "closed",
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 87.11,
+          "low": 85.42,
+          "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
@@ -1276,9 +1340,9 @@
       },
       "sessions_prev": {
         "tokyo": {
-          "date": "08-31",
-          "high": 85.26,
-          "low": 83.34,
+          "date": "09-01",
+          "high": 86.3,
+          "low": 85.24,
           "window_jst": "09:00-17:00"
         },
         "london": {
@@ -1296,63 +1360,71 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-09-01 10:00",
-          "o": 85.58,
-          "h": 85.77,
-          "l": 85.45,
-          "c": 85.54,
+          "time_jst": "2026-09-01 20:15",
+          "o": 86.79,
+          "h": 86.82,
+          "l": 86.58,
+          "c": 86.62,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 10:00",
+          "time_jst": "2026-09-01 20:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 85.55,
-          "time_jst": "2026-09-01 08:00"
+          "price": 87.08,
+          "time_jst": "2026-09-01 19:00"
         },
         "swing_low": {
-          "price": 84.73,
-          "time_jst": "2026-09-01 04:00"
+          "price": 86.54,
+          "time_jst": "2026-09-01 19:30"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-09-01 09:00",
-          "o": 85.47,
-          "h": 85.76,
-          "l": 85.45,
-          "c": 85.61,
+          "time_jst": "2026-09-01 19:00",
+          "o": 86.93,
+          "h": 87.08,
+          "l": 86.54,
+          "c": 86.82,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-09-01 09:00",
+          "time_jst": "2026-09-01 19:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 85.91,
-          "time_jst": "2026-08-31 19:00"
+          "price": 87.11,
+          "time_jst": "2026-09-01 17:00"
         },
         "swing_low": {
-          "price": 84.36,
-          "time_jst": "2026-09-01 00:00"
+          "price": 85.24,
+          "time_jst": "2026-09-01 14:00"
         }
       },
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [],
-        "next_gated_event": null
+        "next_gated_event": {
+          "time_jst": "23:00",
+          "datetime_jst": "2026-09-01T23:00:00+09:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "ISM Manufacturing PMI",
+          "stop_from_jst": "22:30",
+          "stop_until_jst": "23:30"
+        }
       }
     }
   },
