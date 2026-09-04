@@ -2,16 +2,34 @@ name: Daily FX Data
 
 on:
   schedule:
-    # 23:30 UTC 月〜金 = 火〜土 8:30 JST
-    - cron: "13 22 * * 1-5"
-  workflow_dispatch: {}  # 手動実行も可能
+    # 全て「前営業日セッション」を対象にした同一内容の実行。最初に届いた1本が仕事をし、
+    # 残りは fetch.js --if-stale が即終了する（APIクレジット消費ゼロ）。
+    #
+    # 冗長化の理由: GitHubのスケジュール配信はベストエフォートで、本リポジトリでは
+    # 22:13Zのcronが実測で25分〜約8時間遅れて発火している（2026-08-28は06:05Z=15:05 JST）。
+    # 単発cronだと、その遅延がそのまま「フィードが午前中ずっと前日値のまま」になる。
+    #
+    # UTC↔JSTの曜日に注意: 22〜23時台のUTCは翌日のJSTなので曜日は 1-5（月〜金UTC=火〜土JST）、
+    # 00時台以降のUTCは同じ日のJST午前なので曜日を+1して 2-6 にする。ここを 1-5 のままにすると
+    # JST月曜の午前に誤発火し、対象セッションが前週金曜のまま上書きされる。
+    - cron: "13 22 * * 1-5"   # JST 火〜土 07:13（本命）
+    - cron: "41 23 * * 1-5"   # JST 火〜土 08:41（再試行1）
+    - cron: "23 1 * * 2-6"    # JST 火〜土 10:23（再試行2）
+    - cron: "23 3 * * 2-6"    # JST 火〜土 12:23（再試行3・最終）
+  workflow_dispatch: {}  # 手動実行も可能（この場合は --if-stale を付けず必ず再取得する）
 
 permissions:
   contents: write
 
+# 遅延した複数のcronが束になって発火した場合に、同じdata/へ同時にpushしないようにする
+concurrency:
+  group: daily-fx-data
+  cancel-in-progress: false
+
 jobs:
   fetch:
     runs-on: ubuntu-latest
+    timeout-minutes: 20  # 外部APIのハングでジョブが既定の6時間居座るのを防ぐ
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,7 +42,9 @@ jobs:
       - name: Fetch FX data
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
-        run: node fetch.js
+        # スケジュール実行のみ --if-stale を付ける。既に当日分が健全に揃っていれば
+        # fetch.js が外部APIを一切呼ばずに即終了する。手動実行は常に再取得。
+        run: node fetch.js ${{ github.event_name == 'schedule' && '--if-stale' || '' }}
 
       - name: Build GPT feed
         run: node build-feed.js
@@ -46,3 +66,18 @@ jobs:
           done
           echo "::error::data/のpushに3回失敗しました。daily-levels.jsonが更新されていません"
           exit 1
+
+      # 取得に失敗した銘柄があれば、コミット後に実行を赤くして気づけるようにする。
+      # 順序が重要: 先にpushしておかないと、エラー内容を載せたdaily-levels.json自体が
+      # 下流に届かないまま実行だけが赤くなり、下流は「前日値のまま・理由不明」になる。
+      - name: Assert feed completeness
+        run: |
+          node -e '
+            const d = require("./data/daily-levels.json");
+            const g = d.generation || {};
+            console.log(`status=${g.status} complete=${g.complete} errors=${(d.errors||[]).length} session_date=${d.session_date}`);
+            if (g.complete) process.exit(0);
+            for (const e of d.errors || []) console.log(`::error::daily-levels: ${e}`);
+            console.log(`::error::daily-levels.jsonが不完全です（欠落: ${(g.coverage?.pairs?.missing || []).join(",") || "なし"}）。retry_expected=${g.retry_expected}`);
+            process.exit(1);
+          '
