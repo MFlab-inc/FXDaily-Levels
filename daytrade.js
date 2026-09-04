@@ -36,6 +36,64 @@ const PAIRS = [
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const round = (n, d) => Number(n.toFixed(d));
 
+// ---- HTTP取得（タイムアウト＋分類つきリトライ）----
+// fetch.js/intraday.jsの同名ヘルパーと同じ設計。この台本は15分毎に走るため、
+// 予算・待機時間はintraday.js側と揃えた小さめの値にしてある。
+const RETRY_BUDGET = { left: 8 }; // 12ペア×2系列=24リクエストあるためintraday.jsよりやや広め
+const BACKOFF_MS = [1500, 4000];
+const RATE_LIMIT_WAIT_MS = 8000;
+
+function isRetryableStatus(status) {
+  return status === 408 || status === 425 || status === 429 || (status >= 500 && status <= 599);
+}
+function isRetryableTransport(e) {
+  const code = e?.cause?.code || e?.code || "";
+  if (["ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "EAI_AGAIN", "UND_ERR_CONNECT_TIMEOUT",
+       "UND_ERR_HEADERS_TIMEOUT", "UND_ERR_BODY_TIMEOUT", "UND_ERR_SOCKET"].includes(code)) return true;
+  if (e?.name === "TimeoutError" || e?.name === "AbortError") return true;
+  return /fetch failed|terminated|socket hang up|network/i.test(e?.message || "");
+}
+
+async function fetchWithRetry(url, { label, timeoutMs = 15000, headers, retries = 2, validate } = {}) {
+  for (let attempt = 0; ; attempt++) {
+    let err = null;
+    try {
+      const res = await fetch(url, { headers, signal: AbortSignal.timeout(timeoutMs) });
+      if (!res.ok) {
+        err = new Error(`HTTP ${res.status} (${label})`);
+        err.retryable = isRetryableStatus(res.status);
+        const ra = Number(res.headers.get("retry-after"));
+        if (Number.isFinite(ra) && ra > 0) err.waitMs = Math.min(30000, ra * 1000);
+        else if (res.status === 429) err.waitMs = RATE_LIMIT_WAIT_MS;
+        throw err;
+      }
+      const body = await res.json();
+      const bad = validate ? validate(body) : null;
+      if (bad) {
+        err = new Error(`${bad.message} (${label})`);
+        err.retryable = !!bad.retryable;
+        if (bad.retryable) err.waitMs = RATE_LIMIT_WAIT_MS;
+        throw err;
+      }
+      return body;
+    } catch (e) {
+      err = e;
+      const retryable = e.retryable !== undefined ? e.retryable
+        : (e instanceof SyntaxError ? true : isRetryableTransport(e));
+      if (!retryable || attempt >= retries) throw e;
+      if (RETRY_BUDGET.left <= 0) {
+        e.message += "（1実行あたりのリトライ上限に到達したため再試行せず）";
+        throw e;
+      }
+      RETRY_BUDGET.left--;
+      const waitMs = (e.waitMs ?? BACKOFF_MS[Math.min(attempt, BACKOFF_MS.length - 1)])
+        + Math.floor(Math.random() * 500);
+      console.warn(`  再試行 ${attempt + 1}/${retries} (${label}): ${e.message} → ${Math.round(waitMs / 1000)}秒待機`);
+      await sleep(waitMs);
+    }
+  }
+}
+
 // ---- 時刻ユーティリティ（JST基準）----
 function jstNow(now = new Date()) {
   return new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
@@ -74,11 +132,17 @@ async function fetchM5(tdSymbol) {
   const url =
     `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(tdSymbol)}` +
     `&interval=5min&outputsize=1700&timezone=Asia/Tokyo&apikey=${API_KEY}`;
-  const res = await fetch(url);
-  const json = await res.json();
-  if (json.status === "error" || !json.values) {
-    throw new Error(`Twelve Data エラー (${tdSymbol}): ${json.message || "no data"}`);
-  }
+  const json = await fetchWithRetry(url, {
+    label: `twelvedata:M5:${tdSymbol}`, timeoutMs: 15000,
+    validate: (j) => {
+      if (j?.status !== "error" && j?.values) return null;
+      const code = Number(j?.code);
+      return {
+        message: `Twelve Data エラー: ${j?.message || "no data"}${code ? ` [code ${code}]` : ""}`,
+        retryable: code === 429 || (code >= 500 && code <= 599),
+      };
+    },
+  });
   return json.values.map((v) => ({
     t: new Date(v.datetime.replace(" ", "T")), // JSTローカルとして解釈
     o: parseFloat(v.open), h: parseFloat(v.high),
@@ -93,11 +157,17 @@ async function fetchH1Series(tdSymbol, digits, nowJst) {
   const url =
     `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(tdSymbol)}` +
     `&interval=1h&outputsize=750&timezone=Asia/Tokyo&apikey=${API_KEY}`; // 休場帯除外後も500本を確保
-  const res = await fetch(url);
-  const json = await res.json();
-  if (json.status === "error" || !json.values) {
-    throw new Error(`Twelve Data H1エラー (${tdSymbol}): ${json.message || "no data"}`);
-  }
+  const json = await fetchWithRetry(url, {
+    label: `twelvedata:H1:${tdSymbol}`, timeoutMs: 15000,
+    validate: (j) => {
+      if (j?.status !== "error" && j?.values) return null;
+      const code = Number(j?.code);
+      return {
+        message: `Twelve Data H1エラー: ${j?.message || "no data"}${code ? ` [code ${code}]` : ""}`,
+        retryable: code === 429 || (code >= 500 && code <= 599),
+      };
+    },
+  });
   const bars = [];
   for (const v of json.values) {
     const t = new Date(v.datetime.replace(" ", "T"));
@@ -120,9 +190,10 @@ async function fetchH1Series(tdSymbol, digits, nowJst) {
 // 約72立会日≒100暦日が必要なため range=180d とする（先物時代は60dで足りていた）。
 async function fetchUS500H1(nowMs) {
   const url = "https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=60m&range=180d";
-  const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" } });
-  if (!res.ok) throw new Error(`Yahoo HTTP ${res.status} (^GSPC)`);
-  const json = await res.json();
+  const json = await fetchWithRetry(url, {
+    label: "yahoo:^GSPC", timeoutMs: 15000,
+    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+  });
   const r = json?.chart?.result?.[0];
   if (!r?.timestamp) throw new Error("Yahoo ^GSPC データなし");
   const q = r.indicators.quote[0];
