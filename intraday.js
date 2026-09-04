@@ -33,6 +33,67 @@ const PAIRS = [
 ];
 
 const round = (n, d) => Number(n.toFixed(d));
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// ---- HTTP取得（タイムアウト＋分類つきリトライ）----
+// fetch.jsの同名ヘルパーと同じ設計（詳細はそちら参照）。この台本は15分毎に
+// 走るため、fetch.jsより小さめの予算・待機時間にしてある：1回の実行が長引いて
+// 次のスケジュール実行と重ならないようにするため。ダメでも次の15分サイクルで
+// 自然にリトライされる。
+const RETRY_BUDGET = { left: 6 };
+const BACKOFF_MS = [1500, 4000];
+const RATE_LIMIT_WAIT_MS = 8000;
+
+function isRetryableStatus(status) {
+  return status === 408 || status === 425 || status === 429 || (status >= 500 && status <= 599);
+}
+function isRetryableTransport(e) {
+  const code = e?.cause?.code || e?.code || "";
+  if (["ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "EAI_AGAIN", "UND_ERR_CONNECT_TIMEOUT",
+       "UND_ERR_HEADERS_TIMEOUT", "UND_ERR_BODY_TIMEOUT", "UND_ERR_SOCKET"].includes(code)) return true;
+  if (e?.name === "TimeoutError" || e?.name === "AbortError") return true;
+  return /fetch failed|terminated|socket hang up|network/i.test(e?.message || "");
+}
+
+async function fetchWithRetry(url, { label, timeoutMs = 12000, headers, retries = 2, asText = false, validate } = {}) {
+  for (let attempt = 0; ; attempt++) {
+    let err = null;
+    try {
+      const res = await fetch(url, { headers, signal: AbortSignal.timeout(timeoutMs) });
+      if (!res.ok) {
+        err = new Error(`HTTP ${res.status} (${label})`);
+        err.retryable = isRetryableStatus(res.status);
+        const ra = Number(res.headers.get("retry-after"));
+        if (Number.isFinite(ra) && ra > 0) err.waitMs = Math.min(30000, ra * 1000);
+        else if (res.status === 429) err.waitMs = RATE_LIMIT_WAIT_MS;
+        throw err;
+      }
+      const body = asText ? await res.text() : await res.json();
+      const bad = validate ? validate(body) : null;
+      if (bad) {
+        err = new Error(`${bad.message} (${label})`);
+        err.retryable = !!bad.retryable;
+        if (bad.retryable) err.waitMs = RATE_LIMIT_WAIT_MS;
+        throw err;
+      }
+      return body;
+    } catch (e) {
+      err = e;
+      const retryable = e.retryable !== undefined ? e.retryable
+        : (e instanceof SyntaxError ? true : isRetryableTransport(e));
+      if (!retryable || attempt >= retries) throw e;
+      if (RETRY_BUDGET.left <= 0) {
+        e.message += "（1実行あたりのリトライ上限に到達したため再試行せず）";
+        throw e;
+      }
+      RETRY_BUDGET.left--;
+      const waitMs = (e.waitMs ?? BACKOFF_MS[Math.min(attempt, BACKOFF_MS.length - 1)])
+        + Math.floor(Math.random() * 500);
+      console.warn(`  再試行 ${attempt + 1}/${retries} (${label}): ${e.message} → ${Math.round(waitMs / 1000)}秒待機`);
+      await sleep(waitMs);
+    }
+  }
+}
 
 // ---- 市場心理（Yahoo Finance・fetch.jsと同一仕様）----
 const SENTIMENT = [
@@ -51,11 +112,10 @@ const SENTIMENT = [
 
 async function fetchYahoo(item) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(item.symbol)}?range=10d&interval=1d`;
-  const res = await fetch(url, {
+  const json = await fetchWithRetry(url, {
+    label: `yahoo:${item.symbol}`, timeoutMs: 12000,
     headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
   });
-  if (!res.ok) throw new Error(`Yahoo HTTP ${res.status} (${item.symbol})`);
-  const json = await res.json();
   const result = json?.chart?.result?.[0];
   if (!result) throw new Error(`Yahoo データなし (${item.symbol})`);
   const closes = (result.indicators?.quote?.[0]?.close || []).filter(
@@ -78,36 +138,34 @@ async function fetchYahoo(item) {
 async function fetchUS2Y() {
   // 第1候補: Yahoo 2YY=F（CME 2年利回り先物・ほぼリアルタイム）
   try {
-    const res = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/2YY%3DF?range=10d&interval=1d", {
+    // FREDへのフォールバックがあるため再試行は1回だけ（粘るとフォールバックが遅れる）
+    const json = await fetchWithRetry("https://query1.finance.yahoo.com/v8/finance/chart/2YY%3DF?range=10d&interval=1d", {
+      label: "yahoo:2YY=F", timeoutMs: 12000, retries: 1,
       headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
     });
-    if (res.ok) {
-      const json = await res.json();
-      const closes = (json?.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [])
-        .filter((c) => c !== null && c !== undefined);
-      if (closes.length >= 2) {
-        const value = closes[closes.length - 1];
-        const prev = closes[closes.length - 2];
-        if (value > 0.05 && value < 20 && prev > 0.05 && prev < 20) { // 妥当範囲チェック
-          return {
-            label: "米2年債利回り",
-            value: Number(value.toFixed(3)),
-            prev: Number(prev.toFixed(3)),
-            change: Number((value - prev).toFixed(3)),
-            changePct: Number((((value - prev) / prev) * 100).toFixed(2)),
-            source: "yahoo:2YY=F",
-          };
-        }
+    const closes = (json?.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [])
+      .filter((c) => c !== null && c !== undefined);
+    if (closes.length >= 2) {
+      const value = closes[closes.length - 1];
+      const prev = closes[closes.length - 2];
+      if (value > 0.05 && value < 20 && prev > 0.05 && prev < 20) { // 妥当範囲チェック
+        return {
+          label: "米2年債利回り",
+          value: Number(value.toFixed(3)),
+          prev: Number(prev.toFixed(3)),
+          change: Number((value - prev).toFixed(3)),
+          changePct: Number((((value - prev) / prev) * 100).toFixed(2)),
+          source: "yahoo:2YY=F",
+        };
       }
     }
   } catch (e) { /* フォールバックへ */ }
 
   // 第2候補: FRED公式 DGS2（1営業日遅れ・確実）
-  const res2 = await fetch("https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2", {
+  const csv = await fetchWithRetry("https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2", {
+    label: "fred:DGS2", timeoutMs: 10000, asText: true,
     headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
   });
-  if (!res2.ok) throw new Error(`FRED HTTP ${res2.status}`);
-  const csv = await res2.text();
   const vals = csv.trim().split("\n").slice(1)
     .map((l) => parseFloat(l.split(",")[1]))
     .filter((v) => !isNaN(v));
@@ -138,11 +196,10 @@ function fmtDateLocal(d) {
 
 async function refreshCalendar(dataDir, now) {
   const todayJst = fmtDateLocal(new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" })));
-  const res = await fetch(FF_CALENDAR_URL, {
+  const events = await fetchWithRetry(FF_CALENDAR_URL, {
+    label: "forexfactory:calendar", timeoutMs: 10000,
     headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
   });
-  if (!res.ok) throw new Error(`Forex Factory HTTP ${res.status}`);
-  const events = await res.json();
   const out = [];
   for (const e of events) {
     if (!CAL_CURRENCIES.includes(e.country)) continue;
@@ -230,11 +287,35 @@ async function main() {
   const daily = JSON.parse(fs.readFileSync(levelsPath, "utf8"));
 
   // バッチクオート取得（1リクエスト=7クレジット）
+  // 取得に失敗しても process は落とさない。以前はここが素のfetch()で丸裸だったため、
+  // 1回の429やネットワーク断でintraday.js全体が例外で落ち、intraday.ymlの後続ステップ
+  // 「node daytrade.js」（h1-bars.json生成）まで巻き添えで止まっていた。daytrade.jsは
+  // intraday.jsの出力に一切依存しない独立処理なので、この結合には根拠が無かった。
   const symbols = PAIRS.map((p) => p.td).join(",");
-  const res = await fetch(
-    `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbols)}&apikey=${API_KEY}`
-  );
-  const json = await res.json();
+  let quoteJson = {};
+  let quoteBatchError = null;
+  try {
+    quoteJson = await fetchWithRetry(
+      `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbols)}&apikey=${API_KEY}`,
+      {
+        label: "twelvedata:quote", timeoutMs: 15000,
+        validate: (j) => {
+          // 正常時は "USD/JPY": {...} のような銘柄キー直下のマップ。
+          // レート制限等はバッチ全体が {"status":"error","code":429,...} に置き換わる。
+          if (j?.status !== "error") return null;
+          const code = Number(j?.code);
+          return {
+            message: `Twelve Data quoteバッチエラー: ${j?.message || "no data"}${code ? ` [code ${code}]` : ""}`,
+            retryable: code === 429 || (code >= 500 && code <= 599),
+          };
+        },
+      }
+    );
+  } catch (e) {
+    console.error(`FAIL: quoteバッチ取得 - ${e.message}`);
+    quoteBatchError = e.message;
+    quoteJson = {}; // 全銘柄が下のループで「quote取得失敗」として一律エラー記録される
+  }
 
   const out = {
     as_of: jstIso(now),
@@ -244,11 +325,11 @@ async function main() {
     market_session: sessionInfo(now),
     sentiment: {},
     pairs: {},
-    errors: [],
+    errors: quoteBatchError ? [`quote_batch: ${quoteBatchError}`] : [],
   };
 
   for (const p of PAIRS) {
-    const q = json[p.td];
+    const q = quoteJson[p.td];
     const lv = daily.pairs?.[p.code];
     if (!q || q.status === "error" || !q.close) {
       out.errors.push(`${p.code}: quote取得失敗`);

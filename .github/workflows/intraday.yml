@@ -41,15 +41,25 @@ jobs:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
         run: node intraday.js
 
+      # daytrade.js（h1-bars.json生成）はintraday.jsの出力に一切依存しない独立処理。
+      # 以前はintraday.jsが例外で落ちると、GitHub Actionsの既定動作でここから下が
+      # 丸ごとスキップされ、無関係なh1-bars.json（チャート用データ）まで更新されなく
+      # なっていた。intraday.js側にリトライ・タイムアウトを入れて滅多に落ちないように
+      # した上で、それでも落ちた場合に備えてここは !cancelled() で独立実行させる。
+      # ジョブ全体の成否は素のfailureのまま伝播するため、赤くなる可視性は失われない
+      # （手動キャンセル時だけ後続もスキップされる）。
       - name: Build daytrade context
+        if: ${{ !cancelled() }}
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
         run: node daytrade.js
 
       - name: Build GPT feed
+        if: ${{ !cancelled() }}
         run: node build-feed.js
 
       - name: Commit and push data
+        if: ${{ !cancelled() }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
