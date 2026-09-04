@@ -39,6 +39,15 @@ const PAIRS = [
   { code: "USOIL",  td: "WTI/USD", pip: 0.01,   digits: 2, srcNote: "WTI期近先物連動" },     // 0.01ドル=1pip（MT4/MT5と誤差0.01ドルで実測検証済み）
 ];
 
+// ---- 株価指数3種（Yahoo現物系列・sourceで自己記述。US500はh1-bars.jsonのチャートと同一ソース）----
+// ^DJI/^GSPC/^NDX はそれぞれ YM=F/ES=F/NQ=F と同一指数の現物。^IXIC(ナスダック総合)は別指数のため使用しない。
+// 生成物の完全性チェック(isDailyLevelsFresh)と生成ループの両方が参照するため、モジュール直下に置く。
+const INDICES = [
+  { code: "US500", yahoo: "^GSPC", digits: 2 },
+  { code: "US30",  yahoo: "^DJI",  digits: 0 },
+  { code: "US100", yahoo: "^NDX",  digits: 2 },
+];
+
 // ---- 市場心理（Yahoo Finance 非公式API）----
 const SENTIMENT = [
   { code: "DXY",   symbol: "DX-Y.NYB", label: "ドル指数", divisor: 1,  digits: 2 },
@@ -54,6 +63,83 @@ const CAL_IMPACTS = ["High", "Medium"]; // 対象重要度
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const round = (n, d) => Number(n.toFixed(d));
+
+// ---- HTTP取得（タイムアウト＋分類つきリトライ）----
+// 外部APIの一時的な障害で、その銘柄が丸ごとdaily-levels.jsonから欠落するのを防ぐ。
+//
+// 重要な順序: リトライより先にタイムアウトが必須。素のfetch()はundiciの既定で
+// ヘッダ待ち300秒まで無反応になり得るため、タイムアウト無しでリトライを足すと
+// 「1本のハングで5分」が「15分」に悪化する。必ずsignalとセットで使うこと。
+//
+// リトライ上限は1実行あたりの総数でも縛る。レート制限(429)は全銘柄で同時に起きるため、
+// 「1リクエストにつき2回」だけだと12銘柄×3回=36リクエストが制限中のAPIに殺到し、
+// 一時的なスロットリングをキー停止に悪化させかねない。
+const RETRY_BUDGET = { left: 8 };          // 1実行あたりの総リトライ回数の上限
+// 同日リトライcron(daily.yml)の最終枠。daily.ymlのcronを変えたらここも揃えること。
+// daily-levels.json の generation.retry_expected の算出に使う。
+const SAME_DAY_RETRY_UNTIL_JST_HOUR = 13;
+const BACKOFF_MS = [2000, 6000];           // 指数バックオフ（+ジッタ）
+const RATE_LIMIT_WAIT_MS = 20000;          // 429でRetry-After未提供時の待機
+
+// 再試行して意味がある一時障害か（読み取り専用GETのみなので再送自体は常に安全）
+function isRetryableStatus(status) {
+  return status === 408 || status === 425 || status === 429 || (status >= 500 && status <= 599);
+}
+function isRetryableTransport(e) {
+  const code = e?.cause?.code || e?.code || "";
+  if (["ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "EAI_AGAIN", "UND_ERR_CONNECT_TIMEOUT",
+       "UND_ERR_HEADERS_TIMEOUT", "UND_ERR_BODY_TIMEOUT", "UND_ERR_SOCKET"].includes(code)) return true;
+  if (e?.name === "TimeoutError" || e?.name === "AbortError") return true;
+  return /fetch failed|terminated|socket hang up|network/i.test(e?.message || "");
+}
+
+/**
+ * GETしてJSON(またはテキスト)を返す。タイムアウトと分類つきリトライを内包する。
+ * validate(json) は「HTTP 200だが本文がエラー」を判定するコールバック。
+ *   → null なら正常、{ message, retryable } を返すとその場で失敗扱い。
+ *   Twelve Dataは枯渇・レート制限をHTTP 200 + {"status":"error","code":429} で返すため、
+ *   本文検査もリトライループの内側に置く必要がある。
+ */
+async function fetchWithRetry(url, { label, timeoutMs = 15000, headers, retries = 2, asText = false, validate } = {}) {
+  for (let attempt = 0; ; attempt++) {
+    let err = null;
+    try {
+      const res = await fetch(url, { headers, signal: AbortSignal.timeout(timeoutMs) });
+      if (!res.ok) {
+        err = new Error(`HTTP ${res.status} (${label})`);
+        err.retryable = isRetryableStatus(res.status);
+        const ra = Number(res.headers.get("retry-after"));
+        if (Number.isFinite(ra) && ra > 0) err.waitMs = Math.min(60000, ra * 1000);
+        else if (res.status === 429) err.waitMs = RATE_LIMIT_WAIT_MS;
+        throw err;
+      }
+      const body = asText ? await res.text() : await res.json();
+      const bad = validate ? validate(body) : null;
+      if (bad) {
+        err = new Error(`${bad.message} (${label})`);
+        err.retryable = !!bad.retryable;
+        if (bad.retryable) err.waitMs = RATE_LIMIT_WAIT_MS;
+        throw err;
+      }
+      return body;
+    } catch (e) {
+      err = e;
+      // res.json()のSyntaxError = 途中で切れた本文やCDNのHTMLエラーページ。再試行の価値あり
+      const retryable = e.retryable !== undefined ? e.retryable
+        : (e instanceof SyntaxError ? true : isRetryableTransport(e));
+      if (!retryable || attempt >= retries) throw e;
+      if (RETRY_BUDGET.left <= 0) {
+        e.message += "（1実行あたりのリトライ上限に到達したため再試行せず）";
+        throw e;
+      }
+      RETRY_BUDGET.left--;
+      const waitMs = (e.waitMs ?? BACKOFF_MS[Math.min(attempt, BACKOFF_MS.length - 1)])
+        + Math.floor(Math.random() * 500); // ジッタ（全銘柄が同時に再送するのを崩す）
+      console.warn(`  再試行 ${attempt + 1}/${retries} (${label}): ${e.message} → ${Math.round(waitMs / 1000)}秒待機`);
+      await sleep(waitMs);
+    }
+  }
+}
 
 // ---- 日付ユーティリティ ----
 function lastCompletedSessionDate(now = new Date()) {
@@ -201,11 +287,20 @@ async function fetchPairBars(tdSymbol, cutoffDate) {
   const url =
     `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(tdSymbol)}` +
     `&interval=1h&outputsize=1500&timezone=America/New_York&apikey=${API_KEY}`;
-  const res = await fetch(url);
-  const json = await res.json();
-  if (json.status === "error" || !json.values) {
-    throw new Error(`Twelve Data エラー (${tdSymbol}): ${json.message || "no data"}`);
-  }
+  // Twelve Dataはクレジット枯渇・レート制限をHTTP 200 + {"status":"error","code":429} で返す。
+  // 一方 401(キー不正)/403(プラン外シンボル)/404 は何度投げても同じなので再試行しない。
+  const json = await fetchWithRetry(url, {
+    label: `twelvedata:${tdSymbol}`,
+    timeoutMs: 20000, // outputsize=1500 は本文が大きい
+    validate: (j) => {
+      if (j?.status !== "error" && j?.values) return null;
+      const code = Number(j?.code);
+      return {
+        message: `Twelve Data エラー: ${j?.message || "no data"}${code ? ` [code ${code}]` : ""}`,
+        retryable: code === 429 || (code >= 500 && code <= 599),
+      };
+    },
+  });
   const hoursAsc = json.values
     .map((v) => ({
       datetime: v.datetime,
@@ -224,11 +319,11 @@ async function fetchPairBars(tdSymbol, cutoffDate) {
 // ---- Yahoo Finance から指数取得 ----
 async function fetchYahoo(item) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(item.symbol)}?range=10d&interval=1d`;
-  const res = await fetch(url, {
+  const json = await fetchWithRetry(url, {
+    label: `yahoo:${item.symbol}`,
+    timeoutMs: 12000,
     headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
   });
-  if (!res.ok) throw new Error(`Yahoo HTTP ${res.status} (${item.symbol})`);
-  const json = await res.json();
   const result = json?.chart?.result?.[0];
   if (!result) throw new Error(`Yahoo データなし (${item.symbol})`);
   const closes = (result.indicators?.quote?.[0]?.close || []).filter(
@@ -253,36 +348,35 @@ async function fetchYahoo(item) {
 async function fetchUS2Y() {
   // 第1候補: Yahoo 2YY=F（CME 2年利回り先物・ほぼリアルタイム）
   try {
-    const res = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/2YY%3DF?range=10d&interval=1d", {
+    // FREDへのフォールバックがあるため再試行は1回だけ（粘るとフォールバックが遅れる）
+    const json = await fetchWithRetry("https://query1.finance.yahoo.com/v8/finance/chart/2YY%3DF?range=10d&interval=1d", {
+      label: "yahoo:2YY=F", timeoutMs: 12000, retries: 1,
       headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
     });
-    if (res.ok) {
-      const json = await res.json();
-      const closes = (json?.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [])
-        .filter((c) => c !== null && c !== undefined);
-      if (closes.length >= 2) {
-        const value = closes[closes.length - 1];
-        const prev = closes[closes.length - 2];
-        if (value > 0.05 && value < 20 && prev > 0.05 && prev < 20) { // 妥当範囲チェック
-          return {
-            label: "米2年債利回り",
-            value: Number(value.toFixed(3)),
-            prev: Number(prev.toFixed(3)),
-            change: Number((value - prev).toFixed(3)),
-            changePct: Number((((value - prev) / prev) * 100).toFixed(2)),
-            source: "yahoo:2YY=F",
-          };
-        }
+    const closes = (json?.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [])
+      .filter((c) => c !== null && c !== undefined);
+    if (closes.length >= 2) {
+      const value = closes[closes.length - 1];
+      const prev = closes[closes.length - 2];
+      if (value > 0.05 && value < 20 && prev > 0.05 && prev < 20) { // 妥当範囲チェック
+        return {
+          label: "米2年債利回り",
+          value: Number(value.toFixed(3)),
+          prev: Number(prev.toFixed(3)),
+          change: Number((value - prev).toFixed(3)),
+          changePct: Number((((value - prev) / prev) * 100).toFixed(2)),
+          source: "yahoo:2YY=F",
+        };
       }
     }
+    // 範囲外・本数不足はFREDへ（HTTP失敗時はfetchWithRetryがthrow → 同じくcatchでFREDへ）
   } catch (e) { /* フォールバックへ */ }
 
   // 第2候補: FRED公式 DGS2（1営業日遅れ・確実）
-  const res2 = await fetch("https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2", {
+  const csv = await fetchWithRetry("https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS2", {
+    label: "fred:DGS2", timeoutMs: 10000, asText: true,
     headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
   });
-  if (!res2.ok) throw new Error(`FRED HTTP ${res2.status}`);
-  const csv = await res2.text();
   const vals = csv.trim().split("\n").slice(1)
     .map((l) => parseFloat(l.split(",")[1]))
     .filter((v) => !isNaN(v));
@@ -301,11 +395,10 @@ async function fetchUS2Y() {
 
 // ---- Forex Factory カレンダー取得（当日JST分を抽出）----
 async function fetchCalendar(todayJst) {
-  const res = await fetch(FF_CALENDAR_URL, {
+  const events = await fetchWithRetry(FF_CALENDAR_URL, {
+    label: "forexfactory:calendar", timeoutMs: 10000,
     headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
   });
-  if (!res.ok) throw new Error(`Forex Factory HTTP ${res.status}`);
-  const events = await res.json();
   const out = [];
   for (const e of events) {
     if (!CAL_CURRENCIES.includes(e.country)) continue;
@@ -338,9 +431,10 @@ async function fetchCalendar(todayJst) {
 // 現物は米国立会時間(9:30-16:00 ET)のみのため1日約7本。60d≒42立会日で日足集計には十分。
 async function fetchIndexDailyBars(yahooSymbol, cutoffDate) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?interval=60m&range=60d`;
-  const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" } });
-  if (!res.ok) throw new Error(`Yahoo HTTP ${res.status} (${yahooSymbol})`);
-  const json = await res.json();
+  const json = await fetchWithRetry(url, {
+    label: `yahoo:${yahooSymbol}`, timeoutMs: 15000,
+    headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+  });
   const r = json?.chart?.result?.[0];
   if (!r?.timestamp) throw new Error(`Yahoo ${yahooSymbol} データなし`);
   const q = r.indicators.quote[0];
@@ -361,6 +455,29 @@ async function fetchIndexDailyBars(yahooSymbol, cutoffDate) {
   return daily.reverse(); // computeIndicatorsは新しい順を期待
 }
 
+// 既に当日分が健全に生成済みかを、外部APIを一切叩かずに判定する。
+// 同日リトライ用のcronはこの判定で早期終了するため、正常な朝はAPIクレジットを消費しない。
+// 「健全」の条件は3つとも満たすこと:
+//   1. session_date が期待する直近確定セッションと一致（＝当日分として新しい）
+//   2. errors が空（部分失敗して欠けたまま固定されるのを防ぐ）
+//   3. 必須銘柄が全て揃っている（render_chart.py の REQUIRED_DAILY と同じ15銘柄）
+function isDailyLevelsFresh(expectedSession, requiredCodes) {
+  const p = path.join(__dirname, "data", "daily-levels.json");
+  if (!fs.existsSync(p)) return { fresh: false, reason: "daily-levels.json が無い" };
+  let dl;
+  try { dl = JSON.parse(fs.readFileSync(p, "utf8")); }
+  catch (e) { return { fresh: false, reason: `読み込み失敗: ${e.message}` }; }
+  if (dl.session_date !== expectedSession) {
+    return { fresh: false, reason: `session_date=${dl.session_date ?? "なし"} / 期待=${expectedSession}` };
+  }
+  // errorsフィールドが無い＝本機能より前に生成された古い版。安全側に倒して再取得する
+  if (!Array.isArray(dl.errors)) return { fresh: false, reason: "errorsフィールドが無い（旧版）" };
+  if (dl.errors.length > 0) return { fresh: false, reason: `前回実行に${dl.errors.length}件のエラーが残っている` };
+  const missing = requiredCodes.filter((c) => !dl.pairs?.[c]);
+  if (missing.length) return { fresh: false, reason: `銘柄不足: ${missing.join(",")}` };
+  return { fresh: true, reason: `session_date=${dl.session_date} / ${requiredCodes.length}銘柄・エラー0件` };
+}
+
 async function main() {
   const now = new Date();
   const cutoff = lastCompletedSessionDate(now);
@@ -368,6 +485,18 @@ async function main() {
   // 週足ピボットの対象週判定に使用（休場帯なら直近セッションの週が確定済み）
   const weekClosed = isFxWeekClosed(now);
   console.log(`実行日(JST): ${today} / 確定セッション: ${cutoff} / FX週確定: ${weekClosed}`);
+
+  // --if-stale: 既に健全な当日分があれば何もせず終了（同日リトライcron用）。
+  // 手動実行(workflow_dispatch)ではこのフラグを付けないため、常に再取得される。
+  const REQUIRED_CODES = [...PAIRS.map((p) => p.code), ...INDICES.map((ix) => ix.code)];
+  if (process.argv.includes("--if-stale")) {
+    const f = isDailyLevelsFresh(cutoff, REQUIRED_CODES);
+    if (f.fresh) {
+      console.log(`既に最新のためスキップ（${f.reason}）。APIは呼び出していません`);
+      return;
+    }
+    console.log(`再取得が必要（${f.reason}）`);
+  }
 
   const out = {
     date: today,
@@ -459,6 +588,11 @@ async function main() {
     as_of: jstIso(now),
     timezone: "Asia/Tokyo",
     session_date: cutoff,
+    // 生成の健全性。中身は株価指数ループの完了後（ファイル書き出し直前）に確定させるが、
+    // キーの位置をここで確保しておく（JSON.stringifyは挿入順を保つため、後から代入すると
+    // 巨大なpairsの後ろに埋もれて読み手が気づけない）。
+    generation: null,
+    errors: [],
     market_sentiment: {
       dxy: s("DXY")?.value ?? null,
       dxy_change_pct: s("DXY")?.changePct ?? null,
@@ -510,13 +644,6 @@ async function main() {
       source: `twelvedata:${p.td}${p.srcNote ? `(${p.srcNote})` : ""}`,
     };
   }
-  // 株価指数3種（Yahoo現物系列・sourceで自己記述。US500はh1-bars.jsonのチャートと同一ソース）
-  // ^DJI/^GSPC/^NDX はそれぞれ YM=F/ES=F/NQ=F と同一指数の現物。^IXIC(ナスダック総合)は別指数のため使用しない。
-  const INDICES = [
-    { code: "US500", yahoo: "^GSPC", digits: 2 },
-    { code: "US30",  yahoo: "^DJI",  digits: 0 },
-    { code: "US100", yahoo: "^NDX",  digits: 2 },
-  ];
   for (const ix of INDICES) {
     try {
       const bars = await fetchIndexDailyBars(ix.yahoo, cutoff);
@@ -556,6 +683,36 @@ async function main() {
       out.errors.push(`${ix.code}: ${e.message}`);
     }
   }
+
+  // ---- 生成の健全性を daily-levels.json 自身に残す ----
+  // これが無いと下流は「取得に失敗して欠けている」と「そもそも対象外」を区別できず、
+  // 部分的に欠けたフィードが正常なものとして下流に流れてしまう。
+  // 株価指数ループの後（＝out.errorsが出揃った後）に確定させること。
+  const missingPairs = REQUIRED_CODES.filter((c) => !dailyLevels.pairs[c]);
+  const sentimentCodes = SENTIMENT.map((s) => s.code);
+  const missingSentiment = sentimentCodes.filter((c) => !out.sentiment[c]);
+  const calendarOk = !out.errors.some((e) => e.startsWith("calendar:"));
+  const jstHour = Number(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo", hour: "2-digit", hour12: false }));
+  // 同日リトライcron（daily.yml）が残っているか。cronを変更したらここも揃えること。
+  const retryExpected = out.errors.length > 0 && jstHour < SAME_DAY_RETRY_UNTIL_JST_HOUR;
+
+  dailyLevels.errors = [...out.errors];
+  dailyLevels.generation = {
+    status: out.errors.length === 0 ? "ok" : "partial",
+    complete: out.errors.length === 0 && missingPairs.length === 0,
+    coverage: {
+      pairs: { expected: REQUIRED_CODES.length, present: REQUIRED_CODES.length - missingPairs.length, missing: missingPairs },
+      sentiment: { expected: sentimentCodes.length, present: sentimentCodes.length - missingSentiment.length, missing: missingSentiment },
+      calendar: { ok: calendarOk, events: calendar.length },
+    },
+    retry_expected: retryExpected,
+    retry_note: retryExpected
+      ? `同日中に daily.yml の再試行cronが残っている（JST ${SAME_DAY_RETRY_UNTIL_JST_HOUR}時頃まで）。次の実行で自動的に再取得される`
+      : "同日中の自動再試行は残っていない。復旧は翌営業日朝の定期実行、または daily.yml の手動実行(workflow_dispatch)",
+    run_url: process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && process.env.GITHUB_RUN_ID
+      ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+      : null,
+  };
 
   fs.writeFileSync(path.join(dataDir, "daily-levels.json"), JSON.stringify(dailyLevels, null, 2));
 
