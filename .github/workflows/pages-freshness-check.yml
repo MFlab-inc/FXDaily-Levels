@@ -1,0 +1,103 @@
+name: Pages Freshness Check
+
+on:
+  schedule:
+    # 30分毎に公開URL(GitHub Pages)の内容がmainに追いついているかを確認する。
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # 背景: 2026-09-23 11:47頃〜2026-09-24 10:4x頃、mainへのコミット・
+      # pages-build-deployment(Actions)は正常に成功し続けていたにもかかわらず、
+      # 公開URL(https://mflab-inc.github.io/.../data/gpt-feed.txt)だけが
+      # 約23時間古い内容のまま取り残された事例があった。原因調査の結果、
+      # ワークフロー側・Pages設定側には異常がなく、GitHub Pages配信網(CDN)
+      # 側のキャッシュ更新遅延と見られる。リポジトリの設定からは制御できない
+      # 事象のため、「防ぐ」のではなく「早期に気づく」ことを目的に追加する。
+      #
+      # mainのdata/gpt-feed.txt(このジョブがcheckoutした最新版)と、
+      # 公開URLの内容それぞれからfeed_generated_atを取り出し、両者の差が
+      # 閾値を超えていたら公開が追いついていないと判断してジョブを失敗させる。
+      # 絶対時刻ではなくmain側との相対差で判定するため、intraday.ymlが
+      # 動いていない時間帯(週末など)でも誤検知しない。
+      - name: Compare published feed freshness against main
+        env:
+          PAGES_URL: "https://mflab-inc.github.io/FXDaily-Levels/data/gpt-feed.txt"
+          MAX_LAG_MINUTES: "180" # 公開URLがmainよりこの分数以上遅れたら異常とみなす（必要に応じて調整可）
+        run: |
+          node -e '
+            const fs = require("fs");
+
+            function extractGeneratedAt(text) {
+              const m = text.match(/feed_generated_at:\s*(\S+)/);
+              return m ? m[1] : null;
+            }
+
+            async function fetchWithRetry(url) {
+              let lastErr;
+              for (let attempt = 0; attempt < 2; attempt++) {
+                try {
+                  const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                  return await res.text();
+                } catch (e) {
+                  lastErr = e;
+                  if (attempt === 0) await new Promise((r) => setTimeout(r, 3000));
+                }
+              }
+              throw lastErr;
+            }
+
+            (async () => {
+              const localText = fs.readFileSync("data/gpt-feed.txt", "utf8");
+              const localGeneratedAt = extractGeneratedAt(localText);
+              if (!localGeneratedAt) {
+                console.log("::error::ローカル(main)のdata/gpt-feed.txtからfeed_generated_atを読み取れません");
+                process.exit(1);
+              }
+              const localTime = new Date(localGeneratedAt);
+
+              const url = `${process.env.PAGES_URL}?_=${Date.now()}`;
+              let pagesText;
+              try {
+                pagesText = await fetchWithRetry(url);
+              } catch (e) {
+                console.log(`::error::公開URLの取得に失敗しました: ${e.message} (${url})`);
+                process.exit(1);
+              }
+
+              const pagesGeneratedAt = extractGeneratedAt(pagesText);
+              if (!pagesGeneratedAt) {
+                console.log("::error::公開URLの内容からfeed_generated_atを読み取れません（ページ構造が変わった可能性があります）");
+                process.exit(1);
+              }
+              const pagesTime = new Date(pagesGeneratedAt);
+
+              const lagMinutes = Math.round((localTime - pagesTime) / 60000);
+              const maxLag = Number(process.env.MAX_LAG_MINUTES);
+              console.log(`main: ${localGeneratedAt} / 公開URL: ${pagesGeneratedAt} / 遅延: ${lagMinutes}分（許容${maxLag}分）`);
+
+              if (lagMinutes > maxLag) {
+                console.log(`::error::GitHub Pagesの公開データがmainより${lagMinutes}分遅れています（許容${maxLag}分）。公開URLの内容とCDNキャッシュの状態を確認してください。`);
+                process.exit(1);
+              }
+            })().catch((e) => {
+              console.log(`::error::チェック中に予期しないエラー: ${e.message}`);
+              process.exit(1);
+            });
+          '
