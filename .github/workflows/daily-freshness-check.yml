@@ -1,0 +1,49 @@
+name: Daily Freshness Check
+
+on:
+  schedule:
+    # 朝9時台〜11時台(JST)に30分毎。daily.yml が朝のうちに daily-levels.json を
+    # 更新できていなければ、この実行を失敗（赤）にして気づけるようにする。
+    # 「実行が失敗した」ことは daily.yml 自身の "Assert feed completeness" で検知できるが、
+    # daily.yml のscheduleが1本も発火しなかった場合は検知するジョブ自体が存在しないため、
+    # daily.yml とは独立したこのワークフローで「結果として更新されているか」を見張る。
+    # 曜日は daily.yml と同じ火〜土(JST)。00〜02時台のUTCは同日のJSTなので 2-6。
+    # 毎時0分は配信が混みやすいのでずらしている。
+    - cron: "7,37 0-2 * * 2-6"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  actions: read  # 失敗時に直近のdaily.yml実行状況を表示するため
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # fetch.js --check-fresh は daily.yml の --if-stale と同じ判定（isDailyLevelsFresh）:
+      #   session_date が期待する直近確定セッションと一致 / errors が空 / 必須15銘柄が揃う
+      # 外部APIは呼ばない（APIキーも不要）。
+      - name: Check daily-levels.json freshness
+        run: node fetch.js --check-fresh
+
+      # 「scheduleが発火しなかった」のか「発火したが失敗した」のかを切り分ける材料。
+      # 診断用なので、ここが失敗してもこのジョブの成否には影響させない。
+      - name: Show recent daily.yml runs
+        if: ${{ failure() }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "::error::daily-levels.json が朝の時点で未更新です。上の STALE の理由と、下の直近のdaily.yml実行を確認してください。scheduleの発火が無い場合は Actions → Daily FX Data → Run workflow で手動実行できます"
+          gh run list --repo "$GITHUB_REPOSITORY" --workflow daily.yml --limit 8 \
+            --json event,status,conclusion,createdAt \
+            --template '{{range .}}{{.createdAt}}  {{.event}}  {{.status}}  {{.conclusion}}{{"\n"}}{{end}}'

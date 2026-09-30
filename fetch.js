@@ -14,7 +14,8 @@ const fs = require("fs");
 const path = require("path");
 
 const API_KEY = process.env.TWELVE_DATA_API_KEY;
-if (!API_KEY) {
+// --check-fresh は外部APIを呼ばずに鮮度判定だけ行うため、APIキー無しでも動かす
+if (!API_KEY && !process.argv.includes("--check-fresh")) {
   console.error("ERROR: 環境変数 TWELVE_DATA_API_KEY が設定されていません");
   process.exit(1);
 }
@@ -489,6 +490,16 @@ async function main() {
   // --if-stale: 既に健全な当日分があれば何もせず終了（同日リトライcron用）。
   // 手動実行(workflow_dispatch)ではこのフラグを付けないため、常に再取得される。
   const REQUIRED_CODES = [...PAIRS.map((p) => p.code), ...INDICES.map((ix) => ix.code)];
+
+  // --check-fresh: 鮮度判定のみ（daily-freshness-check.yml用）。健全なら0、不健全なら1で終了。
+  // --if-stale と同じ isDailyLevelsFresh を使うため「健全」の定義がズレない。
+  if (process.argv.includes("--check-fresh")) {
+    const f = isDailyLevelsFresh(cutoff, REQUIRED_CODES);
+    console.log(`${f.fresh ? "OK" : "STALE"}: ${f.reason}`);
+    process.exitCode = f.fresh ? 0 : 1;
+    return;
+  }
+
   if (process.argv.includes("--if-stale")) {
     const f = isDailyLevelsFresh(cutoff, REQUIRED_CODES);
     if (f.fresh) {
