@@ -77,7 +77,7 @@ const round = (n, d) => Number(n.toFixed(d));
 const RETRY_BUDGET = { left: 8 };          // 1実行あたりの総リトライ回数の上限
 // 同日リトライcron(daily.yml)の最終枠。daily.ymlのcronを変えたらここも揃えること。
 // daily-levels.json の generation.retry_expected の算出に使う。
-const SAME_DAY_RETRY_UNTIL_JST_HOUR = 13;
+const SAME_DAY_RETRY_UNTIL_JST_HOUR = 14;
 const BACKOFF_MS = [2000, 6000];           // 指数バックオフ（+ジッタ）
 const RATE_LIMIT_WAIT_MS = 20000;          // 429でRetry-After未提供時の待機
 
