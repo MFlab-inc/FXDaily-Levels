@@ -23,7 +23,17 @@ on:
     # JST月曜の午前に誤発火し、対象セッションが前週金曜のまま上書きされる。
     - cron: "*/15 22-23 * * 1-5"  # JST 火〜土 07:00〜08:59、15分毎
     - cron: "*/15 0-4 * * 2-6"    # JST 火〜土 09:00〜13:59、15分毎
-  workflow_dispatch: {}  # 手動実行も可能（この場合は --if-stale を付けず必ず再取得する）
+  # 手動実行、および外部の定期実行サービスからのAPI起動用。
+  # GitHubのscheduleは本リポジトリでは数時間遅れて届き（9/5以降、最初の着弾が09:00〜11:00 JST）、
+  # 朝9時の利用に間に合わないため、時刻どおりに起動できる外部cronからこちらを呼ぶ。
+  # 外部cronは if_stale=true で呼ぶ。健全なら外部APIを呼ばず即終了するので、
+  # 同じ朝に何度呼んでもAPIクレジットを消費しない。
+  workflow_dispatch:
+    inputs:
+      if_stale:
+        description: "健全なら外部APIを呼ばず終了する（外部cron用）。手動で必ず再取得したい時はオフのまま"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -49,9 +59,10 @@ jobs:
       - name: Fetch FX data
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
-        # スケジュール実行のみ --if-stale を付ける。既に当日分が健全に揃っていれば
-        # fetch.js が外部APIを一切呼ばずに即終了する。手動実行は常に再取得。
-        run: node fetch.js ${{ github.event_name == 'schedule' && '--if-stale' || '' }}
+        # schedule実行と、外部cronからの if_stale=true の起動では --if-stale を付ける。
+        # 既に当日分が健全に揃っていれば fetch.js が外部APIを一切呼ばずに即終了する。
+        # 手動実行（if_stale 既定オフ）は常に再取得。
+        run: node fetch.js ${{ (github.event_name == 'schedule' || inputs.if_stale) && '--if-stale' || '' }}
 
       - name: Build GPT feed
         run: node build-feed.js
