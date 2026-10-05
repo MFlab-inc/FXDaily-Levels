@@ -64,6 +64,16 @@ jobs:
         # 手動実行（if_stale 既定オフ）は常に再取得。
         run: node fetch.js ${{ (github.event_name == 'schedule' || inputs.if_stale) && '--if-stale' || '' }}
 
+      # MTF判定フィード（data/mtf-feed.*、日足の履歴 data/mtf/）。失敗しても上の価格フィードの更新は止めない
+      # （continue-on-error）。fetch.js のエラーには混ぜないので、鮮度の判定にも影響しない。
+      # 履歴CSVが無い間（過去分の取得 MTF Backfill の前）と、その日の分を作成済みの間は何もしない。
+      - name: Build MTF feed
+        continue-on-error: true
+        timeout-minutes: 10
+        env:
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+        run: node mtf/run-daily.js
+
       - name: Build GPT feed
         run: node build-feed.js
 
