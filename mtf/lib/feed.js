@@ -35,12 +35,13 @@ function symbolBlock(sym, item, asOf) {
   // 基準日の日足の最終の1時間足(NY16時台)がまだ届いていない可能性: 提供元が17時直後に最後の足を出していないと、
   // 本数不足・終値が少し前の価格の日足が「基準日まで届いた」ように見える。次回以降の実行で取り直す
   const lastRow = st.rows[st.rows.length - 1];
-  const incomplete = !stale && Boolean(lastRow.last_bar_ny) && lastRow.last_bar_ny < "16:00";
+  const incomplete = !stale && calc.lastBarNot16(lastRow);
   const note = stale ? `最新の確定日足が ${d.date} で、基準日 ${asOf} に届いていません`
     : incomplete ? `基準日 ${asOf} の日足の最終の1時間足が ${lastRow.last_bar_ny}(NY) 開始で、16:00 台の足が未着の可能性があります（取り直し待ち）` : null;
   const shortDays = calc.shortBarDays(st.rows, sym.standardBars);
   // 判定に使う終値の日（日足の日・週の最終営業日・月の最終営業日）が本数不足なら、その行にも印を付ける
   const flagOf = (date) => shortDays.find((x) => x.date === date) || null;
+  const summary = calc.shortBarSummary(st.rows, shortDays, 200);
   return {
     ...base,
     status: item.error ? "error" : stale || incomplete ? "stale" : "ok",
@@ -85,6 +86,8 @@ function symbolBlock(sym, item, asOf) {
       direction: h.direction, close_vs_50dma: h.close_vs_50dma,
     })),
     missing_dates: calc.missingWeekdays(st.rows, asOf),
+    // 全期間の一覧（JSON）。テキストには、下の範囲（直近200営業日）のうち「最後の1時間足が16時台でない日」だけを日付つきで出す
+    short_bar_window: { from: summary.from, to: summary.to, rows: Math.min(st.rows.length, summary.windowRows) },
     short_bar_days: shortDays,
   };
 }
@@ -118,7 +121,23 @@ function buildFeed({ asOf, nowMs, items, attempt = 1 }) {
 const dash = (x) => (x === null || x === undefined ? "-" : String(x));
 const fx = (x, d) => (x === null || x === undefined ? "-" : x.toFixed(d));
 const blank = (x, d) => (x === null || x === undefined ? "" : x.toFixed(d)); // 24MMA だけは仕様 §4 のとおり、無ければ空
-const flag = (f) => (f ? ` ※足の本数不足(${f.bars}/${f.standard}本${f.reasons.includes("friday_last_bar_before_16") ? `,金曜の最終足${f.last_bar_ny}` : ""})` : "");
+// 判定に使う終値の日の最後の1時間足が16時台でないときだけ、その行に印を付ける（本数が少ないだけの日は終値に影響しないので付けない）
+const flag = (f) => (f && f.reasons.includes(calc.LAST_BAR_REASON) ? ` ※最後の1時間足がNY${f.last_bar_ny}開始（終値がNY17時の値になっていない。${f.bars}/${f.standard}本）` : "");
+
+// 本数の少ない日（3-7、v1.1 第4節）。直近200営業日のうち「最後の1時間足がNY16時台でない日」だけを日付つきで出し、
+// それ以外の本数の少ない日（月曜の22〜23本など。終値に影響しない）は件数だけ。全期間の一覧は JSON
+function shortBarLine(s, sym) {
+  const w = s.short_bar_window || {};
+  const all = s.short_bar_days || [];
+  const isLast = (x) => x.reasons.includes(calc.LAST_BAR_REASON);
+  const inWin = all.filter((x) => w.from && x.date >= w.from);
+  const older = all.filter((x) => w.from && x.date < w.from);
+  const lastBar = inWin.filter(isLast);
+  const dated = lastBar.length ? lastBar.map((x) => `${x.date}(最終足${x.last_bar_ny},${x.bars}本)`).join(", ") : "なし";
+  const olderLast = older.filter(isLast).length;
+  const tail = older.length ? ` / 直近200営業日より前: 最後の足が16時台でない日${olderLast}日・それ以外${older.length - olderLast}日` : "";
+  return `SHORT_BAR_DAYS（直近200営業日 ${w.from}〜${w.to}。足の本数の下限は${sym.standardBars}本）: 最後の1時間足がNY16時台でない日=${dated} / それ以外の本数の少ない日=${inWin.length - lastBar.length}日（件数のみ。終値には影響しない）${tail}（日付の全期間の一覧は JSON）`;
+}
 
 function renderText(feed) {
   const L = [];
@@ -131,7 +150,7 @@ function renderText(feed) {
   L.push(`daily_boundary: ${feed.daily_boundary}`);
   L.push(`excluded: ${feed.excluded}`);
   L.push("dates: 全ての date / data_base_date / as_of は NY17時区切りの日付（DATE_NY）。generated_at だけが日本時間");
-  L.push("legend: 向き ↑上向き・↓下向き・→どちらでもない / Above・Below・Equal は終値が基準より上・下・同じ / 値が空欄または - は本数不足で計算できない項目 / bars_used は日足・週足・月足の本数（保有=持っている本数）、SHORT_BAR_DAYS の「本」は1日の中の1時間足の本数");
+  L.push("legend: 向き ↑上向き・↓下向き・→どちらでもない / Above・Below・Equal は終値が基準より上・下・同じ / 値が空欄または - は本数不足で計算できない項目 / bars_used は日足・週足・月足の本数（保有=持っている本数）、SHORT_BAR_DAYS の「本」は1日の中の1時間足の本数、「最後の1時間足がNY16時台でない日」は終値がNY17時の値になっていない日");
   for (const s of feed.symbols) {
     const sym = SYMBOLS.find((x) => x.code === s.symbol);
     const dg = sym.digits;
@@ -151,10 +170,7 @@ function renderText(feed) {
     L.push("HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き / CLOSE_vs_50DMA）:");
     for (const h of s.history) L.push(`  ${h.date} / ${fx(h.close, dg)} / ${fx(h.dma50, dg + 1)} / ${fx(h.dma200, dg + 1)} / ${h.direction} / ${h.close_vs_50dma}`);
     L.push(`MISSING_DATES（平日で日足が無い日）: ${s.missing_dates.length ? s.missing_dates.join(", ") : "なし"}`);
-    L.push(`SHORT_BAR_DAYS（足の本数が標準${sym.standardBars}本より少ない日。金曜で最後の足がNY16時前の日を含む）: ${
-      s.short_bar_days.length
-        ? s.short_bar_days.map((x) => `${x.date}(${x.bars}本${x.reasons.includes("friday_last_bar_before_16") ? `,金曜の最終足${x.last_bar_ny}` : ""})`).join(", ")
-        : "なし"}`);
+    L.push(shortBarLine(s, sym));
   }
   return L.join("\n") + "\n";
 }

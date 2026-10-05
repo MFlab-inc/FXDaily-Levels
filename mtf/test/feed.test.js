@@ -108,7 +108,9 @@ test("4/1: 欠測・本数の少ない日の一覧（無ければ『なし』）
   const x = json.symbols.find((s) => s.symbol === "XAUUSD");
   assert.deepEqual(x.short_bar_days, []); // XAUUSD は23本が標準
   assert.match(text, /MISSING_DATES.*: 2026-09-09/);
-  assert.match(text, /SHORT_BAR_DAYS.*: 2026-09-04\(7本\)/);
+  // v1.1: 本数が少ないだけ（最後の足は16時台）の日は、テキストには件数だけ。日付は JSON
+  assert.match(text, /SHORT_BAR_DAYS[^\n]*最後の1時間足がNY16時台でない日=なし \/ それ以外の本数の少ない日=1日/);
+  assert.ok(!/SHORT_BAR_DAYS[^\n]*2026-09-04/.test(text));
   assert.match(text, /MISSING_DATES[^\n]*: なし/);
 });
 
@@ -156,18 +158,20 @@ test("堅牢性: 確定した月足・週足がまだ無い場合も、キーは
   assert.ok(!/NaN|undefined|null/.test(text));
 });
 
-test("3-7: 判定に使う終値の日（日足の日・週の最終日・月の最終日）が本数不足なら、その行にも印と本数を付ける", () => {
+test("3-7: 判定に使う終値の日の最後の1時間足が16時台でないとき、その行にも印を付ける（本数が少ないだけの日は付けない）", () => {
   const rows = scenarioRows("EURUSD", "2024-07-01", ASOF, { bars: (d) => (d === "2026-10-06" ? 22 : d === "2026-10-02" ? 20 : d === "2026-09-30" ? 18 : 24) })
-    .map((r) => (r.date === "2026-10-02" ? { ...r, last_bar_ny: "14:00" } : r));
+    .map((r) => (r.date === "2026-10-06" ? { ...r, last_bar_ny: "15:00" } : r.date === "2026-10-02" ? { ...r, last_bar_ny: "14:00" } : r)); // 火曜・金曜の最終足が早い。9/30(水)は本数不足だけ
   const { json, text } = buildFeed({ asOf: ASOF, nowMs: NOW, items: [{ code: "EURUSD", rows, updatedAt: "x" }] });
   const s = json.symbols.find((x) => x.symbol === "EURUSD");
+  // JSON は今のまま、どの理由でも印を付ける
   assert.deepEqual([s.daily.close_day_short_bars.date, s.daily.close_day_short_bars.bars], ["2026-10-06", 22]);
-  assert.equal(s.weekly.close_day_short_bars.date, "2026-10-02"); // 金曜(週の最終日)
-  assert.ok(s.weekly.close_day_short_bars.reasons.includes("friday_last_bar_before_16"));
-  assert.equal(s.monthly.close_day_short_bars.date, "2026-09-30");
-  assert.match(text, /DAILY: [^\n]*※足の本数不足\(22\/24本\)/);
-  assert.match(text, /WEEKLY: [^\n]*※足の本数不足\(20\/24本,金曜の最終足14:00\)/);
-  assert.match(text, /MONTHLY: [^\n]*※足の本数不足\(18\/24本\)/);
+  assert.equal(s.weekly.close_day_short_bars.date, "2026-10-02");
+  assert.ok(s.weekly.close_day_short_bars.reasons.includes("last_bar_not_16"));
+  assert.deepEqual([s.monthly.close_day_short_bars.date, s.monthly.close_day_short_bars.reasons], ["2026-09-30", ["bars"]]);
+  // テキストの行内: 最後の足が16時台でない日だけ（火曜の日足・金曜の週足）。月足(本数不足だけ)には付けない
+  assert.match(text, /DAILY: [^\n]*※最後の1時間足がNY15:00開始（終値がNY17時の値になっていない。22\/24本）/);
+  assert.match(text, /WEEKLY: [^\n]*※最後の1時間足がNY14:00開始/);
+  assert.ok(!/MONTHLY: [^\n]*※/.test(text));
   // 正常な日には印が付かない
   const ok = buildFeed({ asOf: ASOF, nowMs: NOW, items: itemsAll() }).json.symbols.find((x) => x.symbol === "EURUSD");
   assert.equal(ok.daily.close_day_short_bars, null);
