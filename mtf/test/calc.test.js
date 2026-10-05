@@ -237,9 +237,11 @@ test("3-4: 9/30(水)の終値で9月が確定。9/29までは8月が最新の確
   assert.equal(at("2026-10-02").month, "2026-09");
 });
 
-test("3-4: 月末の最後の平日に足が無くても（欠測）、その日を過ぎれば確定。MONTH_END_DATE はデータのある最後の営業日", () => {
+test("3-4: 月末の最後の平日(10/30)の足が欠測のときは、その後の日の足が届くまで確定しない。MONTH_END_DATE はデータのある最後の営業日", () => {
   const rows = mkRows(weekdaysFrom("2026-06-01", 110).filter((d) => d <= "2026-10-29"), (i) => 100 + i); // 10/30 の足なし
-  const m = C.computeStructure(rows, { asOf: "2026-10-30" }).monthly;
+  assert.equal(C.computeStructure(rows, { asOf: "2026-10-30" }).monthly.month, "2026-09"); // 届いていないので10月は未確定
+  const next = rows.concat(mkRows(["2026-11-02"], () => 300)); // 翌営業日の足が届く
+  const m = C.computeStructure(next, { asOf: "2026-11-02" }).monthly;
   assert.equal(m.month, "2026-10");
   assert.equal(m.date, "2026-10-29");
 });
@@ -402,14 +404,28 @@ test("2-5: 具体例 — 2026-09-30(水) 時点の週足は 9/25 の週、10/2(�
   assert.equal(C.computeStructure(rows, { asOf: "2026-09-30" }).daily.date, "2026-09-30");
 });
 
-test("2-5: 金曜(2026-12-25)が休場で足が無い週でも、基準日が金曜なら確定扱い。WEEK_END_DATE は木曜", () => {
+test("2-5: 金曜(2026-12-25)に足が無い週は、データが金曜以降まで届いた時点で確定。WEEK_END_DATE は木曜", () => {
   const rows = mkRows(weekdaysFrom("2026-06-01", 200).filter((d) => d <= "2026-12-24"), (i) => 100 + i);
-  const r = C.computeStructure(rows, { asOf: "2026-12-25" });
+  // 足が木曜までしか無い間は、金曜に届いたと言えないので1つ前の週
+  assert.equal(C.computeStructure(rows, { asOf: "2026-12-25" }).weekly.week_key, "2026-12-18");
+  // 月曜(12/28)の足が届けば、12/25 の週は木曜までのデータで確定する
+  const more = rows.concat(mkRows(["2026-12-28"], () => 300));
+  const r = C.computeStructure(more, { asOf: "2026-12-28" });
   assert.equal(r.weekly.week_key, "2026-12-25");
   assert.equal(r.weekly.date, "2026-12-24");
-  // 基準日が木曜のままなら、金曜がまだ来ていないので1つ前の週
-  const r2 = C.computeStructure(rows, { asOf: "2026-12-24" });
-  assert.equal(r2.weekly.week_key, "2026-12-18");
+});
+
+test("2-5: 基準日の足がまだ届いていない（データが遅れている）とき、途中までの日で作った週足・月足を確定として出さない", () => {
+  const rows = mkRows(weekdaysFrom("2026-06-01", 200).filter((d) => d <= "2026-10-28"), (i) => 100 + i); // 10/29・10/30 の足が未着
+  const r = C.computeStructure(rows, { asOf: "2026-10-30" });
+  assert.equal(r.daily.date, "2026-10-28");
+  assert.equal(r.weekly.week_key, "2026-10-23"); // 10/30 の週は水曜までしか無いので、1つ前の週
+  assert.equal(r.monthly.month, "2026-09"); // 10月は月末(10/30)まで届いていない
+  // 届けば確定する
+  const full = rows.concat(mkRows(["2026-10-29", "2026-10-30"], () => 300));
+  const r2 = C.computeStructure(full, { asOf: "2026-10-30" });
+  assert.equal(r2.weekly.week_key, "2026-10-30");
+  assert.equal(r2.monthly.month, "2026-10");
 });
 
 // ======================= 履歴・欠測・本数 =======================

@@ -214,23 +214,27 @@ function swingStatus(m, w, d) {
 // ---------- 2-5 確定足だけで判定 ----------
 /**
  * rows: 日足（古い順）。asOf: 判定の基準日（その日の NY 17時までの確定足。既定は rows の最後の日）
- * asOf より後の行は無視する。週は金曜（キー）が asOf 以前なら確定、月は月内の最後の平日が asOf 以前なら確定（3-4）。
+ * asOf より後の行は無視する。週は金曜（キー）が最新の日足の日付以前なら確定、
+ * 月は月内の最後の平日が最新の日足の日付以前なら確定（3-4）。最新の日足が基準日に届いていなければ、その分だけ確定が遅れる。
  */
 function computeStructure(allRows, { asOf = null } = {}) {
-  const cutoff = asOf || (allRows.length ? allRows[allRows.length - 1].date : null);
-  const rows = allRows.filter((r) => r.date <= cutoff);
+  const limit = asOf || (allRows.length ? allRows[allRows.length - 1].date : null);
+  const rows = allRows.filter((r) => r.date <= limit);
   if (!rows.length) return null;
+  // 週・月の確定は「データが実際にそこまで届いているか」で判定する（最新の日足の日付 = rows の最後の日）。
+  // 基準日(asOf)の足がまだ届いていないのに、途中までの日で作った週足・月足を「確定」として出さないため。
+  const reached = rows[rows.length - 1].date;
 
   const daily = dailyStructure(rows);
-  const weeks = buildWeeks(rows).filter((w) => w.key <= cutoff);
-  const months = buildMonths(rows).filter((m) => lastWeekdayOfMonth(m.key) <= cutoff);
+  const weeks = buildWeeks(rows).filter((w) => w.key <= reached);
+  const months = buildMonths(rows).filter((m) => lastWeekdayOfMonth(m.key) <= reached);
   const weekly = weeks.length ? weeklyStructure(weeks) : null;
   const monthly = months.length ? monthlyStructure(months) : null;
   const md = monthly ? monthly.direction : INSUFFICIENT;
   const wd = weekly ? weekly.direction : INSUFFICIENT;
 
   return {
-    as_of: cutoff,
+    as_of: limit,
     daily, weekly, monthly,
     alignment_score: alignmentScore(md, wd, daily.direction),
     swing_status: swingStatus(md, wd, daily.direction),
