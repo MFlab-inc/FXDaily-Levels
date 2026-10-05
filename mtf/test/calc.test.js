@@ -465,17 +465,28 @@ test("3-7: 本数の少ない日に印を付ける — FX は24本、XAUUSD は2
   assert.equal(C.shortBarDays(mkRows(dates, () => 1, { bars: 22 }), 23).length, 3);
 });
 
-test("3-7: 金曜の日足で最後の1時間足がNY16時台より前に始まっていれば、本数が足りていても印を付ける", () => {
+test("3-7(v1.1): 最後の1時間足がNY16時台でない日は、曜日を問わず（月〜金）、本数が足りていても印を付ける", () => {
+  const row = (date, last, bars = 24) => ({ date, open: 1, high: 1, low: 1, close: 1, bars, last_bar_ny: last });
   const rows = [
-    { date: "2026-10-01", open: 1, high: 1, low: 1, close: 1, bars: 24, last_bar_ny: "15:00" }, // 木曜は対象外
-    { date: "2026-10-02", open: 1, high: 1, low: 1, close: 1, bars: 24, last_bar_ny: "15:00" }, // 金曜・16時前
-    { date: "2026-10-09", open: 1, high: 1, low: 1, close: 1, bars: 24, last_bar_ny: "16:00" }, // 金曜・16時台 → 正常
-    { date: "2026-10-16", open: 1, high: 1, low: 1, close: 1, bars: 22, last_bar_ny: "14:00" }, // 本数も不足
+    row("2026-10-05", "15:00"), // 月曜・16時前
+    row("2026-10-06", "15:00"), // 火曜・16時前
+    row("2026-10-07", "14:00"), // 水曜
+    row("2026-10-08", "09:00"), // 木曜
+    row("2026-10-09", "15:00"), // 金曜（v1.0 からの継続）
+    row("2026-10-12", "16:00"), // 16時台 → 正常
+    row("2026-10-13", "16:30"), // 16時台（開始が16:30でも16時台）→ 正常
+    row("2026-10-14", ""), // 不明（空）→ 印なし
+    { date: "2026-10-15", open: 1, high: 1, low: 1, close: 1, bars: 24 }, // last_bar_ny なし → 印なし
+    row("2026-10-16", "15:00", 22), // 本数不足も重なる
   ];
   const s = C.shortBarDays(rows, 24);
   assert.deepEqual(s.map((x) => [x.date, x.reasons]), [
-    ["2026-10-02", ["friday_last_bar_before_16"]],
-    ["2026-10-16", ["bars", "friday_last_bar_before_16"]],
+    ["2026-10-05", ["last_bar_not_16"]],
+    ["2026-10-06", ["last_bar_not_16"]],
+    ["2026-10-07", ["last_bar_not_16"]],
+    ["2026-10-08", ["last_bar_not_16"]],
+    ["2026-10-09", ["last_bar_not_16"]],
+    ["2026-10-16", ["bars", "last_bar_not_16"]],
   ]);
 });
 

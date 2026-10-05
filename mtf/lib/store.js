@@ -5,8 +5,8 @@ const path = require("path");
 /**
  * 日足の保存（data/mtf/ny-daily-<銘柄>.csv）。
  * 列: date_ny,open,high,low,close,bars,last_bar_ny
- *   仕様の列（date_ny〜bars）に、金曜の最終足の開始時刻（NY現地 HH:MM）を足している。
- *   3-7「金曜の最後の1時間足が16時台より前」を後から判定するために必要（本数だけでは分からない）。
+ *   仕様の列（date_ny〜bars）に、その日の最後の1時間足の開始時刻（NY現地 HH:MM）を足している。
+ *   3-7「最後の1時間足がNY16時台でない日」（曜日を問わない）を後から判定するために必要（本数だけでは分からない）。
  */
 const HEADER = "date_ny,open,high,low,close,bars,last_bar_ny";
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;

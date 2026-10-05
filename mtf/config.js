@@ -1,8 +1,9 @@
 "use strict";
 const path = require("path");
 
-// digits は fetch.js の PAIRS と同じ価格の桁数。standardBars は NY17時区切りの1日の標準本数
-// （XAUUSD は1日1時間の休止があるため23本）。
+// digits は fetch.js の PAIRS と同じ価格の桁数。standardBars は NY17時区切りの1日の標準本数で、
+// 「これより少なければ印を付ける」下限として扱う（仕様 3-7）。XAUUSD は23本のまま（2025年4月ごろから火〜金は24本の日が
+// 多いが、23本の日も正常なので下限は変えない）。
 const SYMBOLS = [
   { code: "USDJPY", td: "USD/JPY", digits: 3, standardBars: 24 },
   { code: "EURUSD", td: "EUR/USD", digits: 5, standardBars: 24 },

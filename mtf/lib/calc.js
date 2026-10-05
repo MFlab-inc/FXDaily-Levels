@@ -268,21 +268,50 @@ function missingWeekdays(rows, until = null) {
   return out;
 }
 
-// 足の本数が標準より少ない日。金曜で最後の1時間足が NY 16時台より前に始まっている日も印を付ける（3-7）
+// 最後の1時間足が NY 16時台でない日か（曜日を問わない。v1.1 の 3-7）。
+// 終値が NY 17時の値になっていない（最後の足が欠けている、または早く閉まった）ので、本数の不足とは別の印を付ける。
+// last_bar_ny が空（不明）の行には印を付けない
+const lastBarNot16 = (r) => Boolean(r.last_bar_ny) && !r.last_bar_ny.startsWith("16:");
+const LAST_BAR_REASON = "last_bar_not_16";
+
+// 足の本数が標準（下限）より少ない日、または最後の1時間足が NY 16時台でない日（3-7）。
+// 標準の本数は「これより少なければ印を付ける」下限として扱う（XAUUSD は23本。24本の日があっても印は付けない）
 function shortBarDays(rows, standardBars) {
   const out = [];
   for (const r of rows) {
     const reasons = [];
     if (r.bars < standardBars) reasons.push("bars");
-    if (dowIso(r.date) === 5 && r.last_bar_ny && r.last_bar_ny < "16:00") reasons.push("friday_last_bar_before_16");
+    if (lastBarNot16(r)) reasons.push(LAST_BAR_REASON);
     if (reasons.length) out.push({ date: r.date, bars: r.bars, standard: standardBars, last_bar_ny: r.last_bar_ny || null, reasons });
   }
   return out;
+}
+
+/**
+ * テキスト用の要約（v1.1 第4節）。直近 windowRows 営業日（日足の行）の範囲で、
+ *   lastBar: 最後の1時間足が16時台でない日（日付つきで出す）
+ *   otherCount: それ以外の本数の少ない日の件数（件数だけ。月曜の22〜23本など、終値に影響しないもの）
+ * 範囲より前の分は件数だけ（olderLastBar / olderOther）。JSON には全期間の一覧がある。
+ */
+function shortBarSummary(rows, shortDays, windowRows = 200) {
+  const start = Math.max(0, rows.length - windowRows);
+  const from = rows.length ? rows[start].date : null;
+  const to = rows.length ? rows[rows.length - 1].date : null;
+  const inWin = shortDays.filter((x) => from !== null && x.date >= from);
+  const older = shortDays.filter((x) => from !== null && x.date < from);
+  const isLast = (x) => x.reasons.includes(LAST_BAR_REASON);
+  return {
+    from, to, windowRows,
+    lastBar: inWin.filter(isLast),
+    otherCount: inWin.filter((x) => !isLast(x)).length,
+    olderLastBar: older.filter(isLast).length,
+    olderOther: older.filter((x) => !isLast(x)).length,
+  };
 }
 
 module.exports = {
   UP, DOWN, FLAT, INSUFFICIENT, EPS, N,
   cmp, rangePosition, fridayOf, monthOf, lastWeekdayOfMonth,
   buildWeeks, buildMonths, dailyStructure, weeklyStructure, monthlyStructure,
-  alignmentScore, swingStatus, computeStructure, dailyHistory, missingWeekdays, shortBarDays,
+  alignmentScore, swingStatus, computeStructure, dailyHistory, missingWeekdays, shortBarDays, shortBarSummary, lastBarNot16, LAST_BAR_REASON,
 };
