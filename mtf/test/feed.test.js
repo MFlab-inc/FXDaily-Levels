@@ -134,3 +134,53 @@ test("鮮度: 基準日に届かない銘柄は status=stale、data_base_date �
   assert.match(text, /status: partial/);
   assert.match(text, /## USDCAD[\s\S]*?status: error（履歴CSVがありません）/);
 });
+
+test("堅牢性: 基準日以前の日足が無い銘柄でも他の銘柄は出力される（その銘柄は status=error）", () => {
+  const items = itemsAll({ USDJPY: { rows: scenarioRows("USDJPY", "2026-10-01", "2026-10-06") } });
+  const { json } = buildFeed({ asOf: "2026-09-01", nowMs: NOW, items });
+  assert.equal(json.symbols[0].status, "error");
+  assert.match(json.symbols[0].error, /日足がありません/);
+  assert.equal(json.symbols.length, 9);
+});
+
+test("堅牢性: 確定した月足・週足がまだ無い場合も、キーは残して null、テキストに NaN/undefined は出ない。updated_at が無ければ「なし」", () => {
+  const rows = scenarioRows("EURUSD", "2026-10-05", "2026-10-06"); // 週も月もまだ確定していない
+  const { json, text } = buildFeed({ asOf: "2026-10-06", nowMs: NOW, items: [{ code: "EURUSD", rows, updatedAt: null }] });
+  const s = json.symbols.find((x) => x.symbol === "EURUSD");
+  assert.equal(s.monthly.date, null);
+  assert.equal(s.monthly.mma12, null);
+  assert.equal(s.weekly.cloud_top, null);
+  assert.equal(s.weekly.close_vs_cloud, "Insufficient Data");
+  assert.equal(s.swing_status, "Insufficient Data");
+  assert.match(text, /updated_at: なし/);
+  assert.ok(!/NaN|undefined|null/.test(text));
+});
+
+test("3-7: 判定に使う終値の日（日足の日・週の最終日・月の最終日）が本数不足なら、その行にも印と本数を付ける", () => {
+  const rows = scenarioRows("EURUSD", "2024-07-01", ASOF, { bars: (d) => (d === "2026-10-06" ? 22 : d === "2026-10-02" ? 20 : d === "2026-09-30" ? 18 : 24) })
+    .map((r) => (r.date === "2026-10-02" ? { ...r, last_bar_ny: "14:00" } : r));
+  const { json, text } = buildFeed({ asOf: ASOF, nowMs: NOW, items: [{ code: "EURUSD", rows, updatedAt: "x" }] });
+  const s = json.symbols.find((x) => x.symbol === "EURUSD");
+  assert.deepEqual([s.daily.close_day_short_bars.date, s.daily.close_day_short_bars.bars], ["2026-10-06", 22]);
+  assert.equal(s.weekly.close_day_short_bars.date, "2026-10-02"); // 金曜(週の最終日)
+  assert.ok(s.weekly.close_day_short_bars.reasons.includes("friday_last_bar_before_16"));
+  assert.equal(s.monthly.close_day_short_bars.date, "2026-09-30");
+  assert.match(text, /DAILY: [^\n]*※足の本数不足\(22\/24本\)/);
+  assert.match(text, /WEEKLY: [^\n]*※足の本数不足\(20\/24本,金曜の最終足14:00\)/);
+  assert.match(text, /MONTHLY: [^\n]*※足の本数不足\(18\/24本\)/);
+  // 正常な日には印が付かない
+  const ok = buildFeed({ asOf: ASOF, nowMs: NOW, items: itemsAll() }).json.symbols.find((x) => x.symbol === "EURUSD");
+  assert.equal(ok.daily.close_day_short_bars, null);
+});
+
+test("4: 見出しに、日付がNY17時区切りの日付であること・凡例を載せる。足りない値は - 、24MMAだけは仕様どおり空", () => {
+  const rows = scenarioRows("USDJPY", "2025-10-01", ASOF);
+  const { text } = buildFeed({ asOf: ASOF, nowMs: NOW, items: [{ code: "USDJPY", rows, updatedAt: "x" }] });
+  assert.match(text, /dates: .*DATE_NY.*generated_at だけが日本時間/);
+  assert.match(text, /legend: /);
+  assert.match(text, /24MMA= 6M_HIGH/); // 空
+  const few = buildFeed({ asOf: ASOF, nowMs: NOW, items: [{ code: "USDJPY", rows: scenarioRows("USDJPY", "2026-04-01", ASOF), updatedAt: "x" }] }).text;
+  assert.match(few, /12MMA=- 24MMA= /);
+  assert.match(few, /50DMA=\d/);
+  assert.match(few, /200DMA=-/);
+});
