@@ -102,7 +102,7 @@ test("取得が範囲の先頭に届かない（古い側が欠ける）・日�
   try {
     await assert.rejects(s.run(), /届いていません/);
     assert.deepEqual(fs.readdirSync(s.t.dataDir), []);
-    await assert.rejects(s.run({ minRows: 5000 }), /日足が|届いていません/);
+    await assert.rejects(s.run({ start: "2026-03-02", minRows: 5000 }), /日足が\d+日分しか/);
     assert.deepEqual(fs.readdirSync(s.t.dataDir), []);
   } finally { s.t.cleanup(); }
 });

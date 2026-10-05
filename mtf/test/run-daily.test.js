@@ -266,8 +266,11 @@ test("6-2: 取得は成功したが基準日の足が未公開（最新が前日
     assert.equal(feed.status, "partial");
     assert.equal(feed.data_base_date, "2026-10-05");
     assert.ok(s.logs.some((l) => /::warning::MTF: USDJPY/.test(l)));
-    const r2 = await s.run({ nowMs: NOW + 600000 });
-    assert.notEqual(r2.skipped, "done"); // 完了していないので再試行
+    const callsBefore = s.f.calls.length;
+    assert.equal((await s.run({ nowMs: NOW + 600000 })).skipped, "cooldown"); // 20分未満は見送り
+    const r2 = await s.run({ nowMs: NOW + 25 * 60000 });
+    assert.equal(r2.skipped, undefined); // 完了していないので、20分以上空ければ再試行する
+    assert.ok(s.f.calls.length > callsBefore);
   } finally { s.t.cleanup(); }
 });
 
