@@ -1,0 +1,53 @@
+name: MTF Backfill
+
+# MTF判定フィードの過去分（2024-07-01〜）を、main で1回だけ手動で取得する。
+# Actions タブ → 「MTF Backfill」 → Run workflow（ブランチは main）。
+#   ・data/mtf/ に履歴CSVが1つでもあれば、何も取得せず・何も書かずに失敗して止まる（上書きしない）
+#   ・成功すると data/mtf/ny-daily-<銘柄>.csv（9本）と data/mtf-feed.json / data/mtf-feed.txt をコミットする
+#   ・Twelve Data は1銘柄ずつ約3秒おき（1分あたり20回前後）に、全体で40回前後。
+#     daily / intraday が動いていない時間・起動分を避けて自動で待つ（待ちは長くても約25分）
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  actions: read   # 他の Daily / Intraday が実行中かを確認するため
+
+concurrency:
+  group: mtf-backfill
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Backfill MTF history
+        env:
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node mtf/backfill.js
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/mtf data/mtf-feed.json data/mtf-feed.txt
+          git diff --cached --quiet && echo "変更なし" && exit 0
+          git commit -m "data: MTF backfill (2024-07-01〜)"
+          for i in 1 2 3; do
+            git push && exit 0
+            echo "push失敗（${i}回目）。rebaseして再試行"
+            git pull --rebase origin "${GITHUB_REF_NAME}" || exit 1
+          done
+          echo "::error::MTFの履歴のpushに3回失敗しました"
+          exit 1
