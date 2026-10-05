@@ -69,7 +69,7 @@ jobs:
       # 履歴CSVが無い間（過去分の取得 MTF Backfill の前）と、その日の分を作成済みの間は何もしない。
       - name: Build MTF feed
         continue-on-error: true
-        timeout-minutes: 10
+        timeout-minutes: 5   # 通常は30秒前後。内部にも170秒の時間制限がある（超えても下のコミットまで進む）
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
         run: node mtf/run-daily.js

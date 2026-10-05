@@ -147,18 +147,100 @@ test("6-2: 一部の銘柄が失敗 — 他は更新、失敗銘柄のCSVは変�
   } finally { s.t.cleanup(); }
 });
 
-test("6-2: 未完了のときの再試行は同じ基準日につき最大3回（4回目以降は何もしない）", async () => {
+test("6-2: 未完了のときの再試行は、前回から20分以上空け、同じ基準日につき最大8回（以降は何もしない）", async () => {
   const s = setup({ failures: { "EUR/GBP": { kind: "500", times: 9999 } } });
   try {
-    const attempts = [];
-    for (let i = 0; i < 5; i++) {
+    const seq = [];
+    let callsAfterFirst = 0;
+    // 0分・10分(クールダウン中)・25分・50分・75分… と進める
+    const offsets = [0, 10, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250];
+    for (const m of offsets) {
       const before = s.f.calls.length;
-      const r = await s.run({ nowMs: NOW + i * 600000 });
-      attempts.push([r.exitCode, r.skipped || "ran", s.f.calls.length - before > 0]);
+      const r = await s.run({ nowMs: NOW + m * 60000 });
+      seq.push([m, r.skipped || "ran", s.f.calls.length - before]);
+      if (m === 0) callsAfterFirst = s.f.calls.length;
     }
-    assert.deepEqual(attempts.map((a) => a[1]), ["ran", "ran", "ran", "attempts-exhausted", "attempts-exhausted"]);
-    assert.equal(readJson(s.t).attempt, 3);
-    assert.equal(attempts[3][2], false); // 4回目はAPIを呼ばない
+    assert.deepEqual(seq.map((x) => x[1]), ["ran", "cooldown", "ran", "ran", "ran", "ran", "ran", "ran", "ran", "attempts-exhausted", "attempts-exhausted", "attempts-exhausted"]);
+    assert.equal(readJson(s.t).attempt, 8);
+    // 2回目以降は、完了済みの銘柄を取り直さず、失敗した EURGBP の1回分（再試行を含む）だけ
+    assert.equal(seq[0][2] >= 9, true);
+    assert.ok(s.f.calls.slice(callsAfterFirst).every((c) => c.symbol === "EUR/GBP"), "完了済みの銘柄を取り直している");
+    assert.equal(seq[1][2], 0); // クールダウン中はAPIを呼ばない
+    assert.equal(seq[9][2], 0); // 上限後もAPIを呼ばない
+  } finally { s.t.cleanup(); }
+});
+
+test("6-2: 最後の足が未着の日足（NY16時台の足が無い）は完了扱いにせず、後の実行で取り直して完了する", async () => {
+  const s = setup();
+  try {
+    // 10/6 の最後の1時間足(NY 16:00)だけが無い1時間足
+    const all = scenarioBars("2026-09-01", "2026-10-07");
+    for (const td of Object.keys(all)) all[td] = all[td].filter((b) => b.datetime !== "2026-10-06 20:00:00");
+    const f1 = fakeTwelveData(all);
+    const clock = fakeClock(NOW);
+    const c1 = createClient({ apiKey: KEY, fetchImpl: f1, sleep: clock.sleep, now: clock.now, spacingMs: 100 });
+    const r1 = await runDaily({ nowMs: NOW, dataDir: s.t.dataDir, client: c1, log: () => {} });
+    assert.equal(r1.exitCode, 0);
+    assert.equal(r1.stale.length, 9);
+    const feed1 = readJson(s.t);
+    assert.equal(feed1.status, "partial");
+    assert.equal(feed1.symbols[0].status, "stale");
+    assert.match(feed1.symbols[0].status_note, /最終の1時間足.*15:00/);
+    // 提供元が最後の足を出した後の実行（20分以上後）
+    const r2 = await s.run({ nowMs: NOW + 25 * 60000 });
+    assert.equal(r2.exitCode, 0);
+    assert.deepEqual(r2.stale, []);
+    const feed2 = readJson(s.t);
+    assert.equal(feed2.status, "ok");
+    assert.equal(feed2.symbols[0].status, "ok");
+    assert.equal(store.readRows(s.t.dataDir, "USDJPY").pop().bars, 24); // 取り直しで24本に
+    assert.equal((await s.run({ nowMs: NOW + 60 * 60000 })).skipped, "done");
+  } finally { s.t.cleanup(); }
+});
+
+test("6-2: 再試行で失敗した銘柄だけを取り直す（完了済みの銘柄はAPIを呼ばない）", async () => {
+  const failures = { "EUR/GBP": { kind: "500", times: 99 } };
+  const s = setup({ failures });
+  try {
+    await s.run();
+    const n1 = s.f.calls.length;
+    failures["EUR/GBP"].times = 0; // 復旧
+    const r = await s.run({ nowMs: NOW + 30 * 60000 });
+    assert.equal(r.exitCode, 0);
+    const added = s.f.calls.slice(n1);
+    assert.equal(added.length, 1);
+    assert.equal(added[0].symbol, "EUR/GBP");
+    assert.equal(readJson(s.t).status, "ok");
+  } finally { s.t.cleanup(); }
+});
+
+test("6-2: 手順全体の時間制限 — 超えた銘柄は失敗として記録し、それでもファイルは書いて、試行回数も数える", async () => {
+  const s = setup();
+  try {
+    const clock = fakeClock(NOW);
+    const client = createClient({ apiKey: KEY, fetchImpl: s.f, sleep: clock.sleep, now: clock.now, spacingMs: 2500, deadlineAt: NOW + 6000 });
+    const r = await runDaily({ nowMs: NOW, dataDir: s.t.dataDir, client, log: (m) => s.logs.push(m) });
+    assert.equal(r.exitCode, 1);
+    assert.ok(r.failures.length >= 5, `時間切れの銘柄が少ない: ${r.failures.length}`);
+    assert.match(r.failures[r.failures.length - 1], /時間切れ/);
+    const feed = readJson(s.t);
+    assert.equal(feed.attempt, 1);
+    assert.equal(feed.status, "partial");
+    assert.ok(s.f.calls.length <= 4, `時間制限後もAPIを呼んでいる: ${s.f.calls.length}`);
+    assert.ok(feed.symbols.some((x) => x.status === "ok")); // 間に合った銘柄は更新される
+  } finally { s.t.cleanup(); }
+});
+
+test("堅牢性: 見出し行だけの履歴CSVは『空』として銘柄のエラーにする。形の違う前回フィードは無いものとして作り直す", async () => {
+  const s = setup();
+  try {
+    fs.writeFileSync(path.join(s.t.dataDir, "mtf", "ny-daily-AUDUSD.csv"), store.HEADER + "\n");
+    fs.writeFileSync(path.join(s.t.dataDir, "mtf-feed.json"), JSON.stringify({ as_of: "2026-10-06", status: "ok", symbols: { not: "an array" } }));
+    const r = await s.run();
+    assert.equal(r.exitCode, 1);
+    assert.match(r.failures.join("\n"), /AUDUSD: 履歴CSVが空/);
+    assert.equal(readJson(s.t).symbols.find((x) => x.symbol === "AUDUSD").status, "error");
+    assert.equal(readJson(s.t).symbols.find((x) => x.symbol === "USDJPY").status, "ok");
   } finally { s.t.cleanup(); }
 });
 

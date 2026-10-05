@@ -59,7 +59,7 @@ function hourBarsFromRows(rows, opts = {}) {
 }
 
 // Twelve Data の time_series を模したもの。bars は { datetime, open, high, low, close }（UTC）
-function fakeTwelveData(barsByTd, { pageCap = 5000, failures = {} } = {}) {
+function fakeTwelveData(barsByTd, { pageCap = 5000, failures = {}, endDateShiftH = 0, nullPriceAt = null } = {}) {
   const calls = [];
   const fn = async (url) => {
     const u = new URL(url);
@@ -75,10 +75,12 @@ function fakeTwelveData(barsByTd, { pageCap = 5000, failures = {} } = {}) {
     }
     const all = barsByTd[p.symbol] || [];
     const os = Math.min(Number(p.outputsize || 30), pageCap);
-    let arr = all.filter((b) => (!p.start_date || b.datetime >= p.start_date) && (!p.end_date || b.datetime <= p.end_date));
+    // endDateShiftH: end_date を UTC ではなく UTC+N 時として読むAPIの模擬（継ぎ目の欠けを検出できるかの試験用）
+    const endLimit = p.end_date ? isoDatetime(parseUtcDatetime(p.end_date) - endDateShiftH * HR) : null;
+    let arr = all.filter((b) => (!p.start_date || b.datetime >= p.start_date) && (!endLimit || b.datetime <= endLimit));
     arr = arr.sort((a, b) => b.datetime.localeCompare(a.datetime)).slice(0, os);
     if (!arr.length) return new Response(JSON.stringify({ code: 400, status: "error", message: "No data is available on the specified dates. Try setting different start/end dates." }), { status: 200 });
-    const values = arr.map((b) => ({ datetime: b.datetime, open: b.open.toFixed(5), high: b.high.toFixed(5), low: b.low.toFixed(5), close: b.close.toFixed(5) }));
+    const values = arr.map((b) => ({ datetime: b.datetime, open: b.open.toFixed(5), high: b.high.toFixed(5), low: b.low.toFixed(5), close: b.close.toFixed(5), ...(nullPriceAt === b.datetime ? { close: null } : {}) }));
     return new Response(JSON.stringify({ meta: { symbol: p.symbol }, values, status: "ok" }), { status: 200 });
   };
   fn.calls = calls;

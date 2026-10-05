@@ -32,13 +32,20 @@ function symbolBlock(sym, item, asOf) {
   const rp = (x) => round(x, 2);
   const d = st.daily, w = st.weekly, m = st.monthly;
   const stale = d.date < asOf;
+  // 基準日の日足の最終の1時間足(NY16時台)がまだ届いていない可能性: 提供元が17時直後に最後の足を出していないと、
+  // 本数不足・終値が少し前の価格の日足が「基準日まで届いた」ように見える。次回以降の実行で取り直す
+  const lastRow = st.rows[st.rows.length - 1];
+  const incomplete = !stale && Boolean(lastRow.last_bar_ny) && lastRow.last_bar_ny < "16:00";
+  const note = stale ? `最新の確定日足が ${d.date} で、基準日 ${asOf} に届いていません`
+    : incomplete ? `基準日 ${asOf} の日足の最終の1時間足が ${lastRow.last_bar_ny}(NY) 開始で、16:00 台の足が未着の可能性があります（取り直し待ち）` : null;
   const shortDays = calc.shortBarDays(st.rows, sym.standardBars);
   // 判定に使う終値の日（日足の日・週の最終営業日・月の最終営業日）が本数不足なら、その行にも印を付ける
   const flagOf = (date) => shortDays.find((x) => x.date === date) || null;
   return {
     ...base,
-    status: item.error ? "error" : stale ? "stale" : "ok",
+    status: item.error ? "error" : stale || incomplete ? "stale" : "ok",
     ...(item.error ? { error: item.error } : {}),
+    ...(note && !item.error ? { status_note: note } : {}),
     data_date: d.date,
     monthly: m ? {
       date: m.date, direction: m.direction, close: p(m.close),
@@ -133,7 +140,7 @@ function renderText(feed) {
     L.push(`source: ${s.source}`);
     L.push(`price_type: ${s.price_type}`);
     L.push(`updated_at: ${s.updated_at || "なし"}`);
-    L.push(`status: ${s.status}${s.error ? `（${s.error}）` : s.status === "stale" ? `（最新の確定日足が ${s.data_date} で、基準日 ${feed.as_of} に届いていません）` : ""}`);
+    L.push(`status: ${s.status}${s.error ? `（${s.error}）` : s.status_note ? `（${s.status_note}）` : ""}`);
     if (!s.daily) continue;
     const m = s.monthly, w = s.weekly, d = s.daily;
     L.push(`MONTHLY: date=${dash(m.date)} direction=${m.direction} close=${fx(m.close, dg)} 12MMA=${fx(m.mma12, dg + 1)} 24MMA=${blank(m.mma24, dg + 1)} 6M_HIGH=${fx(m.high_6m, dg)} 6M_LOW=${fx(m.low_6m, dg)} 6M_RANGE_POSITION=${fx(m.range_position_6m, 2)} DATA_STATUS=${m.data_status} bars_used=${m.bars_used} (保有${m.bars_available})${flag(m.close_day_short_bars)}`);

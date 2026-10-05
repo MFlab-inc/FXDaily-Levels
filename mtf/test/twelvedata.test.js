@@ -133,3 +133,38 @@ test("beforeRequest（他ワークフローとの重なり確認）は毎回の�
   await assert.rejects(fetchRecent(c2, "X", 5), /busy/);
   assert.equal(f.calls.length, before);
 });
+
+test("取得: ページの継ぎ目で足が抜けている（end_date をUTC+10として読むAPI）と、黙って進まず例外にする", async () => {
+  const bars = mkBars(500);
+  const f = fakeTwelveData({ X: bars }, { pageCap: 100, endDateShiftH: 10 });
+  await assert.rejects(fetchRange(mk(f, fakeClock()), "X", bars[0].datetime, { pageSize: 100 }), /継ぎ目で \d+ 時間ぶんの足が抜けて/);
+  // 正しく読むAPIなら通る。週末(48時間)・XAUの休止(2時間)の継ぎ目は誤検出しない
+  const wk = [];
+  for (let i = 0; i < 100; i++) wk.push(...mkBars(1, Date.UTC(2026, 0, 5) + i * 7 * 24 * HR - 0)); // 1週間おき（極端な大きな隙間）
+  const f2 = fakeTwelveData({ X: wk }, { pageCap: 30 });
+  assert.equal((await fetchRange(mk(f2, fakeClock()), "X", wk[0].datetime, { pageSize: 30 })).length, 100);
+  const xau = [];
+  for (let d = 0; d < 20; d++) for (let h = 0; h < 24; h++) if (h !== 22) xau.push(...mkBars(1, Date.UTC(2026, 0, 5 + d, h)));
+  const f3 = fakeTwelveData({ X: xau }, { pageCap: 23 });
+  assert.equal((await fetchRange(mk(f3, fakeClock()), "X", xau[0].datetime, { pageSize: 23, maxPages: 40 })).length, xau.length);
+});
+
+test("取得: 価格が null・空・0・負の足は 0 として扱わず例外", async () => {
+  const body = (v) => async () => new Response(JSON.stringify({ values: [{ datetime: "2026-01-01 00:00:00", open: "1", high: "2", low: "0.5", close: v }] }), { status: 200 });
+  for (const v of [null, "", "0", "-1", "abc"]) {
+    await assert.rejects(fetchRecent(mk(body(v), fakeClock(), { maxAttempts: 1 }), "X", 5), /正の数値/, `close=${JSON.stringify(v)}`);
+  }
+  assert.equal((await fetchRecent(mk(body("1.5"), fakeClock()), "X", 5)).length, 1);
+});
+
+test("時間制限(deadlineAt): 超えたら新しい呼び出しも再試行の待ちもせず失敗にする", async () => {
+  const clock = fakeClock(Date.UTC(2026, 9, 6, 21, 10, 40));
+  const f = fakeTwelveData({ X: mkBars(5) }, { failures: { X: { kind: "429-body", times: 99 } } });
+  const c = mk(f, clock, { deadlineAt: clock.t + 30000 }); // 429 の待ちは次の分まで(約21秒)＋…を繰り返すと30秒を超える
+  await assert.rejects(fetchRecent(c, "X", 5), /429|時間切れ/);
+  assert.ok(f.calls.length <= 2);
+  clock.t += 120000; // 期限を過ぎる
+  const before = f.calls.length;
+  await assert.rejects(fetchRecent(c, "X", 5), /時間切れ/); // 期限後は呼ばない
+  assert.equal(f.calls.length, before);
+});

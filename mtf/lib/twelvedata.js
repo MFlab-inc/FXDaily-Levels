@@ -1,5 +1,5 @@
 "use strict";
-const { parseUtcDatetime, isoDatetime } = require("./ny-time");
+const { parseUtcDatetime, isoDatetime, HR } = require("./ny-time");
 
 /**
  * Twelve Data time_series（1時間足・UTC）の取得。
@@ -21,6 +21,7 @@ function createClient({
   maxAttempts = 4,
   timeoutMs = 60000,
   beforeRequest = null, // async () => void。他ワークフローとの重なり回避などの確認を、呼び出しの直前に挟む
+  deadlineAt = null, // 全体の時間制限（ms, エポック）。過ぎたら新しい呼び出しも再試行の待ちもせず失敗にする
   log = () => {},
 } = {}) {
   if (!apiKey) throw new Error("TWELVE_DATA_API_KEY が設定されていません");
@@ -45,13 +46,15 @@ function createClient({
   async function once(params) {
     if (beforeRequest) await beforeRequest();
     await pace();
+    if (deadlineAt && now() >= deadlineAt) throw Object.assign(new Error("時間切れ（内部の時間制限を超えました）"), { retryable: false });
     const q = new URLSearchParams({ ...params, apikey: apiKey });
     stats.requests += 1;
     lastStart = now();
     stamps.push(lastStart);
     let res, text;
     try {
-      res = await fetchImpl(`${API_BASE}?${q.toString()}`, { signal: AbortSignal.timeout(timeoutMs) });
+      const limit = deadlineAt ? Math.max(1000, Math.min(timeoutMs, deadlineAt - now())) : timeoutMs;
+      res = await fetchImpl(`${API_BASE}?${q.toString()}`, { signal: AbortSignal.timeout(limit) });
       text = await res.text();
     } catch (e) {
       throw Object.assign(new Error(`通信失敗: ${scrub(e.name)}: ${scrub(e.message)}`), { retryable: true, waitMs: 5000 });
@@ -86,6 +89,7 @@ function createClient({
       } catch (e) {
         lastErr = e;
         if (!e.retryable || attempt === maxAttempts) break;
+        if (deadlineAt && now() + (e.waitMs || 5000) >= deadlineAt) break; // 待つと時間制限を超える
         stats.retries += 1;
         log(`[twelvedata] ${params.symbol}: ${e.message} → ${Math.round((e.waitMs || 5000) / 1000)}秒後に再試行(${attempt}/${maxAttempts - 1})`);
         await sleep(e.waitMs || 5000);
@@ -101,7 +105,11 @@ function parseValues(values, scrub = String) {
   return values.map((v) => {
     const b = { datetime: String(v.datetime), open: Number(v.open), high: Number(v.high), low: Number(v.low), close: Number(v.close) };
     if (!/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(b.datetime)) throw new Error(`日時の形式が不正です: ${scrub(b.datetime)}`);
-    if (![b.open, b.high, b.low, b.close].every(Number.isFinite)) throw new Error(`価格が数値ではありません（${b.datetime}）`);
+    // null・空文字は Number() で 0 になるので、先に弾く。価格は正の有限値のみ
+    const raw = [v.open, v.high, v.low, v.close];
+    if (raw.some((x) => x === null || x === undefined || x === "") || ![b.open, b.high, b.low, b.close].every((x) => Number.isFinite(x) && x > 0)) {
+      throw new Error(`価格が正の数値ではありません（${b.datetime}）`);
+    }
     return b;
   });
 }
@@ -118,15 +126,24 @@ async function fetchRecent(client, tdSymbol, count = 1000) {
 async function fetchRange(client, tdSymbol, startDt, { pageSize = DEFAULT_PAGE, maxPages = 12, log = () => {} } = {}) {
   const all = [];
   let end = null;
+  let prevOldest = null;
   for (let page = 1; page <= maxPages; page++) {
     const params = { symbol: tdSymbol, interval: "1h", timezone: "UTC", outputsize: String(pageSize), start_date: startDt };
     if (end) params.end_date = end;
     const vals = await client.timeSeries(params);
     log(`[twelvedata] ${tdSymbol} ページ${page}: ${vals.length}本${vals.length ? ` (${vals[vals.length - 1].datetime} 〜 ${vals[0].datetime})` : ""}`);
     if (!vals.length) return all;
+    // ページの継ぎ目の確認: 前のページの最古の足と、このページの最新の足の間が3〜40時間空いていたら、
+    // end_date の解釈（タイムゾーン）がずれて足が抜けている疑いがある（普通の継ぎ目は1時間、XAUの休止は2時間、週末・休日は40時間超）
+    const newest = vals.reduce((m, b) => (b.datetime > m ? b.datetime : m), vals[0].datetime);
+    if (prevOldest) {
+      const gapH = (parseUtcDatetime(prevOldest) - parseUtcDatetime(newest)) / HR;
+      if (gapH > 3 && gapH < 40) throw new Error(`${tdSymbol}: ページの継ぎ目で ${gapH} 時間ぶんの足が抜けています（${newest} 〜 ${prevOldest}）。end_date の時刻の解釈を確認してください`);
+    }
     all.push(...vals);
     if (vals.length < pageSize) return all;
     const oldest = vals.reduce((m, b) => (b.datetime < m ? b.datetime : m), vals[0].datetime);
+    prevOldest = oldest;
     end = isoDatetime(parseUtcDatetime(oldest) - 1000);
     if (end < startDt) return all;
   }
