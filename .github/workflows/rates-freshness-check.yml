@@ -1,0 +1,42 @@
+name: Rates Freshness Check
+
+on:
+  schedule:
+    # 朝のうち（JST 10:37〜11:37）に、data/rates.json が「いま」最新か確かめる。最新でなければこの実行を
+    # 失敗（赤）にして気づけるようにする。rates.yml 自身の "Assert rates freshness" でも検知できるが、
+    # rates.yml のscheduleが1本も発火しなかった場合は検知するジョブ自体が存在しないため、独立して見張る。
+    # 曜日は rates.yml と同じ月〜金（UTCの01〜02時台は同じ日のJST）。毎時0分は配信が混みやすいのでずらしている。
+    - cron: "37 1-2 * * 1-5"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  actions: read  # 失敗時に直近の rates.yml 実行状況を表示するため
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # rates.yml の最後の確認と同じ判定（rates/lib/view.js の evaluate）。外部へは接続しない。
+      - name: Check rates.json freshness
+        run: node rates/run-daily.js --check-fresh
+
+      - name: Show recent rates.yml runs
+        if: ${{ failure() }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "::error::data/rates.json が朝の時点で未更新です。上の STALE の理由と、下の直近のrates.yml実行を確認してください。scheduleの発火が無い場合は Actions → JP-US 2Y Rates → Run workflow で手動実行できます"
+          gh run list --repo "$GITHUB_REPOSITORY" --workflow rates.yml --limit 8 \
+            --json event,status,conclusion,createdAt \
+            --template '{{range .}}{{.createdAt}}  {{.event}}  {{.status}}  {{.conclusion}}{{"\n"}}{{end}}'

@@ -1,0 +1,138 @@
+# 日米2年金利フィード 仕様書
+
+- 版：v1.0（2026-10-07）
+- 目的：USD/JPY の「日米の政策比較」の材料として、公開データの日米2年国債利回りと、その金利差の5営業日の動きを、機械的に分類した結果（判定）とともに、`data/rates.json` と GPT フィード（`data/gpt-feed.txt`・`data/gpt-feed.html`）に出す。
+- 範囲：値・日付・5営業日差・判定・出典を出す。トレード判定ではない。既存の `fetch.js`・`intraday.js`・`daily-levels.json` には触れない（`build-feed.js` に区画を足しただけ。7節）。
+- 根拠の調査：swing-flow リポジトリの `out/rates_survey_20261007.md`（2026-10-07。入手先・形式・公表時刻・利用条件・5営業日差の分布）。
+
+## 1. 用語
+
+| 語 | 意味 |
+|---|---|
+| 米2年 | 米財務省 Daily Treasury Par Yield Curve Rates の `2 Yr`（%）。par yield（債券等価ベース） |
+| 日2年 | 財務省「国債金利情報」の `2年`（%）。流通市場の固定利付国債の実勢価格に基づく半複利最終利回り |
+| 金利差 | 米2年 − 日2年。**両方に値がある日だけ**作る |
+| 5営業日差 | その系列で値がある日を数え、5つ前の日との差（bp）。米2年・日2年・金利差それぞれ、自分の系列の日で数える（祝日が日米で違うため、遡る日が系列ごとに違う） |
+| ミリ% | 0.001%を1とする整数。計算はすべてこれで行う（1bp ＝ 0.01% ＝ 10ミリ%） |
+
+## 2. 取得先
+
+| 項目 | 内容 |
+|---|---|
+| 米2年（一次） | 米財務省のCSV（年ごと）`https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/<年>/all?type=daily_treasury_yield_curve&field_tdr_date_value=<年>&page&_format=csv`。UTF-8、日付 `MM/DD/YYYY`、新しい日付が先頭、列 `2 Yr` |
+| 米2年（照合） | **同じ財務省のXML** `https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value=<年>`（Atomフィード。`NEW_DATE`・`BC_2YEAR`）。CSVと共通の日付で値を比べ、違う日が1日でもあれば「不一致」（判定できません）。XMLだけ取得できないときは、照合を「未実施」と記録してCSVを採用する |
+| **FREDは使わない** | 米2年は財務省のCSVを一次とする（調査で、財務省CSV・XMLとFRED DGS2は値が一致したが、FREDは1営業日遅い。FREDの規約に自動取得（scraping等）の禁止の文があり、位置づけを確認できていないため） |
+| 日2年 | 財務省「国債金利情報」`https://www.mof.go.jp/jgbs/reference/interest_rate/jgbcm.csv`（当月）と `.../data/jgbcm_all.csv`（過去分）。**Shift_JIS（CP932）**、日付は**和暦の略号**（`R8.10.6`＝令和8年10月6日。S=昭和 H=平成 R=令和。月日は0埋めなし）、古い日付が先頭、列 `基準日,1年,2年,…`、休日の行は無い、満期の値が無い所は `-`、末尾に空のカンマ行と「※…」の注意書き。当月ファイルの行が12行未満（月初）のときだけ、全期間ファイル（約1.2MB）も取って重ねる |
+| 祝日 | 内閣府「国民の祝日」CSV（Shift_JIS）`https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv`。取得できなければ、同梱の `rates/jp-holidays.csv`（2022〜2027年）だけで続行する。`--check-fresh` は同梱の表だけを使う（外部へ接続しない） |
+
+形式が想定と違うとき（列名・日付・値）は、黙って捨てずに取得の失敗として扱う。
+
+## 3. 計算
+
+- 値は小数第3位までを整数（ミリ%）にして持つ。足し引き・比較はすべて整数（浮動小数の丸めを使わない。境界ちょうどの判定がずれないため）。
+- 金利差 ＝ 米2年 − 日2年（両方に値がある日だけ）。単位 %pt。
+- 5営業日差（bp）＝（最新日の値 − 5つ前の日の値）÷ 10ミリ%。小数第1位まで（ミリ%の整数の差を10で割るので、丸めは入らない）。
+- 履歴の穴の確認：直近30行の範囲に、開いているはずの日（日本は営業日、米国は規則で「開」の日）の行が無ければ、5営業日差が正しく出ないので取得の問題として記録し、判定できません。
+
+## 4. 判定
+
+金利差の5営業日差が
+
+| 条件 | 判定 |
+|---|---|
+| −10bp 以下 | **円高方向**（米金利が日本より下がった＝金利差の縮小） |
+| +10bp 以上 | **円安方向** |
+| その間 | **はっきりしない** |
+
+- しきい値は `rates/config.js` の `THRESHOLD_BP`（10）。**境界（ちょうど ±10bp）を含む**（−10.0bp は円高方向、+10.0bp は円安方向）。
+- 判定の結果としきい値は、`rates.json` の `judgment`（`label`・`threshold_bp`・`rule`・`basis`）と、フィードの区画に出す。
+- 次のいずれかのとき、判定は **「判定できません」** にする（`judgment.available=false`、理由を `reason` に書く）：
+  - 米2年・日2年のどちらかが、期待する最新日（5節）まで更新されていない（古い）。
+  - どちらかが `stale`（取得に失敗して前回の値のまま）、または値が無い。
+  - 財務省のCSVとXMLが一致しない、履歴に穴がある、祝日表が足りない等、取得・照合の問題が残っている。
+  - 金利差の5営業日差を計算できない（両方に値がある日が足りない、最新日が期待より古い）。
+- 古さは**取得した時点ではなく、表示する時点の時刻で判定し直す**（`rates/lib/view.js` の `evaluate`）。取得に失敗して `rates.json` が更新されないまま日が進んでも、古い判定が出続けない。
+
+## 5. 鮮度・時刻・失敗時の扱い
+
+### 5-1. 期待する最新日
+
+| 系列 | 期待する最新日 |
+|---|---|
+| 日2年 | D日の値は、次の営業日の午前9時30分頃に公表される（財務省FAQ）。**いま公表済みの営業日**（今日が営業日で9:40以降なら今日、そうでなければ直前の営業日）の、**1つ前の営業日**。営業日は、土日・内閣府の祝日・12/31・1/1〜1/3 を除く（2023-01〜2026-10 の財務省の全行と一致。試験で確認） |
+| 米2年 | 米財務省は通常、米東部18:00までに掲載する。米東部18:30以降なら現地の今日、前なら前日から数え、休場の日を飛ばした最初の日 |
+
+- 米国の休場は、連邦の祝日などの規則（日曜の祝日は翌月曜が休場）で決める。**規則だけでは決まらない日**（聖金曜、土曜の祝日の振替の金曜）は「不確か」とし、行が無いまま米東部18:30から24時間が過ぎたら休場だったと見なす（2023-04-07・2023-11-10・2026-04-03は開、2024-03-29・2025-04-18・2026-07-03は閉。試験で確認）。
+- 祝日表にその年が無いときは営業日を決められない。取得の問題として記録し、判定できません。同梱の `rates/jp-holidays.csv` は、内閣府CSVが次の年の分を載せたら更新する（年1回）。
+
+### 5-2. 実行の状態（`generation.status`）
+
+| status | 意味 | `rates.yml` の最後の確認 |
+|---|---|---|
+| `ok` | 取得・照合の問題が無く、米・日とも最新 | 緑 |
+| `pending` | 取得の問題は無いが、まだ最新でない。**日本の営業日の10:30より前**（公表待ち） | 緑（再試行を待つ） |
+| `partial` | 取得・照合の問題がある、または10:30を過ぎても最新でない | 赤 |
+| （作らない） | 米・日ともに取得できない：`rates.json` を更新せず終了コード1 | 古ければ赤 |
+
+- `generation.errors` に取得・照合の問題を書く。`retry_expected` は、同日中の再試行cron（JST 14時前）が残っているか。
+- 片方だけ失敗したときは、成功した側だけ更新し、失敗した側は前回の値に `stale: true` を付けて残す（null で上書きしない）。
+- 前回と内容（取得時刻などを除く）が同じなら、`rates.json` を書き換えない（再試行のたびにコミットが増えない）。
+- 時刻の注意：日本の値は東京の、米国の値は米東部の観測日。同じ暦日どうしを並べているが、約13時間ずれる。
+
+## 6. 出典（フィードの区画に必ず書く）
+
+- 米財務省：`出典：米財務省 Daily Treasury Par Yield Curve Rates（https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics）`
+- 財務省（日本）：公共データ利用規約（第1.0版）PDL1.0 の書き方（出典、加工した旨と主体）
+  `出典：財務省「国債金利情報」（https://www.mof.go.jp/jgbs/reference/interest_rate/index.htm）、PDL1.0（https://www.digital.go.jp/resources/open_data/public_data_license_v1.0）を加工して作成（5営業日の差と金利差の計算：MFlab-inc／FXDaily-Levels）`
+  加工の主体の名称は `rates/config.js` の `PROCESSOR_NAME`。
+- 米財務省のデータの利用条件・出典の書き方を定めた文は、調査した範囲では確認できなかった（出典は自主的に記載している）。
+
+## 7. 出力
+
+### 7-1. `data/rates.json`（`schema: "fxdaily-levels/rates/v1"`）
+
+`as_of`（JST）／`us2y`・`jp2y`（`date`・`value`・`unit`・`source`・`fetched_at`・`stale`・`expected_date`・`fresh`。米は `xml_check`、日は `last_modified`・`published_hint`）／`spread`（`date`・`value`・`unit`）／`change_5d`（`us`・`jp`・`spread`：`value_bp`・`date`・`base_date`・`value`・`base_value`）／`judgment`（`available`・`label`・`threshold_bp`・`rule`・`basis`・`reason`）／`generation`／`calendar_source`／`citations`／`notes`。
+
+### 7-2. フィード（`build-feed.js`）
+
+- `data/rates.json` があるときだけ、`gpt-feed.txt`・`gpt-feed.html` に出す。**無いとき、フィードの出力は従来と同じ**（試験で確認）。
+  - 2行目のヘッダに ` | rates as_of: <JST>` を足す。
+  - サマリーの `【Market Sentiment】` の後に `【JP-US 2Y Rates】` の区画（値と日付、金利差、5営業日差、判定としきい値、観測時刻の注意、出典2行）を足す。
+  - 末尾に `Raw: rates.json（表示時点の判定に直したもの）` を足す。
+- 区画の判定は、表示する時点で鮮度を判定し直した値（4節）。古い／stale のときは「判定できません」と理由を出す。
+- フィードの先頭の注意書き「事実データのみ。トレード判定は含まない」は変えていない。区画の判定は金利差の変化の機械的な分類で、トレード判定ではない旨を区画に書いている。
+
+## 8. ワークフロー
+
+| ファイル | 内容 |
+|---|---|
+| `.github/workflows/rates.yml`（JP-US 2Y Rates） | `*/15 1-4 * * 1-5`（JST 10:00〜13:45、15分毎）と `40,55 0 * * 1-5`（JST 09:40・09:55）。`--if-stale` で、公表前・最新で健全なら外部へ接続せず終了。取得 → `data/rates.json` をコミット（rebase再試行3回）→ フィードを作り直してコミット（最新のmainに合わせてから作り直す。再試行3回）→ 最後に `--check-fresh` で赤くする（先にpushしてから赤にする）。`concurrency: rates-data` |
+| `.github/workflows/rates-freshness-check.yml` | JST 10:37・11:37（月〜金）に `--check-fresh`。朝のうちに更新されていなければ赤にする。scheduleが1本も発火しなかった場合の見張り |
+| 外部cron（リポジトリ外・要登録） | **UTC 00:45（＝JST 09:45）月〜金**に `rates.yml` を `workflow_dispatch`（`if_stale=true`）で呼ぶ。GitHubのscheduleは遅れる・抜けることがあるため（`daily.yml` と同じ運用） |
+
+- Twelve Data は使わない（APIキー不要）。`mtf/lib/guard.js` の待機の対象（Daily FX Data・Intraday Snapshot）と呼び出しは重ならない。
+- `rates.yml` のcronを変えたら、`rates/config.js` の `SAME_DAY_RETRY_UNTIL_JST_HOUR` も揃える。
+
+## 9. 試験
+
+```
+node --test rates/test/*.test.js
+```
+
+- `table20.test.js`：**調査（2026-10-07）の「直近20営業日の表」を、実データ（`rates/test/fixtures/`）から再現する**。金利差・5営業日差・5/10/15bp の判定が表と一致すること（計算の単位）と、10bp の列がフィードの計算（`buildSnapshot`）で一致すること。
+- `snapshot.test.js`：境界（±10.0bp は含む、±9.9bp は含まない）、古い・stale・取得失敗・CSVとXMLの不一致・履歴の穴・祝日表不足で「判定できません」になること、10/12 の週。
+- `calendar.test.js`：日本の営業日の規則が財務省の全918行と、米国の規則が財務省CSVの全941行と一致すること、期待する最新日。
+- `parse.test.js`・`http.test.js`・`view.test.js`・`run-daily.test.js`・`build-feed.test.js`：形式、再試行、表示時点の鮮度、取得の失敗時の挙動、フィードの区画。
+
+## 10. 既知の限界・保守
+
+- 米国の休場は規則で決められない日がある（5-1）。祝日表（`rates/jp-holidays.csv`）は年1回の更新が必要。
+- 現行フィードの `US2Y`（`yahoo:2YY=F`）は、財務省の2年とは別の値（2026-10-07 11:22 JSTで 4.647%、財務省の 10/6 は 4.79%）。本フィードの米2年は財務省の値。
+- 日2年は半複利最終利回り、米2年は par yield（債券等価ベース）。同じ定義とは確認できない。
+- 米財務省のデータの再利用の条件は確認できていない（6節）。
+
+## 11. 改訂履歴
+
+| 版 | 日付 | 内容 |
+|---|---|---|
+| v1.0 | 2026-10-07 | 初版 |
