@@ -21,6 +21,17 @@ const intra = readJson("intraday.json");
 const cal = readJson("economic-calendar.json");
 const dt = readJson("daytrade-context.json");
 
+// 日米2年金利（rates/ が作る data/rates.json）。無ければ区画を出さない（既存の出力は変わらない）。
+// 判定は、取得時ではなく「いま」の鮮度で見直した値（古い／stale なら「判定できません」）。失敗しても他の区画は止めない。
+let ratesParts = null;
+try {
+  ratesParts = require("./rates/lib/view").feedParts(readJson("rates.json"), Date.now(), require("./rates/run-daily").loadBundledHolidays());
+} catch (e) {
+  console.warn(`rates.json の読み込みに失敗したため、日米2年金利の区画は出しません: ${e.message}`);
+}
+const ratesView = ratesParts?.view ?? null;
+const ratesHeader = ratesParts?.header ?? "";
+
 if (!daily) {
   console.error("daily-levels.json がありません。先に Daily FX Data を実行してください。");
   process.exit(1);
@@ -62,6 +73,8 @@ if (ix("US500")) {
   summary += `株価指数(現物ベース): ${f("US30")} | ${f("US500")} | ${f("US100")}\n\n`;
 }
 
+
+if (ratesParts) summary += ratesParts.section + "\n\n";
 
 summary += `【Pairs】 daily levels as_of: ${daily.as_of}` + (intra ? ` / intraday as_of: ${intra.as_of}` : " / intraday: なし") + "\n";
 for (const code of PAIR_ORDER) {
@@ -141,7 +154,7 @@ const html = `<!DOCTYPE html>
 <body>
 <h1>FX Daily Levels - GPT Feed</h1>
 <p>feed_generated_at: ${esc(nowJst)} / timezone: Asia/Tokyo</p>
-<p>daily as_of: ${esc(daily.as_of)} | intraday as_of: ${esc(intra?.as_of ?? "なし")} | calendar as_of: ${esc(cal?.as_of ?? "なし")} | daytrade as_of: ${esc(dt?.as_of ?? "なし")}</p>
+<p>daily as_of: ${esc(daily.as_of)} | intraday as_of: ${esc(intra?.as_of ?? "なし")} | calendar as_of: ${esc(cal?.as_of ?? "なし")} | daytrade as_of: ${esc(dt?.as_of ?? "なし")}${esc(ratesHeader)}</p>
 <p>注意: 事実データのみ。トレード判定は含まない。intradayは最大1時間前の値の場合がある。</p>
 
 <h2>サマリー</h2>
@@ -158,7 +171,7 @@ const html = `<!DOCTYPE html>
 
 <h2>Raw: daytrade-context.json</h2>
 <pre>${esc(dt ? JSON.stringify(dt, null, 1) : "未生成")}</pre>
-</body>
+${ratesView ? `\n<h2>Raw: rates.json（表示時点の判定に直したもの）</h2>\n<pre>${esc(JSON.stringify(ratesView, null, 1))}</pre>\n` : ""}</body>
 </html>
 `;
 
@@ -167,7 +180,7 @@ fs.writeFileSync(path.join(dataDir, "gpt-feed.html"), html);
 // ---- TXT版（フォールバック用・プレーンテキスト）----
 const txt = `FX Daily Levels - GPT Feed (plain text)
 feed_generated_at: ${nowJst} / timezone: Asia/Tokyo
-daily as_of: ${daily.as_of} | intraday as_of: ${intra?.as_of ?? "なし"} | calendar as_of: ${cal?.as_of ?? "なし"} | daytrade as_of: ${dt?.as_of ?? "なし"}
+daily as_of: ${daily.as_of} | intraday as_of: ${intra?.as_of ?? "なし"} | calendar as_of: ${cal?.as_of ?? "なし"} | daytrade as_of: ${dt?.as_of ?? "なし"}${ratesHeader}
 注意: 事実データのみ。トレード判定は含まない。intradayは最大1時間前の値の場合がある。
 
 ===== サマリー =====
@@ -183,7 +196,7 @@ ${cal ? JSON.stringify(cal, null, 1) : "未生成"}
 
 ===== Raw: daytrade-context.json =====
 ${dt ? JSON.stringify(dt, null, 1) : "未生成"}
-`;
+${ratesView ? `\n===== Raw: rates.json（表示時点の判定に直したもの） =====\n${JSON.stringify(ratesView, null, 1)}\n` : ""}`;
 fs.writeFileSync(path.join(dataDir, "gpt-feed.txt"), txt);
 
 // ---- CSV版（Googleスプレッドシート IMPORTDATA 用）----

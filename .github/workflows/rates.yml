@@ -1,0 +1,72 @@
+name: JP-US 2Y Rates
+
+on:
+  schedule:
+    # 日2年は「翌営業日午前9時30分頃」に公表される（財務省FAQ）。公表前（日本の営業日の9:40より前）は、
+    # rates/run-daily.js --if-stale が取りに行かずに終了する。公表後は、最新で健全なら外部へ接続せず終了する
+    # （何度起動しても外部への負荷は増えない）。daily.yml・intraday.yml と同様、GitHubのscheduleは
+    # 届かなかったり遅れたりするため、起動の回数を増やしてある。時刻どおりに起動できる外部cron
+    # （UTC 00:45 ＝ JST 09:45、月〜金）から workflow_dispatch（if_stale=true）で呼ぶ運用を併用する。
+    # UTCの00〜04時台は同じ日のJST午前〜午後なので、曜日は月〜金のまま（1-5）。
+    # rates.yml のcronを変えたら、rates/config.js の SAME_DAY_RETRY_UNTIL_JST_HOUR も揃えること。
+    - cron: "40,55 0 * * 1-5"    # JST 月〜金 09:40、09:55
+    - cron: "*/15 1-4 * * 1-5"   # JST 月〜金 10:00〜13:45、15分毎
+  workflow_dispatch:
+    inputs:
+      if_stale:
+        description: "公表前・最新で健全なら取得せず終了する（外部cron用）。手動で必ず取得したい時はオフのまま"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# 同じ data/rates.json へ同時にpushしない
+concurrency:
+  group: rates-data
+  cancel-in-progress: false
+
+jobs:
+  rates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10  # 外部サイトのハングでジョブが既定の6時間居座るのを防ぐ
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Twelve Data は使わない（APIキー不要）。米財務省・財務省・内閣府の公開ファイルだけを読む。
+      # 米・日のどちらか一方だけ失敗したときは、成功した側だけ更新して先へ進む（失敗した側は前回値に stale を付ける）。
+      # 両方失敗したときは rates.json を更新せずに赤くなる。
+      - name: Fetch JP-US 2Y rates
+        run: node rates/run-daily.js ${{ (github.event_name == 'schedule' || inputs.if_stale) && '--if-stale' || '' }}
+
+      # data/rates.json だけをコミットする。他のワークフローが書く data/ のファイルには触れないので、
+      # 押し合っても rebase で衝突しない。フィード（data/gpt-feed.*）は、ここでは作り直さない
+      # （gpt-feed.* を書くのは daily.yml と intraday.yml だけにしておく）。rates.json の内容は、
+      # 次に intraday.yml（または daily.yml）が走ったときに、フィードの【JP-US 2Y Rates】の区画へ反映される。
+      - name: Commit and push rates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/rates.json
+          git diff --cached --quiet && echo "変更なし" && exit 0
+          git commit -m "rates: $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
+          for i in 1 2 3; do
+            git push && exit 0
+            echo "push失敗（${i}回目）。rebaseして再試行"
+            git pull --rebase origin "${GITHUB_REF_NAME}" || exit 1
+          done
+          echo "::error::data/rates.json のpushに3回失敗しました。日米2年金利が更新されていません"
+          exit 1
+
+      # 古い／取得の問題が残っているときは、コミット後に実行を赤くして気づけるようにする
+      # （先にpushしておかないと、状況を載せた rates.json 自体が下流に届かない）。
+      # 公表待ち（日本の営業日の10:30より前で、取得の問題が無い）は赤にしない。
+      - name: Assert rates freshness
+        if: ${{ !cancelled() }}
+        run: node rates/run-daily.js --check-fresh
