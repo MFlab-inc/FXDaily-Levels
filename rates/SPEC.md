@@ -101,19 +101,28 @@
   - サマリーの `【Market Sentiment】` の後に `【JP-US 2Y Rates】` の区画（値と日付、金利差、5営業日差、判定としきい値、観測時刻の注意、出典2行）を足す。
   - 末尾に `Raw: rates.json（表示時点の判定に直したもの）` を足す。
 - 区画の判定は、表示する時点で鮮度を判定し直した値（4節）。古い／stale のときは「判定できません」と理由を出す。
+- **フィードを作る（`build-feed.js` を実行して `data/gpt-feed.*` をコミットする）のは `daily.yml` と `intraday.yml` だけ**。`rates.yml` はフィードを作らない。`data/rates.json` の更新は、次にそのどちらかが走ったときにフィードへ反映される（8-1）。
 - フィードの先頭の注意書き「事実データのみ。トレード判定は含まない」は変えていない。区画の判定は金利差の変化の機械的な分類で、トレード判定ではない旨を区画に書いている。
 
 ## 8. ワークフロー
 
 | ファイル | 内容 |
 |---|---|
-| `.github/workflows/rates.yml`（JP-US 2Y Rates） | `*/15 1-4 * * 1-5`（JST 10:00〜13:45、15分毎）と `40,55 0 * * 1-5`（JST 09:40・09:55）。`--if-stale` で、公表前・最新で健全なら外部へ接続せず終了。取得 → `data/rates.json` をコミット（rebase再試行3回。**コミットを作ったときだけ**次へ）→ フィードを作り直してコミット（最新のmainに合わせてから作り直す。再試行3回）→ 最後に `--check-fresh` で赤くする（先にpushしてから赤にする）。`concurrency: rates-data`。フィードは生成の時刻を含むため、毎回作り直すと毎回コミットが増える。作り直しをコミットを作ったときだけにして、1日1〜数回にしている |
+| `.github/workflows/rates.yml`（JP-US 2Y Rates） | `*/15 1-4 * * 1-5`（JST 10:00〜13:45、15分毎）と `40,55 0 * * 1-5`（JST 09:40・09:55）。`--if-stale` で、公表前・最新で健全なら外部へ接続せず終了。取得 → `data/rates.json` をコミット（push が拒否されたら rebase して再試行、3回まで）→ 最後に `--check-fresh` で赤くする（先にpushしてから赤にする）。`concurrency: rates-data`。**書くファイルは `data/rates.json` だけ**（`data/gpt-feed.*` は書かない。フィードへの反映は `intraday.yml`・`daily.yml` に任せる。8-1） |
 | `.github/workflows/rates-tests.yml` | `rates/`・`build-feed.js` を変える PR と main への push で、`node --test rates/test/*.test.js` を実行する（外部へは接続しない。本番のデータ更新とは独立） |
 | `.github/workflows/rates-freshness-check.yml` | JST 10:37・11:37（月〜金）に `--check-fresh`。朝のうちに更新されていなければ赤にする。scheduleが1本も発火しなかった場合の見張り |
-| 外部cron（リポジトリ外・要登録） | **UTC 00:45（＝JST 09:45）月〜金**に `rates.yml` を `workflow_dispatch`（`if_stale=true`）で呼ぶ。GitHubのscheduleは遅れる・抜けることがあるため（`daily.yml` と同じ運用） |
+| 外部cron（リポジトリ外・要登録） | **UTC 00:45（＝JST 09:45）月〜金**に `rates.yml` を `workflow_dispatch`（`if_stale=true`）で呼ぶ。GitHubのscheduleは遅れる・抜けることがあるため（`daily.yml` と同じ運用）。登録の手順は [CRON_SETUP.md](CRON_SETUP.md) |
 
 - Twelve Data は使わない（APIキー不要）。`mtf/lib/guard.js` の待機の対象（Daily FX Data・Intraday Snapshot）と呼び出しは重ならない。
 - `rates.yml` のcronを変えたら、`rates/config.js` の `SAME_DAY_RETRY_UNTIL_JST_HOUR` も揃える。
+
+### 8-1. フィードへの反映（`rates.yml` はフィードを作らない）
+
+- `data/gpt-feed.*`・`data/feed.csv`・`data/history.csv` を書くワークフローは `daily.yml` と `intraday.yml` の2つのまま増やさない（`intraday.yml` の `git pull --rebase` の衝突の原因を増やさないため）。
+- `rates.yml` が `data/rates.json` をコミットしたあと、フィードの【JP-US 2Y Rates】の区画とヘッダの `| rates as_of: …` に載るのは、次に `intraday.yml`（schedule `2,17,32,47 * * * 1-5` ほか。`daily.yml` の完了でも起動する）か `daily.yml`（外部cronの JST 06:20・07:20・08:20 ほか）が `build-feed.js` を実行したとき。
+- **反映までの時間は、15分とは限らない**。`intraday.yml` の schedule は GitHub の配信が遅れる・抜けるため、実際の起動は 15 分毎より少ない。実測（GitHub Actions の実行履歴、2026-09-29〜10-07 の `intraday.yml` の直近60回）：schedule 28・`daily.yml` 完了による起動 29・手動 3。JST 09:45 以降の最初の `intraday.yml` の起動は、10/2（金）10:24（39分後）、10/5（月）12:50（3時間5分後）、10/6（火）09:57（12分後）、10/7（水）10:15（30分後）。この4日の観測であり、今後の遅れを保証するものではない。
+- 区画の判定は `build-feed.js` が走った時点の `data/rates.json` を、その時点の時刻で見直して出す（4節）。反映前は、前回の `rates.json` が古ければ「判定できません」と出るので、古い値が最新として載ることはない。
+- `rates.yml` の最後の `--check-fresh`（と `rates-freshness-check.yml`）が見るのは `data/rates.json` の鮮度で、フィードへの反映は見ない。
 
 ## 9. 試験
 
@@ -131,7 +140,7 @@ node --test rates/test/*.test.js
 ## 10. 既知の限界・保守
 
 - 米国の休場は規則で決められない日がある（5-1）。祝日表（`rates/jp-holidays.csv`）は年1回の更新が必要。来年分が無くなると、`--check-fresh` が GitHub Actions の注釈（`::warning`）で更新を促す。2029年に入ると（表が2028年の分まで無いまま）日本の営業日を決められず、判定できません になる。
-- `rates.yml` のフィード作り直し（`data/gpt-feed.*` のコミット）は、`daily.yml`・`intraday.yml` と同じファイルを書く3つ目の書き手になる。作り直しは「最新のmainに合わせてから」行うので自分の側で衝突しないが、`intraday.yml` が先に作ったコミットと同じファイルを書き換えた場合の `git pull --rebase` の衝突は、既存の2つのワークフローの間にもある性質で、本機能でも起こりうる（1日1〜数回）。作り直しを外し、次の intraday（15分毎）に任せることもできる。
+- フィードへの反映は、`rates.yml` ではなく次の `intraday.yml`・`daily.yml` の実行で行う（8-1）。そのため、`data/rates.json` が更新されてからフィードに載るまで、8-1 の実測の4日間では12分〜3時間5分の遅れだった（schedule が遅れる・抜ける日は、さらに遅れうる）。`gpt-feed.*` を書くワークフローは増やしていないので、`intraday.yml` の `git pull --rebase` の衝突の機会は、本機能の追加で増えない。`rates.json` を書く `rates.yml` は別のファイルだけをコミットするため、他のワークフローとの rebase で衝突しない（`rates.yml` のコミット手順を、競合する push を模した手元の git〔bare リポジトリ＋2つの clone〕で動かし、push の拒否 → rebase → push の成功を確認した。リポジトリの自動試験には入れていない）。
 - 現行フィードの `US2Y`（`yahoo:2YY=F`）は、財務省の2年とは別の値（2026-10-07 11:22 JSTで 4.647%、財務省の 10/6 は 4.79%）。本フィードの米2年は財務省の値。
 - 日2年は半複利最終利回り、米2年は par yield（債券等価ベース）。同じ定義とは確認できない。
 - 米財務省のデータの再利用の条件は確認できていない（6節）。
@@ -141,3 +150,4 @@ node --test rates/test/*.test.js
 | 版 | 日付 | 内容 |
 |---|---|---|
 | v1.0 | 2026-10-07 | 初版 |
+| v1.1 | 2026-10-07 | `rates.yml` の「Rebuild GPT feed」の手順を外し、フィードへの反映を `intraday.yml`・`daily.yml` に任せる（7-2・8・8-1・10）。外部cronの登録手順（`CRON_SETUP.md`）を追加 |

@@ -46,10 +46,10 @@ jobs:
         run: node rates/run-daily.js ${{ (github.event_name == 'schedule' || inputs.if_stale) && '--if-stale' || '' }}
 
       # data/rates.json だけをコミットする。他のワークフローが書く data/ のファイルには触れないので、
-      # 押し合っても rebase で衝突しない。コミットを作ったときだけ、次の「フィードを作り直す」へ進む
-      # （フィードは生成の時刻を含むため、毎回作り直すと毎回コミットが増える）。
+      # 押し合っても rebase で衝突しない。フィード（data/gpt-feed.*）は、ここでは作り直さない
+      # （gpt-feed.* を書くのは daily.yml と intraday.yml だけにしておく）。rates.json の内容は、
+      # 次に intraday.yml（または daily.yml）が走ったときに、フィードの【JP-US 2Y Rates】の区画へ反映される。
       - name: Commit and push rates
-        id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -57,32 +57,11 @@ jobs:
           git diff --cached --quiet && echo "変更なし" && exit 0
           git commit -m "rates: $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
           for i in 1 2 3; do
-            if git push; then echo "changed=true" >> "$GITHUB_OUTPUT"; exit 0; fi
-            echo "push失敗（${i}回目）"
-            [ "$i" -lt 3 ] && { git pull --rebase origin "${GITHUB_REF_NAME}" || exit 1; }
+            git push && exit 0
+            echo "push失敗（${i}回目）。rebaseして再試行"
+            git pull --rebase origin "${GITHUB_REF_NAME}" || exit 1
           done
           echo "::error::data/rates.json のpushに3回失敗しました。日米2年金利が更新されていません"
-          exit 1
-
-      # フィード（data/gpt-feed.*）に日米2年金利の区画を反映する（rates.json を更新したときだけ）。
-      # フィードは data/ の内容だけから作る純粋な生成物なので、押し合ったときは「最新のmainに合わせてから
-      # 作り直す」。rebaseの衝突は起きない。次の intraday でも反映されるため、失敗しても rates.json は失われない。
-      - name: Rebuild GPT feed
-        if: ${{ steps.commit.outputs.changed == 'true' }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          for i in 1 2 3; do
-            git fetch origin "${GITHUB_REF_NAME}"
-            git reset --hard "origin/${GITHUB_REF_NAME}"
-            node build-feed.js
-            git add data/gpt-feed.html data/gpt-feed.txt data/feed.csv data/history.csv
-            git diff --cached --quiet && echo "変更なし" && exit 0
-            git commit -m "rates feed: $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
-            git push && exit 0
-            echo "push失敗（${i}回目）。最新を取り直して作り直す"
-          done
-          echo "::error::gpt-feed のpushに3回失敗しました（rates.json は更新済み。次の intraday で反映されます）"
           exit 1
 
       # 古い／取得の問題が残っているときは、コミット後に実行を赤くして気づけるようにする
