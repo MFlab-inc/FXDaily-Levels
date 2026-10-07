@@ -34,29 +34,36 @@ function loadBundledHolidays() {
   return parse.parseCaoHolidays(parse.decodeShiftJis(fs.readFileSync(HOLIDAYS_PATH)));
 }
 
+// 同梱の祝日表（rates/jp-holidays.csv）が、今年と来年をカバーしていなければ、更新を促す警告（GitHub Actions の注釈）
+function holidayCoverageWarning(holidays, today) {
+  const need = Number(today.slice(0, 4)) + 1;
+  const years = new Set([...holidays].map((d) => Number(d.slice(0, 4))));
+  return years.has(need) ? null
+    : `::warning title=祝日表の更新が必要::rates/jp-holidays.csv に${need}年がありません。内閣府の祝日CSVで更新してください（${need + 1}年に入ると日本の営業日を決められず、判定できません になります）`;
+}
+
 function readJson(p) {
   if (!fs.existsSync(p)) return null;
   try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return null; }
 }
 
 // ---- 取得 ----
-async function fetchUs({ nowMs, get, jstDate, log }) {
+async function fetchUs({ nowMs, get, log }) {
   const fetchedAt = toJstIso(nowMs);
   try {
-    const nyYear = Number(isoDate(nyWallMs(nowMs)).slice(0, 4)), jstYear = Number(jstDate.slice(0, 4));
-    const years = [...new Set([nyYear, jstYear])].sort();
+    // 米国の値の年は米東部の年（日本時間の年が先に変わっても、新しい年の行は米東部の年が変わるまで出ない）
+    const year = Number(isoDate(nyWallMs(nowMs)).slice(0, 4));
     let rows = [];
-    const csvOf = async (y) => parse.parseTreasuryCsv((await get(cfg.URLS.treasuryCsv(y), `treasury:csv:${y}`)).bytes.toString("utf8"));
-    for (const y of years) rows = mergeRows(rows, await csvOf(y));
+    // 年初は、その年の最初の行がまだ無く、財務省は本文が空のHTTP 200で返す。その年は空として扱う
+    const csvOf = async (y) => parse.parseTreasuryCsv((await get(cfg.URLS.treasuryCsv(y), `treasury:csv:${y}`)).bytes.toString("utf8"), { allowEmpty: true });
+    rows = await csvOf(year);
     // 年初は、その年の行が少なく5営業日前まで届かない。前の年も取る
-    if (rows.filter((r) => r.date.startsWith(`${years[years.length - 1]}-`)).length < cfg.US_YEAR_MIN_ROWS) {
-      rows = mergeRows(await csvOf(years[0] - 1), rows);
-    }
+    if (rows.length < cfg.US_YEAR_MIN_ROWS) rows = mergeRows(await csvOf(year - 1), rows);
+    if (!rows.length) throw new Error("財務省CSV: データ行がありません");
     // 同じ財務省のXMLで照合する（取れなくても、CSVの値の採用は止めない。照合は「未実施」と記録する）
     let xml;
     try {
-      const y = years[years.length - 1];
-      xml = { rows: parse.parseTreasuryXml((await get(cfg.URLS.treasuryXml(y), `treasury:xml:${y}`)).bytes.toString("utf8")) };
+      xml = { rows: parse.parseTreasuryXml((await get(cfg.URLS.treasuryXml(year), `treasury:xml:${year}`)).bytes.toString("utf8")) };
     } catch (e) { xml = { error: e.message }; log(`  XML照合は未実施: ${e.message}`); }
     return { rows, xml, fetchedAt };
   } catch (e) {
@@ -71,12 +78,19 @@ async function fetchJp({ nowMs, get, log }) {
     let rows = parse.parseMofCsv(parse.decodeShiftJis(month.bytes));
     // 月初は当月ファイルの行が少なく、5営業日前まで届かない。全期間ファイルで補う
     const need = rows.filter((r) => r.milli !== null).length < cfg.MOF_MONTH_MIN_ROWS;
+    let partial = null;
     if (need) {
       log("  日2年: 当月ファイルの行が少ないため、全期間ファイルを取得します");
-      const all = await get(cfg.URLS.mofAll, "mof:jgbcm_all.csv", { timeoutMs: cfg.HTTP.largeTimeoutMs });
-      rows = mergeRows(parse.parseMofCsv(parse.decodeShiftJis(all.bytes)), rows);
+      try {
+        const all = await get(cfg.URLS.mofAll, "mof:jgbcm_all.csv", { timeoutMs: cfg.HTTP.largeTimeoutMs });
+        rows = mergeRows(parse.parseMofCsv(parse.decodeShiftJis(all.bytes)), rows);
+      } catch (e) {
+        // 当月ファイルだけで5営業日差まで足りるなら続行できる。足りなければ判定できません（snapshot.js が記録する）
+        partial = `全期間ファイルを取得できませんでした: ${e.message}`;
+        log(`  ${partial}`);
+      }
     }
-    return { rows, lastModified: month.lastModified, fetchedAt };
+    return { rows, lastModified: month.lastModified, fetchedAt, partial };
   } catch (e) {
     return { error: `財務省の国債金利情報の取得・解析に失敗: ${e.message}` };
   }
@@ -98,6 +112,7 @@ async function loadHolidays({ get, log }) {
 function stable(doc) {
   const c = JSON.parse(JSON.stringify(doc));
   delete c.as_of;
+  delete c.calendar_source;
   if (c.us2y) delete c.us2y.fetched_at;
   if (c.jp2y) delete c.jp2y.fetched_at;
   if (c.generation) delete c.generation.run_url;
@@ -115,6 +130,8 @@ async function run({
 
   // ---- 外部へ接続しない確認 ----
   if (checkFresh) {
+    const warn = holidayCoverageWarning(loadBundledHolidays(), cal.jstParts(nowMs).date);
+    if (warn) log(warn);
     const r = view.evaluate(prev, nowMs, loadBundledHolidays());
     log(`${r.state === "ok" ? "OK" : r.state === "pending" ? "PENDING" : "STALE"}: ${r.reasons.join("／") || "米・日とも最新"}`);
     return r.state === "stale" ? 1 : 0;
@@ -138,7 +155,7 @@ async function run({
   const { holidays, source: calendarSource } = bundledOnly
     ? { holidays: bundled, source: "bundled" } : await loadHolidays({ get, log });
   const [us, jp] = await Promise.all([
-    fetchUs({ nowMs, get, jstDate: today, log }),
+    fetchUs({ nowMs, get, log }),
     fetchJp({ nowMs, get, log }),
   ]);
   if (us.error) log(`NG: ${us.error}`);
@@ -189,7 +206,7 @@ async function run({
   return 0;
 }
 
-module.exports = { run, stable, loadBundledHolidays };
+module.exports = { run, stable, loadBundledHolidays, holidayCoverageWarning };
 
 if (require.main === module) {
   run().then((code) => { process.exitCode = code; }).catch((e) => { console.error(e); process.exitCode = 1; });

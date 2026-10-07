@@ -80,3 +80,13 @@ test("内閣府の祝日CSV（同梱の祝日表）: 日付の集合にする", 
   assert.ok(!h.has("2026-10-13"));
   assert.throws(() => P.parseCaoHolidays("国民の祝日・休日月日,名称\n"), /日付の行/);
 });
+
+test("財務省CSV：行が無い年（年初。本文が空、またはヘッダだけ）は、allowEmpty のときだけ空の配列にする", () => {
+  assert.deepEqual(P.parseTreasuryCsv("", { allowEmpty: true }), []);
+  assert.deepEqual(P.parseTreasuryCsv('Date,"2 Yr"\n', { allowEmpty: true }), []);
+  assert.throws(() => P.parseTreasuryCsv(""), /空/);
+  assert.throws(() => P.parseTreasuryCsv('Date,"2 Yr"\n'), /データ行がありません/);
+  // 値のある行があれば allowEmpty でも通常どおり読む。列名が違う場合は allowEmpty でも例外
+  assert.equal(P.parseTreasuryCsv('Date,"2 Yr"\n10/06/2026,4.79\n', { allowEmpty: true }).length, 1);
+  assert.throws(() => P.parseTreasuryCsv('Date,"3 Yr"\n10/06/2026,4.79\n', { allowEmpty: true }), /2 Yr/);
+});

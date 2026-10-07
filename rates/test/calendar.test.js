@@ -7,7 +7,7 @@ const H = require("./helpers");
 const { addDays } = require("../../mtf/lib/ny-time");
 
 const lines = (name) => new Set(H.fixtureText(name).split("\n").filter(Boolean));
-const US_DATES = lines("us-dates-2023-2026.txt");   // 財務省CSVにある日（2023-01-02〜2026-10-06、941日）
+const US_DATES = lines("us-dates-2023-2026.txt");   // 財務省CSVにある日（2023-01-03〜2026-10-06、941日）
 const JP_DATES = lines("jp-dates-2023-2026.txt");   // 財務省の国債金利情報で2年に値がある日（918日）
 const holidays = H.holidays();
 const days = (from, to) => { const out = []; for (let d = from; d <= to; d = addDays(d, 1)) out.push(d); return out; };
@@ -84,4 +84,24 @@ test("復活祭の計算", () => {
   assert.equal(cal.easterSunday(2024), "2024-03-31");
   assert.equal(cal.easterSunday(2025), "2025-04-20");
   assert.equal(cal.easterSunday(2026), "2026-04-05");
+});
+
+test("境界：日2年は 9:40 ちょうどから公表済みとみなす（9:39 は前。9:40 は今日）", () => {
+  const e = (t) => cal.expectedJpLatest(jstAt(t), holidays, READY);
+  assert.equal(e("2026-10-07 09:39"), "2026-10-05");
+  assert.equal(e("2026-10-07 09:40"), "2026-10-06");
+});
+
+test("境界：米2年は米東部 18:30 ちょうどから現地の今日を数える（18:29 は前日。サマータイムは JST 07:30）", () => {
+  assert.equal(usAt("2026-10-07 07:29"), "2026-10-05");  // 米東部（夏時間）10/6 18:29
+  assert.equal(usAt("2026-10-07 07:30"), "2026-10-06");  // 18:30
+  assert.equal(usAt("2026-12-08 08:29"), "2026-12-04");  // 米東部（冬時間）12/7 18:29。12/7は月曜なので前日は日曜→金曜
+  assert.equal(usAt("2026-12-08 08:30"), "2026-12-07");
+});
+
+test("同梱の祝日表が来年分まで無ければ、更新を促す警告を出す", () => {
+  const { holidayCoverageWarning } = require("../run-daily");
+  assert.equal(holidayCoverageWarning(holidays, "2026-10-07"), null);   // 2027年まで入っている
+  assert.equal(holidayCoverageWarning(holidays, "2026-12-31"), null);
+  assert.match(holidayCoverageWarning(holidays, "2027-06-01"), /^::warning .*2028年がありません/);
 });

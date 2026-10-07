@@ -39,14 +39,14 @@ function evaluate(rates, nowMs, holidays) {
   for (const [label, blk, f, ok] of [["米2年", us, fr.us, usFresh], ["日2年", jp, fr.jp, jpFresh]]) {
     if (!blk) reasons.push(`${label}の値がありません`);
     else if (blk.stale) reasons.push(`${label}は取得に失敗したため前回の値のまま（日付 ${blk.date}）`);
-    else if (!ok) reasons.push(`${label}が最新の営業日（期待 ${f.expected ?? "不明"}）まで更新されていません（最新 ${blk.date}）`);
+    else if (!ok) reasons.push(`${label}が最新の営業日（期待 ${f.required ?? "不明"}）まで更新されていません（最新 ${blk.date}）`);
   }
 
   const view = {
     ...rates,
     effective_at: toJstIso(nowMs),
-    us2y: us && { ...us, expected_date: fr.us.expected, fresh: usFresh },
-    jp2y: jp && { ...jp, expected_date: fr.jp.expected, fresh: jpFresh },
+    us2y: us && { ...us, expected_date: fr.us.expected, required_date: fr.us.required, fresh: usFresh },
+    jp2y: jp && { ...jp, expected_date: fr.jp.expected, required_date: fr.jp.required, fresh: jpFresh },
   };
   // 判定：取得時に「判定できない」だったもの、いま古いもの、取得の問題が残るものは、すべて判定できません
   if (!rates.judgment?.available) {
@@ -74,7 +74,7 @@ function sectionText(view) {
   const side = (name, blk, basis, extra) => {
     if (!blk) return `${name}: 値なし`;
     const stale = blk.stale ? "［stale：取得に失敗したため前回の値のまま］" : "";
-    const old = !blk.stale && blk.fresh === false ? `［古い：期待 ${blk.expected_date ?? "不明"} に対し最新 ${blk.date}］` : "";
+    const old = !blk.stale && blk.fresh === false ? `［古い：期待 ${blk.required_date ?? blk.expected_date ?? "不明"} に対し最新 ${blk.date}］` : "";
     return `${name}: ${fmtPct(blk.value, name === "米2年" ? 2 : 3)}%（${blk.date}・${basis}${extra}）${stale}${old}`;
   };
   L.push(side("米2年", view.us2y, "米東部基準／米財務省 par yield", view.us2y?.xml_check ? `／XML照合 ${xmlText(view.us2y.xml_check)}` : ""));
@@ -103,6 +103,7 @@ function fmtPct(v, digits, signed = false) {
 function xmlText(x) {
   if (x.status === "match") return `一致（${x.compared}日）`;
   if (x.status === "mismatch") return `不一致（${x.mismatches.length}日）`;
+  if (x.status === "incomplete") return `未完了（XMLに判定に使う日付が無い：${(x.missing_in_xml || []).join(",") || "共通の日が無い"}）`;
   return "未実施";
 }
 

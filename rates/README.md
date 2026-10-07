@@ -26,4 +26,4 @@ node rates/run-daily.js --check-fresh # 外部へ接続せず、いま最新か�
 node --test rates/test/*.test.js      # 試験
 ```
 
-`.github/workflows/rates.yml` が毎営業日の朝に実行する。外部cronから `workflow_dispatch`（`if_stale=true`）で呼ぶ運用の登録が別途必要（SPEC 8節）。
+`.github/workflows/rates.yml` が毎営業日の朝に実行する（`rates-tests.yml` が PR と main への push で試験を実行する）。外部cronから `workflow_dispatch`（`if_stale=true`）で呼ぶ運用の登録が別途必要（SPEC 8節）。

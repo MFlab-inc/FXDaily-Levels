@@ -157,3 +157,107 @@ test("--check-fresh：最新なら0、公表待ちなら0、古ければ1（外�
   assert.equal(await go(tmp(), srv, "2026-10-08 10:40", ["--check-fresh"]), 1); // rates.json が無い
   assert.equal(srv.calls.length, 0);
 });
+
+// ---- 年初（年をまたぐ）：2027年のCSVは、最初の行が出るまで本文が空のHTTP 200で返る ----
+const cal = require("../lib/calendar");
+const { addDays } = require("../../mtf/lib/ny-time");
+const holidays = H.holidays();
+const days = (from, to, isOpen) => { const o = []; for (let d = from; d <= to; d = addDays(d, 1)) if (isOpen(d)) o.push(d); return o; };
+const mmddyyyy = (d) => `${d.slice(5, 7)}/${d.slice(8, 10)}/${d.slice(0, 4)}`;
+const usCsv = (dates) => `Date,"2 Yr"\n${[...dates].reverse().map((d, i) => `${mmddyyyy(d)},${(4 + (dates.length - 1 - i) * 0.01).toFixed(2)}`).join("\n")}\n`;
+// 当月ファイル（Shift_JIS）：実ファイルの先頭2行（タイトル・列名）に、ASCIIの行を足す
+const mofBytes = (jpDates) => {
+  const head = H.mofMonthBytes();
+  const lines = []; let at = 0;
+  for (let n = 0; n < 2; n++) { const i = head.indexOf(0x0a, at); lines.push(head.subarray(at, i + 1)); at = i + 1; }
+  const wareki = (d) => `R${Number(d.slice(0, 4)) - 2018}.${Number(d.slice(5, 7))}.${Number(d.slice(8, 10))}`;
+  const rows = jpDates.map((d, i) => `${wareki(d)},1.0,${(1.5 + i * 0.002).toFixed(3)},2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3.0,3.1,3.2\r\n`).join("");
+  return Buffer.concat([...lines, Buffer.from(rows)]);
+};
+const isUsOpen = (d) => cal.usClosure(d) === "open";
+const isJpOpen = (d) => cal.isJpBusinessDay(d, holidays);
+function yearEndServer({ csv2027 = "" } = {}) {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    if (url.includes("/2027/all")) return new Response(csv2027, { status: 200 });                 // 2027年：行が無く、本文が空
+    if (url.includes("daily-treasury-rates.csv")) return new Response(usCsv(days("2026-01-02", "2026-12-31", isUsOpen)), { status: 200 });
+    if (url.includes("pages/xml")) return new Response("", { status: 200 });                       // XMLも空（照合は未実施になる）
+    if (url.includes("jgbcm_all.csv")) return new Response("", { status: 500 });
+    if (url.includes("jgbcm.csv")) return new Response(mofBytes(days("2026-12-01", "2026-12-30", isJpOpen)), { status: 200 });
+    if (url.includes("syukujitsu.csv")) return new Response(fs.readFileSync(path.join(H.ROOT, "jp-holidays.csv")), { status: 200 });
+    return new Response("", { status: 404 });
+  };
+  return { fetchImpl, calls };
+}
+
+test("年初：2027年のCSVが空本文でも、前年のCSVで取得できる（1/4 月曜の朝。米は12/31、日は12/30が最新）", async () => {
+  const dir = tmp(), srv = yearEndServer();
+  assert.equal(await go(dir, srv, "2027-01-04 10:00"), 0);
+  const r = readRates(dir);
+  assert.deepEqual(r.generation.errors, []);
+  assert.equal(r.us2y.date, "2026-12-31"); assert.equal(r.jp2y.date, "2026-12-30");
+  assert.equal(r.us2y.fresh, true); assert.equal(r.jp2y.fresh, true);
+  assert.equal(r.judgment.available, true, r.judgment.reason);
+  assert.equal(r.generation.status, "ok");
+  assert.ok(srv.calls.some((u) => u.includes("/2026/all")) && srv.calls.some((u) => u.includes("/2027/all")));
+});
+
+test("年初：元日（1/1 金曜）の朝（日本）は、米東部がまだ12/31なので、2026年のCSVだけで足りる（2027年のCSVは取らない）", async () => {
+  const dir = tmp(), srv = yearEndServer();
+  await go(dir, srv, "2027-01-01 10:00");
+  const r = readRates(dir);
+  assert.deepEqual(r.generation.errors, []);
+  assert.equal(r.us2y.date, "2026-12-31");
+  assert.ok(!srv.calls.some((u) => u.includes("/2027/all")));
+});
+
+test("年初：2027年のCSVに1行（1/4）だけあるとき（1/5 火曜の朝）は、前年と合わせて5営業日差まで出す", async () => {
+  const dir = tmp();
+  const srv = yearEndServer({ csv2027: usCsv(["2027-01-04"]) });
+  await go(dir, srv, "2027-01-05 10:00");
+  const r = readRates(dir);
+  assert.equal(r.us2y.date, "2027-01-04");
+  assert.equal(r.change_5d.us.base_date, "2026-12-24");     // 5営業日前（12/25は休場）
+  assert.deepEqual(r.generation.errors.filter((e) => e.startsWith("us2y")), []);
+});
+
+test("全体で1行も無ければ（年初の2つの年とも空）、取得の失敗として扱う", async () => {
+  const dir = tmp();
+  const fetchImpl = async (url) => (url.includes("daily-treasury-rates.csv") ? new Response("", { status: 200 }) : new Response("", { status: 500 }));
+  assert.equal(await run({ argv: [], nowMs: H.jst("2027-01-04 10:00"), fetchImpl, sleep: noSleep, dataDir: dir, log: () => {}, env: {} }), 1);
+});
+
+test("全期間ファイルを取得できず当月の行が足りないとき：判定できません。取得の問題（partial）として記録する", async () => {
+  const dir = tmp();
+  await go(dir, server({ fail: { "jgbcm_all.csv": 503 } }), "2026-10-07 10:00");
+  const r = readRates(dir);
+  assert.equal(r.judgment.label, "判定できません");
+  assert.equal(r.generation.status, "partial");
+  assert.match(r.generation.errors.join("\n"), /jp2y: 全期間ファイルを取得できませんでした/);
+});
+
+test("内閣府の祝日CSVの取得の成否（calendar_source）だけが違う再取得では、rates.json を書き換えない", async () => {
+  const dir = tmp();
+  await go(dir, server(), "2026-10-07 10:00");
+  const before = fs.readFileSync(path.join(dir, "rates.json"), "utf8");
+  assert.equal(readRates(dir).calendar_source, "cao_live+bundled");
+  await go(dir, server({ fail: { "syukujitsu.csv": 500 } }), "2026-10-07 10:20");
+  assert.equal(fs.readFileSync(path.join(dir, "rates.json"), "utf8"), before);
+});
+
+test("境界：--if-stale は 9:40 ちょうどから取得する（9:39 は公表前でスキップ）", async () => {
+  const early = server(), on = server();
+  await go(tmp(), early, "2026-10-07 09:39", ["--if-stale"]);
+  await go(tmp(), on, "2026-10-07 09:40", ["--if-stale"]);
+  assert.equal(early.calls.length, 0);
+  assert.ok(on.calls.length > 0);
+});
+
+test("--check-fresh：同梱の祝日表が来年分まであれば（2026年は2027年まで）、警告は出さない", async () => {
+  const dir = tmp(), lines = [];
+  await go(dir, server(), "2026-10-07 10:00");
+  const code = await run({ argv: ["--check-fresh"], nowMs: H.jst("2026-10-07 12:00"), fetchImpl: server().fetchImpl, sleep: noSleep, dataDir: dir, log: (m) => lines.push(m), env: {} });
+  assert.equal(code, 0);
+  assert.ok(!lines.some((l) => l.startsWith("::warning")));
+});

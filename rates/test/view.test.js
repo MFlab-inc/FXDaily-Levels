@@ -44,13 +44,56 @@ test("翌営業日の朝（日2年の10/7分が公表された後）に、rates.
   assert.equal(r.view.us2y.fresh, false); assert.equal(r.view.jp2y.fresh, false);
 });
 
-test("公表前（9:40前）は、前日の値のままでも古くない（米は前日夜に出ているので期待も前日）", () => {
-  // 10/8 09:30 JST：米東部 10/7 20:30 → 米の期待は 10/7。10/7 の米2年が無ければ米は古い
+test("公表前（9:40前）：米の10/7分は出ていても、日2年の10/7分が未公表なので、金利差を作れる最新日は10/6。米を古いとは数えない", () => {
+  // 10/8 09:30 JST：米東部 10/7 20:30 → 米の期待は 10/7。日2年は10/7分が10/8 9:30頃の公表前なので期待は 10/6
   const r = view.evaluate(stored(), H.jst("2026-10-08 09:30"), holidays);
-  assert.equal(r.view.jp2y.expected_date, "2026-10-06"); // 日は10/7分の公表前
-  assert.equal(r.view.jp2y.fresh, true);
+  assert.equal(r.state, "ok");
+  assert.equal(r.view.jp2y.expected_date, "2026-10-06");
   assert.equal(r.view.us2y.expected_date, "2026-10-07");
-  assert.equal(r.view.us2y.fresh, false);
+  assert.equal(r.view.us2y.required_date, "2026-10-06"); // 金利差を作れる最新日（米・日の期待のうち古い方）
+  assert.equal(r.view.us2y.fresh, true); assert.equal(r.view.jp2y.fresh, true);
+  assert.equal(r.view.judgment.label, "はっきりしない");
+  // 9:40を過ぎて日2年の10/7分が公表済みになれば、10/7が必要な最新日。10/6のままなら古い
+  const after = view.evaluate(stored(), H.jst("2026-10-08 09:40"), holidays);
+  assert.equal(after.view.us2y.required_date, "2026-10-07");
+  assert.equal(after.view.us2y.fresh, false); assert.equal(after.view.jp2y.fresh, false);
+  assert.equal(after.view.judgment.label, "判定できません");
+});
+
+// 10/7〜10/15 の米・日の値（実データは10/6まで）を、営業日だけ合成して足す。週末・月曜朝の確認用
+const synth = (from, to, isOpen) => {
+  const { addDays } = require("../../mtf/lib/ny-time");
+  const rows = [];
+  for (let d = from, k = 0; d <= to; d = addDays(d, 1)) if (isOpen(d)) rows.push({ date: d, milli: 4800 + 10 * k++ });
+  return rows;
+};
+const cal = require("../lib/calendar");
+function storedFriday1016() {
+  // 10/16(金) 10:00 に取得した状態：米2年・日2年とも10/15まで（10/12は日米とも休場）
+  const usAdd = synth("2026-10-07", "2026-10-15", (d) => cal.usClosure(d) === "open");
+  const jpAdd = synth("2026-10-07", "2026-10-15", (d) => cal.isJpBusinessDay(d, holidays)).map((r) => ({ ...r, milli: r.milli - 2900 }));
+  const snap = buildSnapshot({
+    nowMs: H.jst("2026-10-16 10:00"), holidays, prev: null,
+    us: { rows: [...us, ...usAdd], xml: { rows: [...usXml, ...usAdd] }, fetchedAt: "t" },
+    jp: { rows: [...jp, ...jpAdd], lastModified: null, fetchedAt: "t" },
+  });
+  return { snap, doc: { schema: view.SCHEMA, as_of: "2026-10-16T10:00:00+09:00", timezone: "Asia/Tokyo", us2y: snap.us2y, jp2y: snap.jp2y, spread: snap.spread, change_5d: snap.change_5d, judgment: snap.judgment, generation: { status: "ok", complete: true, errors: [] } } };
+}
+
+test("週末・月曜の朝：金曜に取得した状態は、日2年の金曜分が公表される月曜9:40までは判定できる（毎週、週末を判定できませんにしない）", () => {
+  const { snap, doc } = storedFriday1016();
+  assert.equal(snap.judgment.available, true, snap.judgment.reason);
+  assert.equal(snap.us2y.date, "2026-10-15"); assert.equal(snap.jp2y.date, "2026-10-15");
+  for (const t of ["2026-10-17 12:00", "2026-10-18 21:00", "2026-10-19 07:00", "2026-10-19 09:39"]) {
+    const r = view.evaluate(doc, H.jst(t), holidays);
+    assert.equal(r.state, "ok", `${t} ${r.reasons.join("／")}`);
+    assert.equal(r.view.judgment.available, true, t);
+  }
+  // 月曜9:40：日2年の金曜（10/16）分が公表済みになるので、10/15のままなら古い（公表待ち）
+  const mon = view.evaluate(doc, H.jst("2026-10-19 09:40"), holidays);
+  assert.equal(mon.state, "pending");
+  assert.equal(mon.view.judgment.label, "判定できません");
+  assert.equal(view.evaluate(doc, H.jst("2026-10-19 10:35"), holidays).state, "stale");
 });
 
 test("公表待ち（pending）：日本の営業日の10:30より前で取得の問題が無ければ、赤にしない。10:30以降は stale", () => {

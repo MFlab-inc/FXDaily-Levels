@@ -138,3 +138,53 @@ test("祝日をまたぐ週（10/12 は日米の休場）：10/13 の朝は、�
   assert.equal(mon.judgment.available, true);
   assert.equal(mon.spread.date, "2026-10-08"); // 金利差は両方に値がある日（日2年の最新）
 });
+
+test("XML照合：判定に使う日付（最新日・5営業日前の日）がXMLにあって同じ値のときだけ match", () => {
+  const s = buildSnapshot(input());
+  assert.deepEqual({ status: s.us2y.xml_check.status, compared: s.us2y.xml_check.compared }, { status: "match", compared: 68 });
+  assert.equal(s.us2y.xml_check.missing_in_xml, undefined);
+});
+
+test("XML照合：XMLが古く（最新日が無く）ても、共通の日が一致していれば match にはしない。incomplete（判定は止めない）", () => {
+  const lag = usXml.filter((r) => r.date <= "2026-10-02");
+  const s = buildSnapshot(input({ us: { rows: us, xml: { rows: lag }, fetchedAt: "t" } }));
+  assert.equal(s.us2y.xml_check.status, "incomplete");
+  assert.deepEqual(s.us2y.xml_check.missing_in_xml, ["2026-10-06"]);
+  assert.ok(s.us2y.xml_check.compared > 0);
+  assert.equal(s.judgment.available, true);       // 照合できていないだけ。判定は止めない（SPEC 2節）
+  assert.deepEqual(s.errors, []);
+});
+
+test("XML照合：共通の日が1日も無ければ match にしない", () => {
+  const s = buildSnapshot(input({ us: { rows: us, xml: { rows: [{ date: "2020-01-02", milli: 1500 }] }, fetchedAt: "t" } }));
+  assert.equal(s.us2y.xml_check.status, "incomplete");
+  assert.equal(s.us2y.xml_check.compared, 0);
+});
+
+test("XML照合：5営業日前の日がXMLに無い場合も incomplete（その値も判定に使うため）", () => {
+  const noBase = usXml.filter((r) => r.date !== "2026-09-29");
+  const s = buildSnapshot(input({ us: { rows: us, xml: { rows: noBase }, fetchedAt: "t" } }));
+  assert.equal(s.us2y.xml_check.status, "incomplete");
+  assert.deepEqual(s.us2y.xml_check.missing_in_xml, ["2026-09-29"]);
+});
+
+test("全期間ファイルを取得できず当月だけ（行が足りない）：判定できません。取得の問題として記録する", () => {
+  const month = jp.filter((r) => r.date >= "2026-10-01");
+  const s = buildSnapshot(input({ jp: { rows: month, lastModified: null, fetchedAt: "t", partial: "全期間ファイルを取得できませんでした: HTTP 503" } }));
+  assert.equal(s.judgment.label, "判定できません");
+  assert.match(s.errors.join("\n"), /jp2y: 全期間ファイルを取得できませんでした: HTTP 503/);
+});
+
+test("週末：金曜に取った状態（米・日とも木曜まで）は、米の金曜分が出ていても、金利差を作れる最新日（木曜）まであるので古くない", () => {
+  // 10/8(木)までの行を用意し、10/10(土)12:00 に作る。米の期待は金曜10/9、日の期待は木曜10/8
+  const add = [["2026-10-07", 4790], ["2026-10-08", 4800]].map(([date, milli]) => ({ date, milli }));
+  const s = buildSnapshot(input({
+    nowMs: H.jst("2026-10-10 12:00"),
+    us: { rows: [...us, ...add], xml: { rows: [...usXml, ...add] }, fetchedAt: "t" },
+    jp: { rows: [...jp, ...add.map((r) => ({ ...r, milli: r.milli - 2900 }))], lastModified: null, fetchedAt: "t" },
+  }));
+  assert.equal(s.us2y.expected_date, "2026-10-09"); assert.equal(s.jp2y.expected_date, "2026-10-08");
+  assert.equal(s.us2y.required_date, "2026-10-08");
+  assert.equal(s.us2y.fresh, true); assert.equal(s.judgment.available, true, s.judgment.reason);
+  assert.equal(s.spread.date, "2026-10-08");
+});

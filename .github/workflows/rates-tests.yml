@@ -1,0 +1,33 @@
+name: Rates Tests
+
+on:
+  pull_request:
+    paths:
+      - "rates/**"
+      - "build-feed.js"
+      - "mtf/lib/ny-time.js"
+      - ".github/workflows/rates*.yml"
+  push:
+    branches: [main]
+    paths:
+      - "rates/**"
+      - "build-feed.js"
+      - "mtf/lib/ny-time.js"
+
+permissions:
+  contents: read
+
+# 日米2年金利フィード（rates/）の試験。調査の直近20営業日の表（10bpの列）をフィードの計算で再現できること、
+# 境界（±10bp）、営業日の規則が財務省の全行と一致すること、取得の失敗時の挙動などを確かめる。
+# 外部へは接続しない（実データから切り出した rates/test/fixtures/ を使う）。本番のデータ更新とは独立。
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run rates tests
+        run: node --test rates/test/*.test.js

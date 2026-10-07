@@ -47,9 +47,10 @@ const sortUnique = (rows) => {
 
 // ---- 米財務省 Daily Treasury Par Yield Curve Rates（CSV）----
 // 返り値: [{ date: "YYYY-MM-DD", milli: number|null }]（古い順）。milli が null＝その日の2年が空欄
-function parseTreasuryCsv(text) {
+// allowEmpty：行が無い年（年初で、その年の最初の行がまだ無い。財務省は本文が空のHTTP 200で返す）を空の配列にする
+function parseTreasuryCsv(text, { allowEmpty = false } = {}) {
   const lines = String(text).replace(/^﻿/, "").split(/\r?\n/).filter((l) => l.trim() !== "");
-  if (!lines.length) throw new Error("財務省CSV: 中身が空です");
+  if (!lines.length) { if (allowEmpty) return []; throw new Error("財務省CSV: 中身が空です"); }
   const header = splitCsvLine(lines[0]).map((h) => h.trim());
   const iDate = header.indexOf("Date"), i2 = header.indexOf("2 Yr");
   if (iDate < 0 || i2 < 0) throw new Error("財務省CSV: 列名に Date または 2 Yr がありません（形式が変わった可能性）");
@@ -66,7 +67,7 @@ function parseTreasuryCsv(text) {
     }
     rows.push({ date: isoOf(+m[3], +m[1], +m[2]), milli });
   }
-  if (!rows.length) throw new Error("財務省CSV: データ行がありません");
+  if (!rows.length) { if (allowEmpty) return []; throw new Error("財務省CSV: データ行がありません"); }
   return sortUnique(rows);
 }
 

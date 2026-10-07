@@ -25,7 +25,7 @@ function changeOver(series, n) {
 
 // 5営業日差（ミリ%）→ 判定。−しきい値以下＝円高方向、＋しきい値以上＝円安方向（境界を含む）、その間＝はっきりしない
 function classify(deltaMilli, thresholdBp) {
-  const t = thresholdBp * BP;
+  const t = Math.round(thresholdBp * BP); // しきい値が小数でも、ミリ%の整数にして比べる
   if (deltaMilli <= -t) return LABELS.yen_strong;
   if (deltaMilli >= t) return LABELS.yen_weak;
   return LABELS.unclear;
@@ -33,10 +33,12 @@ function classify(deltaMilli, thresholdBp) {
 
 // ミリ% → 表示用（"+2.860" "4.79"）。digits は小数の桁（最大3）。整数だけで作り、浮動小数の丸めを使わない
 function fmtMilli(milli, digits, signed = false) {
-  const sign = milli < 0 ? "-" : signed ? "+" : "";
   const a = Math.abs(milli);
   const frac = String(a % 1000).padStart(3, "0").slice(0, digits);
-  return `${sign}${Math.floor(a / 1000)}${digits > 0 ? "." + frac : ""}`;
+  const text = `${Math.floor(a / 1000)}${digits > 0 ? "." + frac : ""}`;
+  // 表示した桁がすべて0なら、符号を付けない（"-0.00" を出さない）
+  const sign = /[1-9]/.test(text) ? (milli < 0 ? "-" : signed ? "+" : "") : "";
+  return sign + text;
 }
 // ミリ%の差 → bp（小数第1位）。例 -54 → -5.4
 const toBp = (deltaMilli) => {
