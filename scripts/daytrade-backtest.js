@@ -1,7 +1,7 @@
 "use strict";
 /**
  * バックテスト（仕様 6-2）。手動実行だけ（自動では動かさない）。
- *   node scripts/daytrade-backtest.js [--no-fetch] [--window-days=365] [--now=<ISO>] [--data-dir=<dir>] [--no-guard]
+ *   node scripts/daytrade-backtest.js [--no-fetch] [--window-days=365] [--now=<ISO>] [--data-dir=<dir>] [--no-guard] [--no-risk-feed] [--spacing-ms=3000]
  * 1) H1履歴 data/history/h1-<銘柄>.csv が無い銘柄だけ Twelve Data から取得して保存する（既にあれば再取得しない）。
  *    1分あたり55回を超えないよう、1銘柄ずつ約3秒おき（毎分20回前後、直近60秒で30回まで）。環境変数 TWELVE_DATA_API_KEY。
  *    GitHub Actions 上では、他の Daily / Intraday が動いている間と、その起動分は避ける（mtf/lib/guard.js）。
@@ -27,6 +27,8 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
   const nowMs = args.now ? parseIso(args.now) : Date.now();
   const dataDir = args["data-dir"] ? path.resolve(args["data-dir"]) : defaultDataDir;
   const windowDays = args["window-days"] ? Number(args["window-days"]) : 365;
+  const spacingMs = args["spacing-ms"] !== undefined ? Number(args["spacing-ms"]) : 3000; // 試験用に短縮できる。上限（直近60秒で30回）は maxPerMinute が守る
+  if (!Number.isFinite(nowMs) || !Number.isInteger(windowDays) || windowDays < 1 || !Number.isFinite(spacingMs) || spacingMs < 0) throw new Error("--now / --window-days / --spacing-ms が読めません");
   const dates = planDates(nowMs, windowDays);
   const startLabel = `${addDaysJst(dates[0], -3)} 00:00:00`; // 窓の3日前から（ATR・群のウォームアップ）[Q35]
 
@@ -42,7 +44,7 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
       guard = createGuard({ repo: env.GITHUB_REPOSITORY, token: env.GITHUB_TOKEN, selfRunId: env.GITHUB_RUN_ID, log: io.log, watchNames: ["Daily FX Data", "Intraday Snapshot", "MTF Backfill"] });
       await guard.waitStartWindow();
     }
-    const client = createClient({ apiKey, spacingMs: 3000, maxPerMinute: 30, beforeRequest: guard ? guard.waitQuiet : null, log: io.log });
+    const client = createClient({ apiKey, spacingMs, maxPerMinute: 30, beforeRequest: guard ? guard.waitQuiet : null, log: io.log });
     const live = parseH1(JSON.parse(fs.readFileSync(path.join(dataDir, "h1-bars.json"), "utf8")));
     for (const pair of missing) {
       const bars = await H.fetchH1(client, pair, { startLabel, nowMs, log: io.log });
