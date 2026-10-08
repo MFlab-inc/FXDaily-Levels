@@ -48,6 +48,7 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
     return { action, slot };
   }
   if (action === "skip" || !action) { io.log(`[daytrade] 何もしません: ${reason || "対象外"}`); return { skipped: reason }; }
+  if (action === "design" && slot === null) throw new Error("run=design には設計の枠（--slot=1|2|3 または DAYTRADE_SLOT）が必要です");
 
   // 2) 前回の計画
   const planPath = path.join(dataDir, "daytrade-plan.json");

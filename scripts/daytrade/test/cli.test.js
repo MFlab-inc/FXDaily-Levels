@@ -111,6 +111,7 @@ test("引数の誤りは例外（黙って別の動きをしない）", async ()
   await assert.rejects(() => main(["--now=2026-10-08T15:30:00+09:00"], {}, quiet().io), /--run=design\|status/);
   await assert.rejects(() => main(["--run=design", "--slot=9", "--now=2026-10-08T15:30:00+09:00"], {}, quiet().io), /--slot/);
   await assert.rejects(() => main(["--run=design", "--now=garbage"], {}, quiet().io), /--now/);
+  await assert.rejects(() => main(["--run=design", "--now=2026-10-08T15:30:00+09:00"], {}, quiet().io), /設計の枠/);
 });
 
 test("--dry-run は何も書かない", async () => {

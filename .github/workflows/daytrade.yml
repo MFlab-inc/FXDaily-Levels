@@ -1,0 +1,109 @@
+name: Daytrade Plan
+
+# デイトレプラン自動生成（仕様 docs/daytrade-plan-spec.md 7節）。daily.yml・intraday.yml とは別のワークフローで、
+# 失敗してもそれらには影響しない。既存のフィード（intraday.json・h1-bars.json・daily-levels.json・mtf-feed.json・
+# economic-calendar.json・daytrade-context.json）は読むだけで、書くのは次の3ファイルだけ:
+#   data/daytrade-plan.txt / data/daytrade-plan.json / data/daytrade/log.csv
+# 外部のAPIキー（secrets）は使わない（risk-feed.json は公開URLから読む）。
+#
+# 起動の種類（設計①②③・状態更新）は cron の文字列から scripts/daytrade/schedule.js の CRON 表で決める。
+# GitHub の cron は UTC 固定で夏冬時間を扱えないので、設計①と設計③は夏用・冬用の2本ずつを置き、実行時に
+# ニューヨークが夏時間かどうかで該当しない側は何もせず終了する（設計②の 15:30 JST は固定）。
+# この cron の一覧は scripts/daytrade/schedule.js の CRON と一致していなければならない（試験が確かめる）。
+#
+#   設計①  NY 17:30（夏 06:30 / 冬 07:30 JST）  型Aのみ。この前に採点（daytrade-score.js）も動かす
+#   設計②  15:30 JST                             型A・型B
+#   設計③  NY 8:00（夏 21:00 / 冬 22:00 JST）    型A・型B。この時刻の毎時更新は設計が兼ねる
+#   状態更新  07:00〜翌02:00 JST の毎時00分      Entry・SL・TP は変えず、距離・鮮度・到達／失効・停止中だけ更新
+#
+# 注意: このリポジトリでは GitHub の schedule 配信が大きく欠落・遅延する（daily.yml のコメント参照）。
+# 遅れた設計は scripts/daytrade/schedule.js の designStale が見送る（次の枠の名目時刻以後・後の枠が済んでいる・
+# 設計③は翌1:00以後）。確実に動かしたいときは、外部の定期実行から workflow_dispatch（run と slot を指定）で呼ぶ。
+on:
+  schedule:
+    - cron: "30 21 * * 0-4"        # 設計① 夏（NY夏時間）: 月〜金 06:30 JST
+    - cron: "30 22 * * 0-4"        # 設計① 冬（NY冬時間）: 月〜金 07:30 JST
+    - cron: "30 6 * * 1-5"         # 設計② 月〜金 15:30 JST
+    - cron: "0 12 * * 1-5"         # 21:00 JST — 夏は設計③、冬は状態更新
+    - cron: "0 13 * * 1-5"         # 22:00 JST — 冬は設計③、夏は状態更新
+    - cron: "0 22,23 * * 0-4"      # 状態更新 月〜金 07:00・08:00 JST
+    - cron: "0 0-11,14-17 * * 1-5" # 状態更新 09:00〜20:00 JST、23:00〜翌02:00 JST（金曜分は土曜02:00まで）
+  workflow_dispatch:
+    inputs:
+      run:
+        description: "design（設計）または status（状態更新）"
+        type: choice
+        options: [status, design]
+        default: status
+      slot:
+        description: "設計の枠（run=design のとき必須）: 1=NY17:30 / 2=15:30 / 3=NY8:00"
+        type: choice
+        options: ["", "1", "2", "3"]
+        default: ""
+      force:
+        description: "済み・遅れの判定を無視して必ず実行する（手動の試験用）"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# 遅れて束になって届いた起動が、同じ data/ へ同時に書かないようにする
+concurrency:
+  group: daytrade-plan
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # cron の文字列（または手動の入力）から、やること（design / status / skip）と枠を決める
+      - name: Resolve action
+        id: resolve
+        env:
+          DAYTRADE_CRON: ${{ github.event.schedule }}
+          DAYTRADE_RUN: ${{ inputs.run }}
+          DAYTRADE_SLOT: ${{ inputs.slot }}
+        run: node scripts/daytrade-plan.js --resolve | tee -a "$GITHUB_OUTPUT"
+
+      # 前日までの案の採点（設計の前に動かす。何度動かしても同じ結果で、済んだ案は触らない）
+      - name: Score previous plans
+        if: ${{ steps.resolve.outputs.action == 'design' }}
+        run: node scripts/daytrade-score.js
+
+      - name: Generate plan
+        if: ${{ steps.resolve.outputs.action == 'design' || steps.resolve.outputs.action == 'status' }}
+        env:
+          DAYTRADE_CRON: ${{ github.event.schedule }}
+          DAYTRADE_RUN: ${{ inputs.run }}
+          DAYTRADE_SLOT: ${{ inputs.slot }}
+          FORCE: ${{ inputs.force && '--force' || '' }}
+        run: node scripts/daytrade-plan.js $FORCE
+
+      - name: Commit and push
+        if: ${{ steps.resolve.outputs.action == 'design' || steps.resolve.outputs.action == 'status' }}
+        env:
+          ACTION: ${{ steps.resolve.outputs.action }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/daytrade-plan.txt data/daytrade-plan.json data/daytrade/log.csv
+          git diff --cached --quiet && echo "変更なし" && exit 0
+          git commit -m "daytrade: ${ACTION} $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
+          # intraday.yml 等と同じリポジトリへ押し合うことがある（他のワークフローは別のファイルを書く）。
+          for i in 1 2 3; do
+            git push && exit 0
+            echo "push失敗（${i}回目）。rebaseして再試行"
+            git pull --rebase origin "${GITHUB_REF_NAME}" || exit 1
+          done
+          echo "::error::daytrade-plan のpushに3回失敗しました"
+          exit 1
