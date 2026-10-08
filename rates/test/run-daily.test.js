@@ -84,6 +84,34 @@ test("--if-stale：翌朝、rates.json が古ければ取得し直す。公表�
   assert.equal(r.judgment.label, "判定できません");
 });
 
+test("retry_note：status と時刻に合った文言になる（14時以降も workflow_run による再取得は続きうる）", async () => {
+  // 健全（ok）：再試行は不要
+  const okDir = tmp();
+  await go(okDir, server(), "2026-10-07 10:00");
+  let r = readRates(okDir);
+  assert.equal(r.generation.status, "ok");
+  assert.equal(r.generation.retry_expected, false);
+  assert.match(r.generation.retry_note, /再試行は不要/);
+  assert.doesNotMatch(r.generation.retry_note, /残っていない/);
+  // 10:45 でも古いまま（partial）で JST 14時前：schedule の再試行も workflow_run も残っている
+  const dir = tmp();
+  await go(dir, server(), "2026-10-07 10:00");
+  await go(dir, server(), "2026-10-08 10:45", ["--if-stale"]);
+  r = readRates(dir);
+  assert.equal(r.generation.status, "partial");
+  assert.equal(r.generation.retry_expected, true);
+  assert.match(r.generation.retry_note, /再試行が残っている/);
+  assert.match(r.generation.retry_note, /完了のたびの起動もある/);
+  // 同じく古いまま JST 14時以降：schedule の再試行は終わったが、workflow_run による再取得は続きうる
+  await go(dir, server(), "2026-10-08 14:30", ["--if-stale"]);
+  r = readRates(dir);
+  assert.equal(r.generation.status, "partial");
+  assert.equal(r.generation.retry_expected, false);
+  assert.match(r.generation.retry_note, /schedule による同日中の再試行は終わっている/);
+  assert.match(r.generation.retry_note, /workflow_run/);
+  assert.doesNotMatch(r.generation.retry_note, /自動の再試行は残っていない/, "「自動の再試行は無い」とは言い切らない");
+});
+
 test("米・日ともに取得できない：rates.json を作らない／更新しない。終了コード1", async () => {
   const dir = tmp();
   const srv = server({ fail: { "treasury.gov": 500, "mof.go.jp": 500 } });

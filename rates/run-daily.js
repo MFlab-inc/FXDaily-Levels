@@ -4,7 +4,7 @@
  * 日米2年金利フィード（data/rates.json）の更新。仕様は rates/SPEC.md。
  *
  *   node rates/run-daily.js              取得して data/rates.json を更新する（手動実行・常に取得）
- *   node rates/run-daily.js --if-stale   公表前、または既に最新で健全なら、取得せずに終了（rates.yml の定期実行用）
+ *   node rates/run-daily.js --if-stale   公表前、または既に最新で健全なら、取得せずに終了（rates.yml の schedule・workflow_run・外部cron用）
  *   node rates/run-daily.js --check-fresh  外部へ接続せず、rates.json が「いま」最新か確かめる（健全なら0、古ければ1）
  *
  * 米国：米財務省 Daily Treasury Par Yield Curve Rates のCSV（一次）。同じ財務省のXMLと照合する。FREDは使わない。
@@ -180,9 +180,13 @@ async function run({
     generation: {
       status, complete: status === "ok", errors: snap.errors,
       retry_expected: retryExpected,
-      retry_note: retryExpected
-        ? `同日中に rates.yml の再試行cronが残っている（JST ${cfg.SAME_DAY_RETRY_UNTIL_JST_HOUR}時頃まで）。次の実行で自動的に再取得される`
-        : "同日中の自動再試行は残っていない。復旧は翌営業日の定期実行、または rates.yml の手動実行(workflow_dispatch)",
+      // rates.yml は schedule（JST 13:45 まで）のほかに、intraday.yml・daily.yml の完了のたび（workflow_run）にも
+      // 起動するため、14時以降も再取得は続きうる。「自動の再試行が無い」とは言い切らない（SPEC 5-2・8-2）。
+      retry_note: status === "ok"
+        ? "取得・照合の問題はなく、米・日とも最新。再試行は不要"
+        : retryExpected
+          ? `同日中に rates.yml の再試行が残っている（schedule は JST ${cfg.SAME_DAY_RETRY_UNTIL_JST_HOUR}時頃まで。intraday.yml・daily.yml の完了のたびの起動もある）。次の実行で自動的に再取得される`
+          : `rates.yml の schedule による同日中の再試行は終わっている（JST ${cfg.SAME_DAY_RETRY_UNTIL_JST_HOUR}時以降）。intraday.yml・daily.yml の完了のたびの再取得（workflow_run）は続きうるが、時刻は保証されない。復旧は次の自動の再取得、翌営業日の定期実行、または rates.yml の手動実行(workflow_dispatch)`,
       run_url: env.GITHUB_SERVER_URL && env.GITHUB_REPOSITORY && env.GITHUB_RUN_ID
         ? `${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}` : null,
     },
