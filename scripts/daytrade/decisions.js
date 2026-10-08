@@ -47,6 +47,11 @@ const QUESTIONS = [
   { id: "Q37", impact: "minor", title: "ロット上限が0.00になる案の扱い", provisional: "不採用にせず、0.00と表示（資金に対してSL幅が大きい旨の注記）" },
   { id: "Q38", impact: "minor", title: "仕様の入力表は Pivot・前日高安を『gpt-feed.txt／intraday.json』と書くが、intraday.json に無い（daily-levels.json にある）", provisional: "gpt-feed.txt の元データである data/daily-levels.json を読む（同じ値）" },
   { id: "Q39", impact: "minor", title: "型Bの『確認条件』が仕様に無い（型Aは『帯到達後、M15が基準価格より下で陰線確定』）", provisional: "型Bには確認条件の行を出さない" },
+  { id: "Q40", impact: "material", title: "イベント停止の窓の両端（『15分前〜30分後』）を含むか。毎時00分の状態更新が :15／:30 のイベントの端に当たる", provisional: "両端を含む（既存 daytrade.js の判定と同じ）。:30 のイベントは翌:00の状態更新でも『停止中』になる" },
+  { id: "Q41", impact: "minor", title: "SL幅10pips未満の判定は、外側への丸めの前か後か（実効の下限が9.5〜10pipsで変わる）", provisional: "丸めた後のSL幅で判定（仕様の文の順どおり）" },
+  { id: "Q42", impact: "material", title: "daytrade-context.json は『確定M15の最終足（鮮度確認用）』とあるが、20分の判定をファイルの as_of とM15最終足のどちらで行うか", provisional: "判定は as_of のみ。M15最終足の最古の時刻と data_status が OK でない銘柄は、出力に参考表示するだけで発注可否には使わない" },
+  { id: "Q43", impact: "minor", title: "日付をまたぐイベント（23:30〜23:59 の窓が翌0:00以降に及ぶ）の扱い。カレンダーは当日分のみ", provisional: "窓の後半は適用しない（日付が変わるとカレンダーから消える／未取得のため）。仕様の『翌0:00〜3:00は日付が変わった後の状態更新で拾う』の範囲のみ" },
+  { id: "Q44", impact: "minor", title: "risk_pct=0.5 の単位（式は equity×risk_pct と書かれ、文字どおりだと50%）", provisional: "パーセント（0.5% ）として equity×0.5÷100 で計算" },
 ];
 
 const byId = new Map(QUESTIONS.map((q) => [q.id, q]));

@@ -21,7 +21,8 @@ const CRON = {
 };
 
 // ニューヨークが夏時間（EDT, UTC-4）か
-const isNyDst = (ms) => (nyWallMs(ms) - ms) / HR === -4;
+// nyWallMs は秒未満を落とすので、ミリ秒つきの現在時刻（Date.now()）でも合うよう、先に秒へ切り捨てる
+const isNyDst = (ms) => { const s = Math.floor(ms / 1000) * 1000; return (nyWallMs(s) - s) / HR === -4; };
 const seasonOf = (ms) => (isNyDst(ms) ? "summer" : "winter");
 
 // 実行時刻から、起動の種類を『やること』に解決する。{ action: 'design'|'status'|'skip', slot, reason }

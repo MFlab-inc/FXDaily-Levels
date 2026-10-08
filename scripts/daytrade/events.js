@@ -21,7 +21,7 @@ function calendarStatus(cal, nowMs) {
   const asOf = parseIso(cal.as_of);
   if (!Number.isFinite(asOf)) return { ok: false, reason: "economic-calendar.json の as_of が読めません" };
   const age = Math.round((nowMs - asOf) / MIN);
-  if (age > STALE_MIN) return { ok: false, reason: `カレンダーの as_of が${age}分前（${STALE_MIN}分超）です` };
+  if (nowMs - asOf > STALE_MIN * MIN) return { ok: false, reason: `カレンダーの as_of が${age}分前（${STALE_MIN}分超）です` };
   return { ok: true, reason: null, age_min: age };
 }
 

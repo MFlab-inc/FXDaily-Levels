@@ -224,6 +224,18 @@ test("schedule: 夏冬の判定（NY夏時間）と各 cron の解決。該当�
   assert.equal(r("0 0-11,14-17 * * 1-5", WINTER).action, "status");
   assert.equal(r("1 2 3 4 5", SUMMER).action, null);
 });
+test("schedule: ミリ秒つきの現在時刻（Date.now()）でも夏冬を正しく判定する", () => {
+  for (const ms of [0, 1, 123, 999]) {
+    assert.equal(S.isNyDst(SUMMER + ms), true);
+    assert.equal(S.isNyDst(WINTER + ms), false);
+    assert.deepEqual(S.resolveAction("30 21 * * 0-4", SUMMER + ms), { action: "design", slot: 1 });
+    assert.equal(S.resolveAction("30 22 * * 0-4", SUMMER + ms).action, "skip");
+    assert.deepEqual(S.resolveAction("0 12 * * 1-5", J.parseIso("2026-07-15T21:00:00+09:00") + ms), { action: "design", slot: 3 });
+    assert.deepEqual(S.resolveAction("0 13 * * 1-5", J.parseIso("2026-07-15T22:00:00+09:00") + ms), { action: "status", slot: null });
+    assert.deepEqual(S.resolveAction("30 22 * * 0-4", WINTER + ms), { action: "design", slot: 1 });
+    assert.equal(J.jstHm(S.slotNominalMs(1, "2026-07-15", SUMMER + ms)), "06:30");
+  }
+});
 test("schedule: 夏冬の切り替え日（NY 3/8・11/1）でも判定が合う", () => {
   assert.equal(S.isNyDst(Date.parse("2026-03-08T06:59:00Z")), false);
   assert.equal(S.isNyDst(Date.parse("2026-03-08T07:00:00Z")), true);

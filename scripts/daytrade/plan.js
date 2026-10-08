@@ -266,7 +266,9 @@ function designLogRows(plan, prevPlan, rows, nowMs) {
     const row = candRow(c, "design", plan.generated_at);
     const key = L.keyOf(row);
     newKeys.add(key);
-    if (!latest.has(key)) out.push(row);
+    const last = latest.get(key);
+    // 版がまだ無い、または直近の行が status（取消済み）なら、新しい design の行として追記する（取消後に同じ案が再び出たとき、ログ・採点から漏れない）
+    if (!last || last.run === "status") out.push(row);
   }
   if (prevPlan && prevPlan.plan_date === plan.plan_date && Array.isArray(prevPlan.candidates)) {
     for (const pc of prevPlan.candidates) {
@@ -305,7 +307,7 @@ function buildStatus({ inputs, riskFeed, nowMs, prevPlan, logRows }) {
     inputs_problems: inputs.problems,
   };
   // 今日の設計が無い（全枠が抜けた・設計①の前・失効後）[W9]
-  if (!prevPlan || prevPlan.plan_date !== planDate || !Array.isArray(prevPlan.candidates)) {
+  if (!prevPlan || prevPlan.plan_date !== planDate || prevPlan.design_missing || !Array.isArray(prevPlan.candidates)) {
     const banners = baseHeader(inputs, nowMs, calSt, mtfSt);
     banners.unshift(`設計なし（計画日 ${planDate} の設計がまだありません）`);
     return { plan: { ...header, design_slot: null, generated_at: null, order_ok: false, banners, candidates: [], summary: null, design_missing: true } };

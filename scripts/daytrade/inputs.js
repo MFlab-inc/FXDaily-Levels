@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { MIN, parseIso, parseJstLabel } = require("./jst");
 const { lastCompletedSessionDate } = require("../../mtf/lib/ny-time");
+const { pairOf } = require("./pairs");
 
 /**
  * 入力の読み込みと鮮度（仕様 1節）。既存のファイルは読むだけ（変更しない）。
@@ -61,7 +62,17 @@ function loadInputs({ dataDir, repoRoot, nowMs }) {
   for (const [name, key] of [["intraday.json", "intraday"], ["daytrade-context.json", "ctx"], ["h1-bars.json", "h1"]]) {
     const asOf = parseIso(raw[key]?.as_of);
     const age = Number.isFinite(asOf) ? Math.max(0, Math.round((nowMs - asOf) / MIN)) : null;
-    feeds.push({ name, as_of: raw[key]?.as_of ?? null, age_min: age, stale: age === null || age > FRESH_LIMIT_MIN });
+    feeds.push({ name, as_of: raw[key]?.as_of ?? null, age_min: age, stale: age === null || nowMs - asOf > FRESH_LIMIT_MIN * MIN });
+  }
+
+  // daytrade-context.json の『確定M15の最終足』（仕様 1節は鮮度確認用と書く）。20分の判定には使わず、最古の最終足と data_status が OK でない銘柄を参考表示する [Q42]
+  const ctxM15 = { oldest_last_closed: null, not_ok: [] };
+  let oldestT = null;
+  for (const [code, p] of Object.entries(raw.ctx?.pairs || {})) {
+    if (!pairOf(code)) continue;
+    const t = parseJstLabel(p?.m15?.last_closed?.time_jst);
+    if (Number.isFinite(t) && (oldestT === null || t < oldestT)) { oldestT = t; ctxM15.oldest_last_closed = p.m15.last_closed.time_jst; }
+    if (p?.data_status && p.data_status !== "OK") ctxM15.not_ok.push(`${code}:${p.data_status}`);
   }
 
   const daily = raw.daily;
@@ -76,7 +87,7 @@ function loadInputs({ dataDir, repoRoot, nowMs }) {
     raw, rules: rules.value, accounts, riskPct: Number.isFinite(acc.value?.risk_pct) ? acc.value.risk_pct : null,
     dailyLossPct: acc.value?.daily_loss_pct ?? null, commissionPerLotJpy: acc.value?.commission_per_lot_jpy ?? null,
     h1: parseH1(raw.h1), problems, expectedSession,
-    freshness: { limit_min: FRESH_LIMIT_MIN, feeds, stale: feeds.some((f) => f.stale), daily: { ok: dailyOk, reason: dailyReason, session_date: daily?.session_date ?? null, as_of: daily?.as_of ?? null } },
+    freshness: { limit_min: FRESH_LIMIT_MIN, feeds, ctx_m15: ctxM15, stale: feeds.some((f) => f.stale), daily: { ok: dailyOk, reason: dailyReason, session_date: daily?.session_date ?? null, as_of: daily?.as_of ?? null } },
   };
 }
 

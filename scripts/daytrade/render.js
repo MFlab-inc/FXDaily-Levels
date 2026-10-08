@@ -42,16 +42,21 @@ function candidateBlock(c, accts) {
 function render(plan, accounts = {}) {
   const L = [];
   const accts = accounts;
+  // 仕様 1節「出力の先頭に『発注不可（鮮度超過）』を付ける」: 鮮度超過のバナーは見出しより前の1行目に置く
+  const staleBanner = plan.banners.find((b) => b.startsWith("発注不可（鮮度超過）"));
+  if (staleBanner) L.push(staleBanner);
   L.push("# デイトレプラン（自動生成）");
   L.push(`plan_date: ${plan.plan_date} / run: ${plan.run}${plan.design_slot ? `（設計${plan.design_slot}）` : ""} / 設計: ${dt(plan.generated_at)} / 状態更新: ${dt(plan.status_updated_at)} / 有効期限: ${dt(plan.expires_at)}`);
   L.push(`暫定: 仕様 v1.1 が沈黙・矛盾している点（${plan.provisional.open_questions.length}件: ${plan.provisional.open_questions[0]}〜${plan.provisional.open_questions[plan.provisional.open_questions.length - 1]}）を暫定の読みで処理しています。区画の順・名前は仮です（Q01: テンプレv1.2の7項目の本文が無い）。`);
   L.push(plan.order_ok ? "発注可否: 発注可（鮮度は20分以内）" : "発注可否: 発注不可");
-  for (const b of plan.banners) L.push(`  ※ ${b}`);
+  for (const b of plan.banners) if (b !== staleBanner) L.push(`  ※ ${b}`);
 
   // 1. 前提と鮮度
   L.push("");
   L.push("== 1. 前提と鮮度 ==");
   for (const f of plan.freshness.feeds) L.push(`  ${f.name}: as_of ${dt(f.as_of)}（${f.age_min === null ? "読めない" : `${f.age_min}分前`}）${f.stale ? " 20分超" : ""}`);
+  const cm = plan.freshness.ctx_m15;
+  if (cm) L.push(`  （参考）daytrade-context の確定M15の最終足: 最古 ${cm.oldest_last_closed ?? "—"}${cm.not_ok.length ? ` ／ data_status が OK でない銘柄: ${cm.not_ok.join("、")}` : ""}。発注可否には使わない`);
   L.push(`  daily-levels.json: session_date ${plan.freshness.daily.session_date ?? "—"}（直近に確定した営業日 ${plan.mtf.expected_session}）${plan.freshness.daily.ok ? "" : ` 未更新: ${plan.freshness.daily.reason}`}`);
   L.push(`  mtf-feed.json: status ${plan.mtf.status ?? "—"} / data_base_date ${plan.mtf.data_base_date ?? "—"}${plan.mtf.ok ? "" : ` 方向根拠なし: ${plan.mtf.reason}`}`);
   L.push(`  イベント: ${plan.events.status === "ok" ? "取得済み（economic-calendar.json）" : `イベント未取得（${plan.events.reason}）。停止時間なしで生成`} ／ ${plan.events.note}`);

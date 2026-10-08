@@ -7,6 +7,7 @@ const { loadInputs } = require("../inputs");
 const { buildDesign, buildStatus, markSameDirection, rankCandidates } = require("../plan");
 const { render } = require("../render");
 const L = require("../log");
+const { calendarStatus } = require("../events");
 const { makeScenario } = require("./scenario");
 const { rm } = require("./helpers");
 const J = require("../jst");
@@ -372,5 +373,81 @@ test("ロット: 資金が小さく 0.00 になる案も残し、『0.00』と�
     const { plan, inputs } = build(sc);
     assert.equal(plan.candidates[0].schemes.A.lots[701620], 0);
     assert.match(render(plan, inputs.accounts), /701620=0\.00（資金に対してSL幅が大きい）/);
+  } finally { cleanup(sc); }
+});
+
+// ---- 独立レビューで見つかった不具合の回帰試験 ----
+test("鮮度: 『20分を超えて』は秒・ミリ秒まで見る（20分ちょうどは許容、20分29秒は超過）。カレンダーも同じ", () => {
+  const sc = makeScenario({ intradayLagMin: 20, h1LagMin: 20, ctxLagMin: 20, calLagMin: 20 });
+  try {
+    const at = (extraMs) => loadInputs({ dataDir: sc.dataDir, repoRoot: sc.repoRoot, nowMs: sc.nowMs + extraMs });
+    assert.equal(at(0).freshness.stale, false);
+    assert.equal(at(29000).freshness.stale, true); // 表示の分は四捨五入で20分だが、20分を超えている
+    assert.equal(at(29000).freshness.feeds[0].age_min, 20);
+    const cal = JSON.parse(fs.readFileSync(path.join(sc.dataDir, "economic-calendar.json"), "utf8"));
+    assert.equal(calendarStatus(cal, sc.nowMs).ok, true);
+    assert.equal(calendarStatus(cal, sc.nowMs + 29000).ok, false);
+  } finally { cleanup(sc); }
+});
+
+test("出力: 鮮度超過は見出しより前の1行目に出す", () => {
+  const sc = makeScenario({ intradayLagMin: 25 });
+  try {
+    const { plan, inputs } = build(sc);
+    const txt = render(plan, inputs.accounts);
+    assert.match(txt.split("\n")[0], /^発注不可（鮮度超過）: intraday\.json\(25分前\)/);
+    assert.equal(txt.split("\n")[1], "# デイトレプラン（自動生成）");
+    assert.equal((txt.match(/発注不可（鮮度超過）/g) || []).length, 1); // 二重に出さない
+    const ok = makeScenario();
+    try { const b = build(ok); assert.equal(render(b.plan, b.inputs.accounts).split("\n")[0], "# デイトレプラン（自動生成）"); } finally { cleanup(ok); }
+  } finally { cleanup(sc); }
+});
+
+test("状態更新: 設計が無いまま次の状態更新が来ても『設計なし』のまま（候補なしの設計と取り違えない）", () => {
+  const sc = makeScenario({ nowIso: "2026-10-08T07:00:00+09:00" });
+  try {
+    const inputs = loadInputs({ dataDir: sc.dataDir, repoRoot: sc.repoRoot, nowMs: sc.nowMs });
+    const first = buildStatus({ inputs, riskFeed: noFeed, nowMs: sc.nowMs, prevPlan: null, logRows: [] }).plan;
+    assert.equal(first.design_missing, true);
+    const second = buildStatus({ inputs, riskFeed: noFeed, nowMs: sc.nowMs + J.HR, prevPlan: first, logRows: [] }).plan;
+    assert.equal(second.design_missing, true);
+    assert.match(second.banners[0], /設計なし/);
+    assert.match(render(second, inputs.accounts), /設計がありません/);
+  } finally { cleanup(sc); }
+});
+
+test("log: 取消(再設計)の後に同じ版が再び出たら、新しい design の行として追記する（ログ・採点から漏れない）", () => {
+  const sc = makeScenario();
+  const gone = makeScenario({ mtfStatus: "partial" }); // 方向根拠なし → 候補ゼロ → 旧版がすべて取消になる
+  try {
+    const first = build(sc);
+    assert.equal(first.logAppend.length, 4);
+    const second = build(gone, { prevPlan: first.plan, logRows: first.logAppend });
+    assert.equal(second.plan.candidates.length, 0);
+    assert.equal(second.logAppend.length, 4);
+    assert.ok(second.logAppend.every((r) => r.run === "status" && r.reached === "取消(再設計)"));
+    const rows = [...first.logAppend, ...second.logAppend];
+    // 元の入力で同じ案が戻ってくる
+    const third = build(sc, { prevPlan: second.plan, logRows: rows });
+    assert.equal(third.logAppend.length, 4);
+    assert.ok(third.logAppend.every((r) => r.run === "design"));
+    const latest = [...L.latestByKey([...rows, ...third.logAppend]).values()];
+    assert.equal(latest.filter((r) => r.run === "design").length, 4); // 採点の対象（直近の行が design）に戻る
+    // 同じ版が続くだけなら追記しない
+    assert.equal(build(sc, { prevPlan: third.plan, logRows: [...rows, ...third.logAppend] }).logAppend.length, 0);
+  } finally { cleanup(sc); cleanup(gone); }
+});
+
+test("出力: daytrade-context の確定M15の最終足と data_status を参考表示する（発注可否には使わない）", () => {
+  const sc = makeScenario({ tweak: (f) => {
+    for (const [code, p] of Object.entries(f["daytrade-context.json"].pairs)) p.m15 = { last_closed: { time_jst: code === "XAUUSD" ? "2026-10-08 14:45" : "2026-10-08 15:15" } };
+    f["daytrade-context.json"].pairs.XAUUSD.data_status = "DEGRADED";
+  } });
+  try {
+    const { plan, inputs } = build(sc);
+    assert.equal(plan.freshness.ctx_m15.oldest_last_closed, "2026-10-08 14:45");
+    assert.deepEqual(plan.freshness.ctx_m15.not_ok, ["XAUUSD:DEGRADED"]);
+    assert.equal(plan.order_ok, true);
+    assert.match(render(plan, inputs.accounts), /確定M15の最終足: 最古 2026-10-08 14:45 ／ data_status が OK でない銘柄: XAUUSD:DEGRADED。発注可否には使わない/);
   } finally { cleanup(sc); }
 });
