@@ -68,7 +68,8 @@ async function fetchH1(client, pair, { startLabel, nowMs, pageSize, log = () => 
   for (const r of raw) {
     const t = parseJstLabel(r.datetime);
     if (!Number.isFinite(t) || t + HR > nowMs || isFxClosedMs(t)) continue;
-    byT.set(t, { t, o: r.open, h: r.high, l: r.low, c: r.close });
+    const rd = (v) => Number(v.toFixed(pair.digits)); // CSV に書く桁に先にそろえる（保存した CSV から再実行しても同じ結果になるように）
+    byT.set(t, { t, o: rd(r.open), h: rd(r.high), l: rd(r.low), c: rd(r.close) });
   }
   return [...byT.values()].sort((a, b) => a.t - b.t);
 }

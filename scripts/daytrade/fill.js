@@ -12,7 +12,8 @@ const { EPS } = require("./num");
  *  先着 [Q20]    : 到達した足では SL だけ判定（TP1 は次の足から）。同一足に SL と TP1 が両方入れば SL 先。
  *                  SL の始値ギャップは始値で損切り（損失を縮めない）、TP1 は TP1 の価格で利確（利益を増やさない）。
  *                  有効期限（翌3:00）まで決着しなければ『未決』（最終足の終値で決済した扱いは exit に別記）。
- * 追跡の打ち切り（バックテスト用）: reachUntilMs 以後に始まる足では到達を見ない（取消された案）。到達した後の SL/TP1 は有効期限まで追う。
+ * 追跡の打ち切り（バックテスト用）: 終わりが reachUntilMs を超える足では到達を見ない（取消された案）。到達した後の SL/TP1 は有効期限まで追う。
+ * 帯を飛び越えた足（高安が帯と重ならない）は『未到達』のまま（エントリー側のギャップは約定させない。出口側のギャップは損切りを始値で扱う）。
  * bars: 古い順の確定 H1 {t(開始ms), o,h,l,c}
  * cand: { side, plan_date, generated_at_ms, entry_low, entry_high, worst_entry, schemes: { A: {sl, tp}|null, B: {sl, tp}|null } }
  */
@@ -28,7 +29,7 @@ function simulate(cand, bars, { reachUntilMs = null } = {}) {
   for (let i = 0; i < bars.length; i++) {
     const b = bars[i];
     if (b.t < cand.generated_at_ms) continue;
-    if (reachUntilMs !== null && b.t >= reachUntilMs) break; // 次の設計で取消された案は、そこまでの足でしか到達を見ない（バックテスト [Q25]）
+    if (reachUntilMs !== null && b.t + HR > reachUntilMs) break; // 次の設計で取消された案は、取消時刻までに終わる足でしか到達を見ない。取消時刻をまたぐ足は、次の版も（設計時刻より前に始まるので）使わない（バックテスト [Q25]）
     if (!overlaps(b, cand.entry_low, cand.entry_high)) continue;
     const blocked = noNewEntryReason(b.t, cand.plan_date);
     if (!blocked) { reachedIdx = i; break; }

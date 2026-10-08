@@ -268,6 +268,7 @@ function designLogRows(plan, prevPlan, rows, nowMs) {
     newKeys.add(key);
     const last = latest.get(key);
     // 版がまだ無い、または直近の行が status（取消済み）なら、新しい design の行として追記する（取消後に同じ案が再び出たとき、ログ・採点から漏れない）
+    if (last) { row.filled_ticket_701620 = last.filled_ticket_701620; row.filled_ticket_702449 = last.filled_ticket_702449; } // 人が埋めた約定の突き合わせは引き継ぐ
     if (!last || last.run === "status") out.push(row);
   }
   if (prevPlan && prevPlan.plan_date === plan.plan_date && Array.isArray(prevPlan.candidates)) {

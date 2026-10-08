@@ -40,10 +40,11 @@ function planDates(nowMs, windowDays) {
   return out;
 }
 
-function runBacktest({ barsByCode, rowsByCode, nowMs, windowDays = 365, thresholds, onProgress = () => {} }) {
+// evaluateImpl は試験用に差し替えられる（既定はライブと同じ evaluate）
+function runBacktest({ barsByCode, rowsByCode, nowMs, windowDays = 365, thresholds, onProgress = () => {}, evaluateImpl = evaluate }) {
   const hist = createHistory({ barsByCode, rowsByCode, thresholds });
   const records = [];
-  const stats = { designs: 0, evaluations: 0, skipped: {}, incomplete: 0, dates: 0, first: null, last: null };
+  const stats = { designs: 0, evaluations: 0, skipped: {}, incomplete: 0, suppressed: 0, dates: 0, first: null, last: null };
   const skip = (why) => { stats.skipped[why] = (stats.skipped[why] || 0) + 1; };
 
   for (const D of planDates(nowMs, windowDays)) {
@@ -61,7 +62,7 @@ function runBacktest({ barsByCode, rowsByCode, nowMs, windowDays = 365, threshol
           const mtfSt = globalMtfStatus(r.ctx.mtfJson, r.meta.asOf);
           const ctx = { ...r.ctx, direction: symbolDirection(r.ctx.mtfJson, pair.code, mtfSt) };
           stats.evaluations++;
-          const res = evaluate(ctx, setup);
+          const res = evaluateImpl(ctx, setup, { t, slot });
           if (res.outcome === "candidate") cands.push({ pair, res, meta: r.meta, t, slot, ctx });
         }
       }
@@ -79,10 +80,15 @@ function runBacktest({ barsByCode, rowsByCode, nowMs, windowDays = 365, threshol
     }
     for (const rec of active.values()) finished.push(rec);
 
+    // 同じ基準水準・同じ向き（=同じ取引の考え）の先の版が既に約定していれば、後の版は数えない（二重に建てない）[Q25]
+    finished.sort((a, b) => a.gen - b.gen || keyOf(a).localeCompare(keyOf(b)));
+    const filledIdea = new Map();
     for (const rec of finished) {
       const { res, pair } = rec;
       const bars = barsByCode[pair.code];
       if (!coversExpiry(bars, D)) { stats.incomplete++; continue; }
+      const idea = [res.symbol, res.setup, res.side, res.ref.price].join("|");
+      if (filledIdea.has(idea) && filledIdea.get(idea) < rec.gen) { stats.suppressed++; continue; }
       const schemes = {};
       for (const s of SCHEMES) { const x = res.schemes[s.name]; if (x.pass) schemes[s.name] = { sl: x.sl, tp: x.tp }; }
       const i0 = lowerBound(bars, rec.gen);
@@ -90,6 +96,7 @@ function runBacktest({ barsByCode, rowsByCode, nowMs, windowDays = 365, threshol
         side: res.side, plan_date: D, generated_at_ms: rec.gen,
         entry_low: res.band.low, entry_high: res.band.high, schemes,
       }, bars.slice(i0), { reachUntilMs: rec.cut });
+      if (sim.reached === "到達" && !filledIdea.has(idea)) filledIdea.set(idea, sim.reached_at);
       for (const s of SCHEMES) {
         const x = res.schemes[s.name];
         if (!x.pass) continue;
@@ -110,7 +117,7 @@ function recordOf({ rec, res, pair, s, x, sim, D, expires }) {
   const sc = sim.schemes[s.name];
   const out = {
     plan_date: D, slot: rec.slot, weekday: jstDow(jstAt(D, "12:00")), setup: res.setup, scheme: s.name, k: s.k, symbol: pair.code, side: res.side,
-    vol: rec.meta.vol, plan_rr: x.rr, sl_pips: x.sl_pips, profit_pips: x.profit_pips,
+    ref: res.ref.price, vol: rec.meta.vol, plan_rr: x.rr, sl_pips: x.sl_pips, profit_pips: x.profit_pips,
     reached: sim.reached, reached_ms: sim.reached_at, cancelled_unreached: sim.reached === "未到達" && rec.cut < expires,
   };
   if (sim.reached !== "到達" || !sc) return out;

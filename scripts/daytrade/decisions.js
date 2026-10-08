@@ -32,7 +32,7 @@ const QUESTIONS = [
   { id: "Q22", impact: "material", title: "起動方式：GitHubのscheduleは欠落・遅延する／冬時間の切替／設計③と毎時statusの重複／遅れて動いた設計", provisional: "schedule＋workflow_dispatch。夏冬の2本ずつのcronを置き、実行時にNY時間で季節を判定。設計③の時刻はstatusを兼ねる。遅れた設計は、後の枠の設計が既にある／次の枠の名目時刻を過ぎていれば何もしない" },
   { id: "Q23", impact: "material", title: "イベント：calendar の as_of が20分超（約9割）／date が当日でないとき『イベント未取得＝停止なし』で案が出る", provisional: "仕様どおり『イベント未取得』を先頭と各案に明記して、停止時間なしで生成" },
   { id: "Q24", impact: "minor", title: "ボラ状態の表示項目（regime・flags を含めるか）", provisional: "pairs.<ペア>.intraday 配下（range_today・range_vs_adr・spike_flag・updated_at）のみ。無い・nullの項目は出さない。取得失敗は『未取得』、収録外は『未収録』" },
-  { id: "Q25", impact: "blocking", title: "バックテスト：設計3回・再設計の重複計上と追跡の打ち切り", provisional: "各設計の案は次の設計時刻まで追跡し、未到達なら取消（未到達として分母に入れる）。同一のEntry/SL/TPの再設計は継続とみなし二重に数えない" },
+  { id: "Q25", impact: "blocking", title: "バックテスト：設計3回・再設計の重複計上と追跡の打ち切り", provisional: "各設計の案は次の設計時刻まで追跡し、未到達なら取消（未到達として分母に入れる）。Entry帯とSLが同一の再設計は継続とみなし二重に数えない。基準水準・向きが同じ先の版が既に約定していれば、後の版は数えない" },
   { id: "Q26", impact: "blocking", title: "バックテスト：約定価格・始値のギャップ・M15確認条件（H1では検証不能）", provisional: "約定は最悪Entry。SLの始値ギャップは始値で損切り、TP1は価格で利確。M15確認条件は未反映と明記" },
   { id: "Q27", impact: "material", title: "バックテスト：過去の設計時点の現在値・当日高安（ADR消化率）の再現", provisional: "現在値=直前に確定したH1の終値。当日高安=NY17時（JST6:00/7:00）以降の確定足" },
   { id: "Q28", impact: "material", title: "バックテスト：イベント停止（過去のカレンダーが無い）", provisional: "全期間『停止なし』（仕様の文言どおり）と明記" },

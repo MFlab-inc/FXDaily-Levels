@@ -36,7 +36,7 @@ function dailyLevelsFrom(row, pair) {
   const d = pair.digits;
   return {
     pivot: round(P, d), r1: round(2 * P - row.low, d), s1: round(2 * P - row.high, d),
-    r2: round(P + r, d), s2: round(P - r, d), prev_high: row.high, prev_low: row.low,
+    r2: round(P + r, d), s2: round(P - r, d), prev_high: round(row.high, d), prev_low: round(row.low, d),
   };
 }
 

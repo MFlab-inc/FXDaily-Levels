@@ -37,6 +37,8 @@ function scoreRows({ rows, barsByCode, nowMs }) {
     if (!coversExpiry(bars, row.plan_date)) { held.push({ key: L.keyOf(row), reason: "H1足が有効期限まで届いていません" }); continue; }
     const cand = candFromRow(row);
     if (!Number.isFinite(cand.generated_at_ms) || !Number.isFinite(cand.entry_low) || !Number.isFinite(cand.entry_high)) { held.push({ key: L.keyOf(row), reason: "行の値が読めません" }); continue; }
+    // 設計時刻の後の足が途中から（古い案に対して新しい足だけ）では、『未到達』と確定させない
+    if (bars[0].t > cand.generated_at_ms + 60 * 60000) { held.push({ key: L.keyOf(row), reason: "H1足が設計時刻まで遡って届いていません" }); continue; }
     const r = simulate(cand, bars);
     newRows.push({
       ...row, run: "status", generated_at: jstIso(nowMs),

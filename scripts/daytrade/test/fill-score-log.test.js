@@ -291,3 +291,13 @@ test("riskfeed: 銘柄ごと — 未収録／未取得／あるものだけ表�
   assert.deepEqual(volatilityOf({ status: "未取得", pairs: {} }, "EURUSD"), { state: "未取得" });
   assert.deepEqual(volatilityOf(null, "EURUSD"), { state: "未取得" });
 });
+
+test("score: 設計時刻より後に始まる足しか無い案は採点を保留する（『未到達』と確定させない）", () => {
+  const now = J.parseIso("2026-10-09T06:30:00+09:00");
+  const late = [bar("02:00", 1.1030, 1.1020, 1.1025, 1.1024, "2026-10-09")]; // 設計(10-08 15:30)の後だが、12時間後から始まる足だけ
+  const r = scoreRows({ rows: [row()], barsByCode: { EURUSD: late }, nowMs: now });
+  assert.equal(r.newRows.length, 0);
+  assert.match(r.held[0].reason, /遡って/);
+  // 設計の直後に始まる足（16:00）から有効期限までそろっていれば採点できる
+  assert.equal(scoreRows({ rows: [row()], barsByCode: { EURUSD: fullBars() }, nowMs: now }).newRows.length, 1);
+});

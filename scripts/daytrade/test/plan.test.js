@@ -433,6 +433,10 @@ test("log: 取消(再設計)の後に同じ版が再び出たら、新しい des
     assert.ok(third.logAppend.every((r) => r.run === "design"));
     const latest = [...L.latestByKey([...rows, ...third.logAppend]).values()];
     assert.equal(latest.filter((r) => r.run === "design").length, 4); // 採点の対象（直近の行が design）に戻る
+    // 人が埋めた filled_ticket は引き継ぐ
+    const ticketed = first.logAppend.map((r) => (r.symbol === "EURUSD" ? { ...r, filled_ticket_701620: "T777" } : r));
+    const again = build(sc, { prevPlan: second.plan, logRows: [...ticketed, ...second.logAppend.map((r) => (r.symbol === "EURUSD" ? { ...r, filled_ticket_701620: "T777" } : r))] });
+    assert.equal(again.logAppend.find((r) => r.symbol === "EURUSD").filled_ticket_701620, "T777");
     // 同じ版が続くだけなら追記しない
     assert.equal(build(sc, { prevPlan: third.plan, logRows: [...rows, ...third.logAppend] }).logAppend.length, 0);
   } finally { cleanup(sc); cleanup(gone); }

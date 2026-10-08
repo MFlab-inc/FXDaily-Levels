@@ -331,3 +331,80 @@ test("CLI: 取得が必要なのに APIキーが無い／--no-fetch なら、取
     await assert.rejects(() => btMain(["--window-days=0"], {}, quiet().io), /window-days/);
   } finally { rm(path.dirname(dataDir)); }
 });
+
+// ---- 独立レビューで見つかった不具合の回帰試験 ----
+test("h1history: 取得した足は銘柄の桁に丸める（保存した CSV から再実行しても同じ結果になる）", async () => {
+  const xau = pairOf("XAUUSD");
+  const raw = [{ t: J.parseJstLabel("2026-10-05 10:00"), o: 4000.123456, h: 4001.987654, l: 3999.5, c: 4000.556 }];
+  const client = { stats: { requests: 0 }, timeSeries: async () => raw.map((b) => ({ datetime: `${J.jstLabel(b.t)}:00`, open: b.o, high: b.h, low: b.l, close: b.c })) };
+  const bars = await H.fetchH1(client, xau, { startLabel: "2026-10-05 00:00:00", nowMs: J.parseJstLabel("2026-10-06 00:00"), pageSize: 5000 });
+  assert.deepEqual(bars, [{ t: raw[0].t, o: 4000.12, h: 4001.99, l: 3999.5, c: 4000.56 }]);
+  assert.deepEqual(H.parseCsv(H.toCsv(bars, xau)), bars); // 往復で変わらない
+});
+
+test("histctx: 前日高安も銘柄の桁に丸める（ライブの daily-levels.json と同じ）", () => {
+  const d = dailyLevelsFrom({ high: 1.123456789, low: 1.1, close: 1.11 }, eu);
+  assert.equal(d.prev_high, 1.12346);
+});
+
+test("fill: 取消時刻をまたぐ足は、取消される版では到達に使わない（足の終わりが取消時刻を超えたら見ない）", () => {
+  const { simulate } = require("../fill");
+  const D = "2026-10-08";
+  const mk = (hm, h, l) => ({ t: J.jstAt(D, hm), o: (h + l) / 2, h, l, c: (h + l) / 2 });
+  const cand = { side: "sell", plan_date: D, generated_at_ms: J.jstAt(D, "06:30"), entry_low: 1.104, entry_high: 1.1042, schemes: {} };
+  const bars = [mk("07:00", 1.1030, 1.1020), mk("15:00", 1.1045, 1.1035)];
+  assert.equal(simulate(cand, bars, { reachUntilMs: J.jstAt(D, "15:30") }).reached, "未到達"); // 15:00〜16:00 の足は 15:30 の取消をまたぐ
+  assert.equal(simulate(cand, bars, { reachUntilMs: J.jstAt(D, "16:00") }).reached, "到達"); // 16:00 ちょうどに終わる足は使える
+  assert.equal(simulate(cand, bars).reached, "到達");
+  // 帯を飛び越えた足（高安が帯と重ならない）は未到達のまま
+  assert.equal(simulate(cand, [mk("07:00", 1.1030, 1.1020), mk("08:00", 1.1060, 1.1050)]).reached, "未到達");
+});
+
+test("backtest: 同じ基準水準・同じ向きの先の版が約定していれば、後の版は数えない（約定は1日1回まで）", () => {
+  const { records, stats } = synthRun();
+  const seen = new Map();
+  for (const r of records.filter((x) => x.reached === "到達")) {
+    const k = [r.plan_date, r.symbol, r.setup, r.scheme, r.side, r.ref].join("|");
+    seen.set(k, (seen.get(k) || 0) + 1);
+  }
+  assert.ok([...seen.values()].every((n) => n === 1), JSON.stringify([...seen].filter(([, n]) => n > 1)));
+  assert.ok(Number.isInteger(stats.suppressed));
+});
+
+test("backtest: 同じ基準水準・向きの先の版が約定していれば、後の版（帯が少し違う再設計）は数えない／約定していなければ両方数える", () => {
+  const D = "2026-10-06";
+  const { barsByCode, rowsByCode } = allSynth();
+  const quietFrom = J.jstAt(D, "07:00"), quietTo = J.jstAt("2026-10-07", "03:00");
+  const withBars = (touch) => ({
+    ...barsByCode,
+    EURUSD: barsByCode.EURUSD.map((b) => {
+      if (b.t < quietFrom || b.t >= quietTo) return b;
+      const quiet = { t: b.t, o: 1.0995, h: 1.1010, l: 1.0990, c: 1.0995 };
+      return touch && b.t === J.jstAt(D, "10:00") ? { ...quiet, h: 1.1045 } : quiet;
+    }),
+  });
+  // 設計①は帯 1.1040〜1.1042、設計②は同じ基準水準 1.1040 で帯だけ少し違う（ATRが変わった再設計）、設計③は無し
+  const res = (band, sl) => ({
+    outcome: "candidate", symbol: "EURUSD", setup: "A", side: "sell", ref: { label: "Pivot", price: 1.104 }, band, worst_entry: 1.104,
+    pip_value_jpy: 1500, schemes: { A: { pass: true, sl, tp: 1.099, sl_pips: (sl - 1.104) * 1e4, profit_pips: 50, rr: 5 }, B: { pass: false } },
+  });
+  const stub = (ctx, setup, { slot }) => {
+    const none = { outcome: "rejected", symbol: ctx.pair.code, setup, schemes: { A: { pass: false }, B: { pass: false } } };
+    return ctx.pair.code === "EURUSD" && setup === "A" && ctx.planDate === D ? (slot === 1 ? res({ low: 1.104, high: 1.1042 }, 1.105) : slot === 2 ? res({ low: 1.104, high: 1.1043 }, 1.1051) : none) : none;
+  };
+  // ctx に計画日を載せるため、histctx の meta を使わず、設計時刻から決める
+  const wrapped = (ctx, setup, info) => stub({ ...ctx, planDate: require("../windows").planDateOf(info.t) }, setup, info);
+  const run = (touch) => runBacktest({ barsByCode: withBars(touch), rowsByCode, nowMs: J.parseIso("2026-10-08T12:00:00+09:00"), windowDays: 3, evaluateImpl: wrapped });
+  // 設計①の版が 10:00 に約定 → 設計②の同じ基準水準の版は数えない
+  let { records, stats } = run(true);
+  const rec = records.filter((r) => r.symbol === "EURUSD");
+  assert.equal(rec.length, 1);
+  assert.equal(rec[0].slot, 1);
+  assert.equal(rec[0].reached, "到達");
+  assert.equal(stats.suppressed, 1);
+  // 約定していなければ、設計①の版は取消(未到達)、設計②の版が新しい版として数えられる（設計③で無くなるので、これも取消(未到達)）
+  ({ records, stats } = run(false));
+  const rec2 = records.filter((r) => r.symbol === "EURUSD");
+  assert.deepEqual(rec2.map((r) => [r.slot, r.reached, r.cancelled_unreached]), [[1, "未到達", true], [2, "未到達", true]]);
+  assert.equal(stats.suppressed, 0);
+});
