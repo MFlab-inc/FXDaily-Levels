@@ -13,7 +13,7 @@ on:
   # Intraday Snapshot（intraday.yml）と Daily FX Data（daily.yml）が完了するたびにも起動する（--if-stale）。
   # GitHubのscheduleが届かない日でも、この2つのどちらかが動けば、その直後に rates.yml が動く。
   # この2つは、実績で月〜金の1日あたり平均12〜13回（3〜17回。2026-09-08〜10-07）完了している。
-  # 公表前（日本の営業日の9:40より前）と、最新で健全なときは、外部へ接続せずに終了する（ジョブ全体で十数秒）。
+  # 公表前（日本の営業日の9:40より前）と、最新で健全なときは、外部へ接続せずに終了する（ジョブ全体で十数秒の見込み。未実測。SPEC 8-2）。
   # workflows: の名前は、各ワークフローの name: と完全に同じにすること（rates/test/workflows.test.js が確かめる）。
   # branches: [main] は、main 以外のブランチでの試し実行では起動しないための条件。
   # workflow_run は、このファイルが既定ブランチ（main）にあるときだけ効く。intraday.yml・daily.yml は変更していない。

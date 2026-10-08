@@ -27,4 +27,4 @@ node rates/run-daily.js --check-fresh # 外部へ接続せず、いま最新か�
 node --test rates/test/*.test.js      # 試験
 ```
 
-`.github/workflows/rates.yml` は、schedule（月〜金 JST 09:40〜13:45）と、`intraday.yml`・`daily.yml` の完了のたび（`workflow_run`）に、`--if-stale` で起動する（公表前・最新で健全なら、外部へ接続せずに終了する。1日の起動は月〜金で平均12〜13回、その大半が即終了。SPEC 8-2）。外部cronから `workflow_dispatch`（`if_stale=true`）で呼ぶ運用は**任意**（手順は [CRON_SETUP.md](CRON_SETUP.md)、SPEC 8節）。`rates-tests.yml` が PR と main への push で試験を実行する。`rates.yml` が書くのは `data/rates.json` だけで、フィード（`gpt-feed.*`）への反映は次の `intraday.yml`・`daily.yml` の実行で行う（SPEC 8-1）。
+`.github/workflows/rates.yml` は、schedule（月〜金 JST 09:40〜13:45）と、`intraday.yml`・`daily.yml` の完了のたび（`workflow_run`）に、`--if-stale` で起動する（公表前・最新で健全なら、外部へ接続せずに終了する。`workflow_run` の起動は月〜金で1日平均12.9回〔3〜17回、2026-09-08〜10-07 の完了数による見込み〕で、その大半が即終了。ほかに `rates.yml` 自身の schedule（最大18本。届く割合は未測定）、外部cron、手動実行がある。SPEC 8-2）。外部cronから `workflow_dispatch`（`if_stale=true`）で呼ぶ運用は**任意**（手順は [CRON_SETUP.md](CRON_SETUP.md)、SPEC 8節）。`rates-tests.yml` が PR と main への push で試験を実行する。`rates.yml` が書くのは `data/rates.json` だけで、フィード（`gpt-feed.*`）への反映は次の `intraday.yml`・`daily.yml` の実行で行う（SPEC 8-1）。
