@@ -130,7 +130,7 @@ node --test scripts/daytrade/test/*.test.js
 - **SL幅10pips以上の門で、H1 ATR14 が小さい銘柄はA案がほとんど通らない。** A案（0.5×ATR）が10pips以上になるには H1 ATR14 が20pips以上必要。H1 ATR14 の中央値（pips）：EURUSD 9.9、GBPUSD 13.3、AUDUSD 8.7、USDCAD 10.0、USDCHF 8.9、EURGBP 5.9、USDJPY 17.5、EURJPY 18.0、XAUUSD 約170（1pip=0.1ドル）。そのため年間の案は型A（A案）で約110件、型B（A案）で6件ほどで、XAUUSD が型A・A案の約8割を占める。EURGBP は一度も出ない。仕様の数値の問題で、実装の都合ではない（本人の判断事項。パラメータは動かしていない）。
 - **型Bは年間でごく少ない**（Q09：15:30の設計②では成立せず、設計③の21:00／22:00からしか出ない）。n が小さいので、型Bの行は読み取れない。
 - **『pips合計』は銘柄を混ぜると XAUUSD が支配的**になる。銘柄の軸で見ること。
-- H1履歴の時刻の解釈（`timezone=Asia/Tokyo`、`start_date`/`end_date` のページ送り）は、`h1-bars.json` の重なり500本との照合で確認した（USDJPY〜EURGBP は不一致0、XAUUSD は丸めの差による2本のみ）。
+- H1履歴の時刻の解釈（`timezone=Asia/Tokyo`、`start_date`/`end_date` のページ送り）は、`h1-bars.json` の重なり500本との照合で確認した（取得時は全銘柄で不一致0、XAUUSD のみ取得値の桁（5桁）と `h1-bars.json` の桁（2桁）の差で2本。銘柄の桁に丸めて保存した現在の CSV では500本とも一致）。
 
 ## 6. 運用上の注意（実装の外）
 
