@@ -14,7 +14,7 @@ USD/JPY の「日米の政策比較」の材料として、米2年（米財務�
 | `lib/view.js` | 保存済みの rates.json を「いま」の鮮度で見直す。フィードの区画 |
 | `lib/http.js` | タイムアウト・再試行つきGET |
 | `run-daily.js` | 更新（`--if-stale`、`--check-fresh`） |
-| `CRON_SETUP.md` | 外部cron（`rates.yml` を JST 09:45 に呼ぶ）の登録手順 |
+| `CRON_SETUP.md` | 外部cron（`rates.yml` を JST 09:45 に呼ぶ。**任意**）の登録手順 |
 | `jp-holidays.csv` | 同梱の祝日表（内閣府CSV。2022〜2027年。年1回更新） |
 | `test/` | 試験と、実データから切り出した試験用ファイル（`fixtures/`） |
 
@@ -27,4 +27,4 @@ node rates/run-daily.js --check-fresh # 外部へ接続せず、いま最新か�
 node --test rates/test/*.test.js      # 試験
 ```
 
-`.github/workflows/rates.yml` が毎営業日の朝に実行する（`rates-tests.yml` が PR と main への push で試験を実行する）。外部cronから `workflow_dispatch`（`if_stale=true`）で呼ぶ運用の登録が別途必要（手順は [CRON_SETUP.md](CRON_SETUP.md)、SPEC 8節）。`rates.yml` が書くのは `data/rates.json` だけで、フィード（`gpt-feed.*`）への反映は次の `intraday.yml`・`daily.yml` の実行で行う（SPEC 8-1）。
+`.github/workflows/rates.yml` は、schedule（月〜金 JST 09:40〜13:45）と、`intraday.yml`・`daily.yml` の完了のたび（`workflow_run`）に、`--if-stale` で起動する（公表前・最新で健全なら、外部へ接続せずに終了する。1日の起動は月〜金で平均12〜13回、その大半が即終了。SPEC 8-2）。外部cronから `workflow_dispatch`（`if_stale=true`）で呼ぶ運用は**任意**（手順は [CRON_SETUP.md](CRON_SETUP.md)、SPEC 8節）。`rates-tests.yml` が PR と main への push で試験を実行する。`rates.yml` が書くのは `data/rates.json` だけで、フィード（`gpt-feed.*`）への反映は次の `intraday.yml`・`daily.yml` の実行で行う（SPEC 8-1）。

@@ -38,7 +38,9 @@ const URLS = {
 const JP_READY_JST_MIN = 9 * 60 + 40;
 // 公表済みのはずの時刻から、この時刻までは「更新待ち（pending）」として赤にしない。
 const PENDING_UNTIL_JST_MIN = 10 * 60 + 30;
-// 同日中の再試行cron（rates.yml）が残っている最終の時（JST）。rates.yml のcronを変えたら揃えること。
+// rates.yml の schedule による同日中の再試行が残っている最終の時（JST）。schedule の最終時刻を変えたら揃えること。
+// なお rates.yml は、intraday.yml・daily.yml の完了（workflow_run）でも起動するため、この時刻を過ぎても再取得は続きうる。
+// retry_expected=false は「自動の再試行が無い」ことを意味しない（SPEC 5-2・8-2）。
 const SAME_DAY_RETRY_UNTIL_JST_HOUR = 14;
 // 米財務省は「通常、米東部18:00までに掲載」。その後の余裕を含めて18:30（米東部）を「掲載済みのはず」の時刻にする。
 const US_READY_ET_MIN = 18 * 60 + 30;

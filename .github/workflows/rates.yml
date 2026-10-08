@@ -4,19 +4,21 @@ on:
   schedule:
     # 日2年は「翌営業日午前9時30分頃」に公表される（財務省FAQ）。公表前（日本の営業日の9:40より前）は、
     # rates/run-daily.js --if-stale が取りに行かずに終了する。公表後は、最新で健全なら外部へ接続せず終了する
-    # （何度起動しても外部への負荷は増えない）。daily.yml・intraday.yml と同様、GitHubのscheduleは
+    # （最新でない間は、起動のたびに取得し直す）。daily.yml・intraday.yml と同様、GitHubのscheduleは
     # 届かなかったり遅れたりするため、起動の回数を増やしてある（2026-10-08 は 9:40〜11:20 に1本も起動しなかった）。
     # UTCの00〜04時台は同じ日のJST午前〜午後なので、曜日は月〜金のまま（1-5）。
     # rates.yml のcronを変えたら、rates/config.js の SAME_DAY_RETRY_UNTIL_JST_HOUR も揃えること。
     - cron: "40,55 0 * * 1-5"    # JST 月〜金 09:40、09:55
     - cron: "*/15 1-4 * * 1-5"   # JST 月〜金 10:00〜13:45、15分毎
   # Intraday Snapshot（intraday.yml）と Daily FX Data（daily.yml）が完了するたびにも起動する（--if-stale）。
-  # この2つは、実績で平日1日あたり平均12回ほど（3〜17回）完了している。schedule が届かない日でも、
-  # どちらかが動けばその直後に rates.yml が動く。公表前・最新で健全なときは、外部へ接続せず数秒で終わる。
-  # 名前は各ワークフローの name: と完全に同じにすること。branches: [main] は、main 以外のブランチでの
-  # 試し実行では起動しないための条件。intraday.yml・daily.yml は変更していない。
-  # 時刻どおりに起動したいときは、外部cron（UTC 00:45 ＝ JST 09:45、月〜金）から workflow_dispatch
-  # （if_stale=true）で呼ぶ運用を併用できる（任意。rates/CRON_SETUP.md）。
+  # GitHubのscheduleが届かない日でも、この2つのどちらかが動けば、その直後に rates.yml が動く。
+  # この2つは、実績で月〜金の1日あたり平均12〜13回（3〜17回。2026-09-08〜10-07）完了している。
+  # 公表前（日本の営業日の9:40より前）と、最新で健全なときは、外部へ接続せずに終了する（ジョブ全体で十数秒）。
+  # workflows: の名前は、各ワークフローの name: と完全に同じにすること（rates/test/workflows.test.js が確かめる）。
+  # branches: [main] は、main 以外のブランチでの試し実行では起動しないための条件。
+  # workflow_run は、このファイルが既定ブランチ（main）にあるときだけ効く。intraday.yml・daily.yml は変更していない。
+  # 時刻どおり（UTC 00:45 ＝ JST 09:45、月〜金）に起動したいときは、外部cronから workflow_dispatch
+  # （if_stale=true）で呼ぶ運用も併用できる（任意。rates/CRON_SETUP.md）。
   workflow_run:
     workflows: ["Intraday Snapshot", "Daily FX Data"]
     types: [completed]
@@ -31,9 +33,10 @@ on:
 permissions:
   contents: write
 
-# 同じ data/rates.json へ同時にpushしない。同時に複数起動しても、動くのは1つずつ（待機中の run は、
-# 後から来た待機中の run に置き換えられて取り消されることがある。どれも --if-stale で同じ判定をするので問題ない。
-# ただし、手動実行〔if_stale オフ〕が待機中のときに別の起動が来ると、その手動実行が取り消されることがある）
+# 同じ data/rates.json へ同時にpushしない。同時に複数起動しても、動くのは1つずつ（実行中1つ＋待機中1つまで）。
+# 待機中の run があるところへ新しい起動が来ると、待機中の run は取り消されて置き換わる（GitHub Docs）。
+# --if-stale の起動どうしは同じ判定をするので、置き換わっても問題ない。ただし、手動実行〔if_stale オフ＝必ず取得〕が
+# 待機中のときに別の起動が来ると、その手動実行が取り消されることがある。
 concurrency:
   group: rates-data
   cancel-in-progress: false
@@ -43,8 +46,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10  # 外部サイトのハングでジョブが既定の6時間居座るのを防ぐ
     steps:
+      # ref を明示する。省略すると、そのイベントのコミット（GITHUB_SHA）を読む。ref を指定すると、実行を始めた
+      # 時点のブランチの先頭を読むので、concurrency で待たされた run が、先行の run がコミットした rates.json より
+      # 前の古い rates.json を読んで、push が拒否され、rebase が同じファイルで衝突する、という事態を避けられる。
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -54,8 +62,10 @@ jobs:
       # Twelve Data は使わない（APIキー不要）。米財務省・財務省・内閣府の公開ファイルだけを読む。
       # 米・日のどちらか一方だけ失敗したときは、成功した側だけ更新して先へ進む（失敗した側は前回値に stale を付ける）。
       # 両方失敗したときは rates.json を更新せずに赤くなる。
+      # 手動実行（workflow_dispatch）で if_stale がオフのときだけ、必ず取得する。それ以外の起動（schedule・
+      # workflow_run、将来足すものも）と、if_stale オンの手動実行・外部cronは、すべて --if-stale。
       - name: Fetch JP-US 2Y rates
-        run: node rates/run-daily.js ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_run' || inputs.if_stale) && '--if-stale' || '' }}
+        run: node rates/run-daily.js ${{ (github.event_name != 'workflow_dispatch' || inputs.if_stale) && '--if-stale' || '' }}
 
       # data/rates.json だけをコミットする。他のワークフローが書く data/ のファイルには触れないので、
       # 押し合っても rebase で衝突しない。フィード（data/gpt-feed.*）は、ここでは作り直さない
@@ -79,6 +89,7 @@ jobs:
       # 古い／取得の問題が残っているときは、コミット後に実行を赤くして気づけるようにする
       # （先にpushしておかないと、状況を載せた rates.json 自体が下流に届かない）。
       # 公表待ち（日本の営業日の10:30より前で、取得の問題が無い）は赤にしない。
+      # workflow_run でも走るので、取得の問題が続いている間は、起動のたびに赤い実行が増える。
       - name: Assert rates freshness
         if: ${{ !cancelled() }}
         run: node rates/run-daily.js --check-fresh

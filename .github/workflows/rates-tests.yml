@@ -7,12 +7,18 @@ on:
       - "build-feed.js"
       - "mtf/lib/ny-time.js"
       - ".github/workflows/rates*.yml"
+      # rates.yml の workflow_run が参照する name: を確かめる試験（rates/test/workflows.test.js）が読むファイル
+      - ".github/workflows/intraday.yml"
+      - ".github/workflows/daily.yml"
   push:
     branches: [main]
     paths:
       - "rates/**"
       - "build-feed.js"
       - "mtf/lib/ny-time.js"
+      - ".github/workflows/rates*.yml"
+      - ".github/workflows/intraday.yml"
+      - ".github/workflows/daily.yml"
 
 permissions:
   contents: read

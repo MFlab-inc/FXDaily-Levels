@@ -4,7 +4,7 @@
  * 日米2年金利フィード（data/rates.json）の更新。仕様は rates/SPEC.md。
  *
  *   node rates/run-daily.js              取得して data/rates.json を更新する（手動実行・常に取得）
- *   node rates/run-daily.js --if-stale   公表前、または既に最新で健全なら、取得せずに終了（rates.yml の定期実行用）
+ *   node rates/run-daily.js --if-stale   公表前、または既に最新で健全なら、取得せずに終了（rates.yml の schedule・workflow_run・外部cron用）
  *   node rates/run-daily.js --check-fresh  外部へ接続せず、rates.json が「いま」最新か確かめる（健全なら0、古ければ1）
  *
  * 米国：米財務省 Daily Treasury Par Yield Curve Rates のCSV（一次）。同じ財務省のXMLと照合する。FREDは使わない。

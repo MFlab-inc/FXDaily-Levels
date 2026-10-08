@@ -4,7 +4,8 @@ on:
   schedule:
     # 朝のうち（JST 10:37〜11:37）に、data/rates.json が「いま」最新か確かめる。最新でなければこの実行を
     # 失敗（赤）にして気づけるようにする。rates.yml 自身の "Assert rates freshness" でも検知できるが、
-    # rates.yml のscheduleが1本も発火しなかった場合は検知するジョブ自体が存在しないため、独立して見張る。
+    # rates.yml が1本も起動しなかった場合（scheduleも、intraday.yml・daily.yml の完了による workflow_run も）は
+    # 検知するジョブ自体が存在しないため、独立して見張る。この見張り自体もscheduleなので、発火が遅れる・抜ける可能性は残る。
     # 曜日は rates.yml と同じ月〜金（UTCの01〜02時台は同じ日のJST）。毎時0分は配信が混みやすいのでずらしている。
     - cron: "37 1-2 * * 1-5"
   workflow_dispatch: {}
@@ -37,6 +38,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           echo "::error::data/rates.json が朝の時点で未更新です。上の STALE の理由と、下の直近のrates.yml実行を確認してください。scheduleの発火が無い場合は Actions → JP-US 2Y Rates → Run workflow で手動実行できます"
-          gh run list --repo "$GITHUB_REPOSITORY" --workflow rates.yml --limit 8 \
+          gh run list --repo "$GITHUB_REPOSITORY" --workflow rates.yml --limit 20 \
             --json event,status,conclusion,createdAt \
             --template '{{range .}}{{.createdAt}}  {{.event}}  {{.status}}  {{.conclusion}}{{"\n"}}{{end}}'
