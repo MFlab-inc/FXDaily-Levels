@@ -455,3 +455,44 @@ test("出力: daytrade-context の確定M15の最終足と data_status を参考
     assert.match(render(plan, inputs.accounts), /確定M15の最終足: 最古 2026-10-08 14:45 ／ data_status が OK でない銘柄: XAUUSD:DEGRADED。発注可否には使わない/);
   } finally { cleanup(sc); }
 });
+
+// ---- 変異試験で生き残った状態更新・ログの境界 ----
+test("状態更新: 買いの案の距離は最悪Entry（帯の上端）から測る。MTFの基準日が合わなければ発注不可", () => {
+  const sc = makeScenario();
+  const badMtf = makeScenario({ mtfBase: "2026-10-06" });
+  try {
+    const { plan: design, inputs } = build(sc);
+    const aud = design.candidates.find((c) => c.symbol === "AUDUSD");
+    assert.equal(aud.side, "buy");
+    assert.equal(aud.worst_entry, aud.band.high);
+    const st = { ...inputs, raw: { ...inputs.raw, intraday: JSON.parse(JSON.stringify(inputs.raw.intraday)) } };
+    st.raw.intraday.pairs.AUDUSD.price = 0.659;
+    const { plan } = buildStatus({ inputs: st, riskFeed: noFeed, nowMs: sc.nowMs + 10 * J.MIN, prevPlan: design, logRows: [] });
+    assert.equal(plan.candidates.find((c) => c.symbol === "AUDUSD").distance_pips, 30); // 0.6560 → 0.6590
+    // 状態更新の時点で MTF が使えなければ、案は残すが発注不可
+    const bad = buildStatus({ inputs: loadInputs({ dataDir: badMtf.dataDir, repoRoot: badMtf.repoRoot, nowMs: sc.nowMs }), riskFeed: noFeed, nowMs: sc.nowMs, prevPlan: design, logRows: [] }).plan;
+    assert.equal(bad.order_ok, false);
+    assert.match(bad.banners.join("\n"), /方向根拠なし/);
+    assert.equal(bad.candidates.length, 4);
+  } finally { cleanup(sc); cleanup(badMtf); }
+});
+
+test("log: 取消の行を足さないのは、計画日が違う前の設計／既に取消済みの版", () => {
+  const sc = makeScenario();
+  const gone = makeScenario({ mtfStatus: "partial" });
+  const next = makeScenario({ nowIso: "2026-10-09T15:30:00+09:00", mtfBase: "2026-10-08", dailySession: "2026-10-08" });
+  try {
+    const first = build(sc);
+    // (1) 前の設計が別の計画日（昨日）→ 昨日の案の取消は足さない。今日の案は新しい design の行
+    const nxt = build(next, { prevPlan: first.plan, logRows: first.logAppend });
+    assert.equal(nxt.plan.plan_date, "2026-10-09");
+    assert.ok(nxt.logAppend.length > 0);
+    assert.ok(nxt.logAppend.every((r) => r.run === "design" && r.plan_date === "2026-10-09"));
+    // (2) 直近の行が既に取消(status)の版は、もう一度取消さない
+    const cancelled = first.logAppend.map((r) => ({ ...r, run: "status", reached: "取消(再設計)" }));
+    const again = build(gone, { prevPlan: first.plan, logRows: [...first.logAppend, ...cancelled] });
+    assert.equal(again.logAppend.length, 0);
+    // (3) 取消されていない版は、今回の設計で無くなれば取消される
+    assert.equal(build(gone, { prevPlan: first.plan, logRows: first.logAppend }).logAppend.length, 4);
+  } finally { cleanup(sc); cleanup(gone); cleanup(next); }
+});

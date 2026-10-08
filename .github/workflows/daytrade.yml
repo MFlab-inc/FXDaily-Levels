@@ -48,7 +48,10 @@ on:
 permissions:
   contents: write
 
-# 遅れて束になって届いた起動が、同じ data/ へ同時に書かないようにする
+# 遅れて束になって届いた起動が、同じ data/ へ同時に書かないようにする。
+# 注意: GitHub は待機中の run を1つしか持たず、より新しい run が来ると古い待機 run を置き換える。実行中の run が長引いて
+# 設計の run が状態更新の run に置き換わると、その設計は作られない（状態更新は設計を作らない）。その日の設計は
+# workflow_dispatch（run=design と slot）で作り直せる。
 concurrency:
   group: daytrade-plan
   cancel-in-progress: false
@@ -73,11 +76,13 @@ jobs:
           DAYTRADE_CRON: ${{ github.event.schedule }}
           DAYTRADE_RUN: ${{ inputs.run }}
           DAYTRADE_SLOT: ${{ inputs.slot }}
+        shell: bash   # pipefail を有効にして、node が落ちたのに緑になるのを防ぐ
         run: node scripts/daytrade-plan.js --resolve | tee -a "$GITHUB_OUTPUT"
 
       # 前日までの案の採点（設計の前に動かす。何度動かしても同じ結果で、済んだ案は触らない）
       - name: Score previous plans
         if: ${{ steps.resolve.outputs.action == 'design' }}
+        continue-on-error: true   # 採点の失敗で設計を止めない（次の設計で再試行される）
         run: node scripts/daytrade-score.js
 
       - name: Generate plan
@@ -96,7 +101,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/daytrade-plan.txt data/daytrade-plan.json data/daytrade/log.csv
+          git add data/daytrade-plan.txt data/daytrade-plan.json
+          # log.csv は最初の案が出るまで存在しない（git add は存在しないパスで失敗するので、あるときだけ足す）
+          if [ -f data/daytrade/log.csv ]; then git add data/daytrade/log.csv; fi
           git diff --cached --quiet && echo "変更なし" && exit 0
           git commit -m "daytrade: ${ACTION} $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
           # intraday.yml 等と同じリポジトリへ押し合うことがある（他のワークフローは別のファイルを書く）。

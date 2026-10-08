@@ -15,6 +15,7 @@
 | バックテスト | `scripts/daytrade-backtest.js` | H1履歴の取得（1回だけ）、再計算、集計、`backtest-<日付>.md/.csv`（6-2） |
 | ワークフロー | `.github/workflows/daytrade.yml` | 設計①②③＋毎時の状態更新。`daily.yml` とは別（7節） |
 | ワークフロー | `.github/workflows/daytrade-backtest.yml` | 手動実行（`workflow_dispatch`）のみ（6-2） |
+| ワークフロー | `.github/workflows/daytrade-tests.yml` | 単体試験の自動実行（PR・main への push。外部接続なし） |
 | 部品 | `scripts/daytrade/*.js` | 下表 |
 | 試験 | `scripts/daytrade/test/*.test.js` | 模擬データでの単体試験（`node --test scripts/daytrade/test/*.test.js`） |
 
@@ -47,6 +48,14 @@ node scripts/daytrade-score.js
 node scripts/daytrade-backtest.js [--window-days=365] [--no-fetch]
 node --test scripts/daytrade/test/*.test.js
 ```
+
+バックテストの結果（`data/daytrade/backtest-2026-10-09.csv`）は、コミット済みの H1 履歴と日足から再現できることを試験（`golden.test.js`）で固定している。バックテストの規則を意図して変えたときは、次で結果を作り直し、差分を確かめてからコミットする（H1 は再取得しない）：
+
+```
+node scripts/daytrade-backtest.js --no-fetch --now=2026-10-09T00:30:00+09:00
+```
+
+`.github/workflows/daytrade-tests.yml` が、`scripts/daytrade*` などを変える PR と main への push で、この試験と MTF の試験を動かす（外部へは接続しない・secrets は使わない）。
 
 ## 3. 既存のルールとの差（仕様 9-1 の「差分を列挙するだけでよい」）
 

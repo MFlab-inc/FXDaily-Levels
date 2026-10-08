@@ -41,6 +41,7 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
     if (!["design", "status"].includes(action)) throw new Error("--run=design|status か、cron の文字列（DAYTRADE_CRON）を指定してください");
     if (slot !== null && ![1, 2, 3].includes(slot)) throw new Error(`--slot は 1〜3 です: ${s}`);
   }
+  if (action === "design" && slot === null) throw new Error("run=design には設計の枠（--slot=1|2|3 または DAYTRADE_SLOT）が必要です");
   if (args.resolve) {
     io.log(`action=${action}`);
     io.log(`slot=${slot ?? ""}`);

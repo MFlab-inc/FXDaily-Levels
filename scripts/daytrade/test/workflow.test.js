@@ -90,8 +90,9 @@ for (const [season, week] of [["夏", SUMMER_WEEK], ["冬", WINTER_WEEK]]) {
 }
 
 test("workflow: 書き込むのは計画の3ファイルだけ（git add data/ や -A をしない）。secrets を使わない", () => {
-  const adds = [...PLAN.matchAll(/git add ([^\n]+)/g)].map((m) => m[1].trim());
-  assert.deepEqual(adds, ["data/daytrade-plan.txt data/daytrade-plan.json data/daytrade/log.csv"]);
+  const code = PLAN.split("\n").filter((l) => !l.trim().startsWith("#")).join("\n"); // コメント行は除く
+  const added = [...code.matchAll(/git add ([^;\n]+)/g)].flatMap((m) => m[1].trim().split(/\s+/));
+  assert.deepEqual(added.sort(), ["data/daytrade-plan.json", "data/daytrade-plan.txt", "data/daytrade/log.csv"]);
   assert.ok(!/secrets\./.test(PLAN), "daytrade.yml は secrets を使わない");
   assert.match(PLAN, /group: daytrade-plan/);
   assert.match(PLAN, /cancel-in-progress: false/);
@@ -100,8 +101,55 @@ test("workflow: 書き込むのは計画の3ファイルだけ（git add data/ �
   assert.ok(!/workflow_run/.test(PLAN));
 });
 
+// 'name: <名前>' のステップの run: スクリプト本文を取り出す
+function stepScript(yml, name) {
+  const lines = yml.split("\n");
+  const i = lines.findIndex((l) => l.trim() === `- name: ${name}`);
+  assert.ok(i >= 0, name);
+  const r = lines.findIndex((l, k) => k > i && /^\s+run: \|\s*$/.test(l));
+  const indent = lines[r + 1].match(/^ */)[0].length;
+  const out = [];
+  for (let k = r + 1; k < lines.length && (lines[k].trim() === "" || lines[k].match(/^ */)[0].length >= indent); k++) out.push(lines[k].slice(indent));
+  return out.join("\n");
+}
+
+test("workflow: 『Commit and push』の手順を実際に動かす — log.csv が無くても計画の2ファイルをコミット・pushできる（有れば3ファイル）", () => {
+  const { execFileSync } = require("node:child_process");
+  const os = require("node:os");
+  const script = stepScript(PLAN, "Commit and push");
+  const run = (withLog) => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "wf-"));
+    try {
+      const sh = (cmd, cwd = root, env = {}) => execFileSync("bash", ["-ec", cmd], { cwd, env: { ...process.env, ...env }, encoding: "utf8" });
+      sh("git init -q --bare remote.git && git init -q -b main work && cd work && git config user.email a@b && git config user.name n && echo init > README && git add . && git commit -qm init && git remote add origin ../remote.git && git push -q -u origin main 2>/dev/null");
+      const work = path.join(root, "work");
+      fs.mkdirSync(path.join(work, "data", "daytrade"), { recursive: true });
+      fs.writeFileSync(path.join(work, "data", "daytrade-plan.txt"), "x\n");
+      fs.writeFileSync(path.join(work, "data", "daytrade-plan.json"), "{}\n");
+      if (withLog) fs.writeFileSync(path.join(work, "data", "daytrade", "log.csv"), "a,b\n");
+      sh(script, work, { ACTION: "status", GITHUB_REF_NAME: "main" });
+      return sh("git show --name-only --format= HEAD", work).trim().split("\n").sort();
+    } finally { fs.rmSync(root, { recursive: true, force: true }); }
+  };
+  assert.deepEqual(run(false), ["data/daytrade-plan.json", "data/daytrade-plan.txt"]);
+  assert.deepEqual(run(true), ["data/daytrade-plan.json", "data/daytrade-plan.txt", "data/daytrade/log.csv"]);
+});
+
+test("workflow: 起動の解決は pipefail 付きの shell で動かす。採点の失敗は設計を止めない。CI の試験ワークフローは secrets を使わず read-only", () => {
+  const lines = PLAN.split("\n");
+  const i = lines.findIndex((l) => l.trim() === "- name: Resolve action");
+  const block = lines.slice(i, i + 12).join("\n");
+  assert.match(block, /shell: bash/);
+  const j = lines.findIndex((l) => l.trim() === "- name: Score previous plans");
+  assert.match(lines.slice(j, j + 6).join("\n"), /continue-on-error: true/);
+  const T = read(".github/workflows/daytrade-tests.yml");
+  assert.ok(!/secrets\./.test(T));
+  assert.match(T, /contents: read/);
+  assert.match(T, /node --test scripts\/daytrade\/test\/\*\.test\.js/);
+});
+
 test("workflow: if 条件で secrets を直接参照しない（job の env 経由）", () => {
-  for (const [name, yml] of [["daytrade.yml", PLAN], ["daytrade-backtest.yml", BACKTEST]]) {
+  for (const [name, yml] of [["daytrade.yml", PLAN], ["daytrade-backtest.yml", BACKTEST], ["daytrade-tests.yml", read(".github/workflows/daytrade-tests.yml")]]) {
     for (const m of yml.matchAll(/^\s*(?:-\s*)?if:\s*(.+)$/gm)) assert.ok(!/secrets\./.test(m[1]), `${name}: if に secrets: ${m[1]}`);
   }
 });
