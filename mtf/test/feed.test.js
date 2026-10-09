@@ -18,8 +18,8 @@ test("4: ファイル全体の項目 — 生成日時(JST)・基準日・版・�
   assert.equal(json.daily_boundary, "ニューヨーク時間17時");
   assert.match(json.excluded, /WTD／MTD/);
   assert.equal(json.status, "ok");
-  assert.equal(json.symbols.length, 9);
-  assert.deepEqual(json.symbols.map((s) => s.symbol), ["USDJPY", "EURUSD", "GBPUSD", "AUDUSD", "EURJPY", "EURGBP", "USDCAD", "XAUUSD", "USDCHF"]);
+  assert.equal(json.symbols.length, SYMBOLS.length);
+  assert.deepEqual(json.symbols.map((s) => s.symbol), ["USDJPY", "EURUSD", "GBPUSD", "AUDUSD", "EURJPY", "EURGBP", "USDCAD", "XAUUSD", "USDCHF", "NZDUSD"]); // 後から足した NZDUSD は末尾（既存の並びを変えない）
   // テキストの先頭
   const head = text.split("\n").slice(0, 8).join("\n");
   assert.match(head, /generated_at: 2026-10-07T06:25:00\+09:00/);
@@ -132,7 +132,7 @@ test("鮮度: 基準日に届かない銘柄は status=stale、data_base_date �
   assert.equal(json.data_base_date, "2026-10-05");
   assert.equal(json.status, "partial");
   assert.equal(json.attempt, 2);
-  assert.match(json.coverage, /6\/9/);
+  assert.match(json.coverage, new RegExp(`${SYMBOLS.length - 3}/${SYMBOLS.length}`)); // 3銘柄（EURGBP・USDCAD・XAUUSD）が基準日に届かない
   assert.match(text, /status: partial/);
   assert.match(text, /## USDCAD[\s\S]*?status: error（履歴CSVがありません）/);
 });
@@ -142,7 +142,7 @@ test("堅牢性: 基準日以前の日足が無い銘柄でも他の銘柄は出
   const { json } = buildFeed({ asOf: "2026-09-01", nowMs: NOW, items });
   assert.equal(json.symbols[0].status, "error");
   assert.match(json.symbols[0].error, /日足がありません/);
-  assert.equal(json.symbols.length, 9);
+  assert.equal(json.symbols.length, SYMBOLS.length);
 });
 
 test("堅牢性: 確定した月足・週足がまだ無い場合も、キーは残して null、テキストに NaN/undefined は出ない。updated_at が無ければ「なし」", () => {

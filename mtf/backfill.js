@@ -2,8 +2,8 @@
 /**
  * 過去分の一括取得（バックフィル）。main で1回だけ、手動で実行する（.github/workflows/mtf-backfill.yml）。
  *   ・data/mtf/ に履歴CSVが1つでもあれば、何も取得せず・何も書かずに止まる（上書きしない）
- *   ・9銘柄を1つずつ 2024-07-01 から取得する（1銘柄4回前後・全体で40回前後）。1つでも失敗したら何も書かない（やり直せる）
- *   ・全部そろってから、履歴CSV 9本と mtf-feed.json / mtf-feed.txt をまとめて置く
+ *   ・全銘柄（mtf/config.js の SYMBOLS）を1つずつ 2024-07-01 から取得する（1銘柄4回前後・全体で40回前後）。1つでも失敗したら何も書かない（やり直せる）
+ *   ・全部そろってから、銘柄ごとの履歴CSVと mtf-feed.json / mtf-feed.txt をまとめて置く（あとから銘柄を足すときは add-symbol.js）
  */
 const path = require("path");
 const { SYMBOLS, BACKFILL_START, DATA_DIR } = require("./config");

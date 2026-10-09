@@ -14,6 +14,8 @@ const SYMBOLS = [
   { code: "USDCAD", td: "USD/CAD", digits: 5, standardBars: 24 },
   { code: "XAUUSD", td: "XAU/USD", digits: 2, standardBars: 23 },
   { code: "USDCHF", td: "USD/CHF", digits: 5, standardBars: 24 },
+  // 後から足した銘柄は末尾に置く（上の銘柄の並び・出力の順序を変えない）。履歴CSVは mtf/add-symbol.js で1回だけ取得する
+  { code: "NZDUSD", td: "NZD/USD", digits: 5, standardBars: 24 },
 ];
 
 const BACKFILL_START = "2024-07-01";

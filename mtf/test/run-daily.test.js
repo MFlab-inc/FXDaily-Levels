@@ -62,12 +62,12 @@ test("6-2: 毎日の更新 — 最新の確定日を追記し、フィード(jso
     assert.equal(feed.as_of, "2026-10-06");
     assert.equal(feed.attempt, 1);
     assert.ok(fs.existsSync(path.join(s.t.dataDir, "mtf-feed.txt")));
-    assert.equal(s.f.calls.length, 9); // 1銘柄1リクエスト
+    assert.equal(s.f.calls.length, SYMBOLS.length); // 1銘柄1リクエスト
     assert.ok(s.f.calls.every((c) => c.outputsize === "1000" && c.timezone === "UTC" && c.interval === "1h"));
     // data/ には想定したファイルだけ。一時ファイルを data/ にも、その隣にも残さない
     assert.deepEqual(listData(s.t), ["mtf", "mtf-feed.json", "mtf-feed.txt"]);
     assert.deepEqual(fs.readdirSync(s.t.root).filter((n) => n.startsWith(".mtf-tmp-")), []);
-    assert.equal(fs.readdirSync(path.join(s.t.dataDir, "mtf")).length, 9);
+    assert.equal(fs.readdirSync(path.join(s.t.dataDir, "mtf")).length, SYMBOLS.length);
   } finally { s.t.cleanup(); }
 });
 
@@ -89,7 +89,7 @@ test("6-2: その日の分を作成済みなら何もしない（2回目はTwelv
     const r3 = await runDaily({ nowMs: Date.UTC(2026, 9, 7, 21, 20), dataDir: s.t.dataDir, client: c2, log: () => {} });
     assert.equal(r3.exitCode, 0);
     assert.equal(readJson(s.t).data_base_date, "2026-10-07");
-    assert.equal(f2.calls.length, 9);
+    assert.equal(f2.calls.length, SYMBOLS.length);
   } finally { s.t.cleanup(); }
 });
 
@@ -181,7 +181,7 @@ test("6-2: 最後の足が未着の日足（NY16時台の足が無い）は完�
     const c1 = createClient({ apiKey: KEY, fetchImpl: f1, sleep: clock.sleep, now: clock.now, spacingMs: 100 });
     const r1 = await runDaily({ nowMs: NOW, dataDir: s.t.dataDir, client: c1, log: () => {} });
     assert.equal(r1.exitCode, 0);
-    assert.equal(r1.stale.length, 9);
+    assert.equal(r1.stale.length, SYMBOLS.length);
     const feed1 = readJson(s.t);
     assert.equal(feed1.status, "partial");
     assert.equal(feed1.symbols[0].status, "stale");
@@ -252,7 +252,7 @@ test("6-2: 履歴CSVが無い銘柄は取り込まない・CSVを作らない（
     assert.ok(!fs.existsSync(path.join(s.t.dataDir, "mtf", "ny-daily-XAUUSD.csv")));
     assert.equal(s.f.calls.filter((c) => c.symbol === "XAU/USD").length, 0);
     assert.equal(readJson(s.t).symbols.find((x) => x.symbol === "XAUUSD").status, "error");
-    assert.equal(store.existingCsvFiles(s.t.dataDir).length, 8);
+    assert.equal(store.existingCsvFiles(s.t.dataDir).length, SYMBOLS.length - 1);
   } finally { s.t.cleanup(); }
 });
 
@@ -261,7 +261,7 @@ test("6-2: 取得は成功したが基準日の足が未公開（最新が前日
   try {
     const r = await s.run();
     assert.equal(r.exitCode, 0);
-    assert.equal(r.stale.length, 9);
+    assert.equal(r.stale.length, SYMBOLS.length);
     const feed = readJson(s.t);
     assert.equal(feed.status, "partial");
     assert.equal(feed.data_base_date, "2026-10-05");
