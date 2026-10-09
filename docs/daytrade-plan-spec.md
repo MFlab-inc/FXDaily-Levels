@@ -35,7 +35,7 @@
 | `config/daytrade-rules.json` | FXDaily-Levels（既存） | `pair_currencies`（銘柄→2通貨の対応表）を読み取り専用で流用 | 既存。**変更しない** |
 | `data/mtf-feed.txt`／`.json` | FXDaily-Levels | 確定月足・週足・日足の向き、ALIGNMENT_SCORE | 稼働中。10/8 06:20生成、基準日10/7、status ok |
 | `EA-Risk-Monitor/data/risk-feed.json` | `https://mflab-inc.github.io/EA-Risk-Monitor/data/risk-feed.json` | ボラティリティの状態を参考情報として表示。イベントには使わない | 稼働中（10/8 19:37生成）。収録は12ペアのみ |
-| `data/daytrade/accounts.json` | FXDaily-Levels（新規） | 口座ごとの `equity_jpy`、共通の `commission_per_lot_jpy`（1013）、`risk_pct`（0.5）、`daily_loss_pct`（1.5） | 新規。本人が更新 |
+| `data/daytrade/accounts.json` | FXDaily-Levels（新規） | 口座ごとの `equity_jpy`（**10-5 で変更**: 口座はラベル A／B にし、資金はファイルに置かず Variables から読む）、共通の `commission_per_lot_jpy`（1013）、`risk_pct`（0.5）、`daily_loss_pct`（1.5） | 新規。本人が更新 |
 | H1履歴（バックテスト用） | FXDaily-Levels `data/history/h1-<銘柄>.csv`（新規） | 過去1年のH1。Twelve Data から1回だけ取得 | 新規（第6節） |
 
 鮮度：フィードの生成時刻から20分を超えていれば、出力の先頭に「発注不可（鮮度超過）」を付ける。計算はする。GitHub Pagesの取得は生成日時を必ず読み、必要なら `?nocache=<時刻>` で取り直す。
