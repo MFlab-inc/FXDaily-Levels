@@ -157,7 +157,7 @@ test("口座設定・停止対象通貨表の問題は、黙らずバナーに�
   const noAcc = mk(); fs.rmSync(path.join(noAcc.dataDir, "daytrade", "accounts.json")); cases.push([noAcc, /口座設定の問題: .*accounts\.json がありません/, true]);
   const badRisk = mk(); writeJson(badRisk, "daytrade/accounts.json", accJson({ risk_pct: 50 })); cases.push([badRisk, /risk_pct が 0 超 5 以下の数ではありません（50）/, true]); // 上限 5 は残す
   const edge5 = mk(); writeJson(edge5, "daytrade/accounts.json", accJson({ risk_pct: 5 })); cases.push([edge5, null, false]); // 5 ちょうどは有効
-  const unsetA = mk({ env: { DAYTRADE_EQUITY_A: "" } }); cases.push([unsetA, /口座 A の資金が未設定です（GitHub Actions の Variables DAYTRADE_EQUITY_A を設定してください/, true]);
+  const unsetA = mk({ env: { DAYTRADE_EQUITY_A: "" } }); cases.push([unsetA, /口座 A の資金が未設定です（GitHub Actions の Secrets（または Variables）DAYTRADE_EQUITY_A を設定してください/, true]);
   const badEq = mk({ env: { DAYTRADE_EQUITY_B: "-3000000" } }); cases.push([badEq, /口座 B の資金（DAYTRADE_EQUITY_B）が正の整数（円）ではありません/, true]);
   const noRules = mk(); fs.writeFileSync(path.join(noRules.repoRoot, "config", "daytrade-rules.json"), JSON.stringify({ pair_currencies: { EURUSD: ["EUR", "USD"] } })); cases.push([noRules, /pair_currencies）が読めません/, true]);
   const softBad = mk(); writeJson(softBad, "daytrade/accounts.json", { accounts: { A: { role: "daytrade" } }, risk_pct: 0.5 }); cases.push([softBad, null, false]);

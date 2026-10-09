@@ -234,6 +234,17 @@ function referenceBlock(inputs, riskFeed) {
   };
 }
 
+// 暫定判断の番号（decisions.js で confirmed でないもの）。無ければ『未確定の判断なし』
+function provisionalBlock() {
+  const open = provisionalIds();
+  return {
+    open_questions: open,
+    note: open.length
+      ? "仕様 v1.1 と確定した解釈（docs/daytrade-plan-spec.md 10節）が沈黙している点を、暫定の読みで処理しています（docs/daytrade-plan-impl-notes.md）"
+      : "未確定の判断はありません（確定した解釈は docs/daytrade-plan-spec.md 10節、経緯は docs/daytrade-plan-impl-notes.md）",
+  };
+}
+
 // 口座ごとの表示（出力の1項目目）: 本日の損失上限＝equity×daily_loss_pct [Q36]。手数料は commission_per_lot_jpy。
 // 資金そのもの（equity_jpy）は出力に書かない（公開されるため。Variables から読んだ値はこの関数の中だけで使う）。equity_status は ok／unset／invalid
 function accountsBlock(inputs) {
@@ -251,7 +262,7 @@ function commonPlan({ inputs, riskFeed, nowMs, calSt, mtfSt, run, planDate, logR
   const pairCur = inputs.rules?.pair_currencies || {};
   return {
     schema_version: SCHEMA_VERSION,
-    provisional: { open_questions: provisionalIds(), note: "仕様 v1.1 と確定した解釈（docs/daytrade-plan-spec.md 10節）が沈黙している点を、暫定の読みで処理しています（docs/daytrade-plan-impl-notes.md）" },
+    provisional: provisionalBlock(),
     plan_date: planDate, run, status_updated_at: jstIso(nowMs), expires_at: jstIso(expiresAtMs(planDate)),
     freshness: inputs.freshness,
     ...accountsBlock(inputs),
