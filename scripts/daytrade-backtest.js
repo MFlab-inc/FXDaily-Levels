@@ -5,14 +5,16 @@
  * 1) H1履歴 data/history/h1-<銘柄>.csv が無い銘柄だけ Twelve Data から取得して保存する（既にあれば再取得しない）。
  *    1分あたり55回を超えないよう、1銘柄ずつ約3秒おき（毎分20回前後、直近60秒で30回まで）。環境変数 TWELVE_DATA_API_KEY。
  *    GitHub Actions 上では、他の Daily / Intraday が動いている間と、その起動分は避ける（mtf/lib/guard.js）。
- * 2) 過去の各設計時刻に案を作り、到達・SL/TP1先着を判定して、data/daytrade/backtest-<日付>.md と .csv に出す。
+ * 2) 過去の各設計時刻（設計①②③と、型Bの追加＝毎時 16:00〜21:00）に案を作り、到達・SL/TP1先着を判定して、
+ *    data/daytrade/backtest-<日付>.md と .csv に出す。SL下限方式 (a) 現行（10pips未満は不採用）と (b) 10pips下限で広げて採用 の
+ *    両方を同じ入力で計算して並べる（ライブの規則は (a) のまま）。
  */
 const fs = require("fs");
 const path = require("path");
 const { parseArgs, repoRoot, dataDir: defaultDataDir } = require("./daytrade/cli");
 const { PAIRS } = require("./daytrade/pairs");
 const H = require("./daytrade/h1history");
-const { runBacktest, aggregate, planDates } = require("./daytrade/backtest");
+const { runBacktestModes, aggregate, floorBreakdown, planDates } = require("./daytrade/backtest");
 const { toCsv, toMarkdown } = require("./daytrade/report");
 const { REGIME } = require("./daytrade/histctx");
 const { fetchRiskFeed } = require("./daytrade/riskfeed");
@@ -86,16 +88,16 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
   }
 
   // 4) 実行・出力
-  const { records, stats } = runBacktest({ barsByCode, rowsByCode, nowMs, windowDays, thresholds });
+  const { records, stats, statsByMode } = runBacktestModes({ barsByCode, rowsByCode, nowMs, windowDays, thresholds });
   const rows = aggregate(records);
   const day = jstIso(nowMs).slice(0, 10);
-  const md = toMarkdown(rows, { nowMs, window: { first: stats.first, last: stats.last }, stats, history, regimeSource, noMtf });
+  const md = toMarkdown(rows, { nowMs, window: { first: stats.first, last: stats.last }, stats, statsByMode, floorRows: floorBreakdown(records), history, regimeSource, noMtf });
   store.writeAll(dataDir, [
     { file: path.join("daytrade", `backtest-${day}.md`), content: md },
     { file: path.join("daytrade", `backtest-${day}.csv`), content: toCsv(rows) },
   ]);
-  io.log(`[backtest] 完了: 案 ${records.length}件（A案・B案を別に数える）、設計 ${stats.designs}回、評価 ${stats.evaluations}件 → data/daytrade/backtest-${day}.md / .csv`);
-  return { records, rows, stats };
+  io.log(`[backtest] 完了: 案 ${records.length}件（SL下限方式 (a)(b) の合計。A案・B案を別に数える）、設計 ${stats.designs}回、型B追加の出来事 ${stats.adds}回、評価 ${stats.evaluations}件（1方式あたり） → data/daytrade/backtest-${day}.md / .csv`);
+  return { records, rows, stats, statsByMode };
 }
 
 if (require.main === module) {

@@ -125,10 +125,11 @@ test("histctx.upperBound: 足の終わりが設計時刻ちょうどの足も確
   const r = h.ctxAt(eu, J.jstAt("2026-10-05", "21:00"), "A");
   assert.equal(r.skip, undefined);
   assert.equal(r.ctx.price, barsByCode.EURUSD.find((b) => b.t === J.jstAt("2026-10-05", "20:00")).c);
-  // 実際のバックテストでも設計③の評価がある
-  const slots = new Set();
-  runBacktest({ barsByCode, rowsByCode, nowMs: J.parseIso("2026-10-08T12:00:00+09:00"), windowDays: 3, evaluateImpl: (ctx, setup, info) => { slots.add(info.slot); return { outcome: "rejected", symbol: ctx.pair.code, setup, schemes: { A: { pass: false }, B: { pass: false } } }; } });
-  assert.deepEqual([...slots].sort(), [1, 2, 3]);
+  // 実際のバックテストでも設計③の評価がある。型Bは設計③と型B追加（slot 4）だけ、型Aは設計①②③だけ
+  const slots = new Set(), setupsBySlot = {};
+  runBacktest({ barsByCode, rowsByCode, nowMs: J.parseIso("2026-10-08T12:00:00+09:00"), windowDays: 3, evaluateImpl: (ctx, setup, info) => { slots.add(info.slot); (setupsBySlot[info.slot] ||= new Set()).add(setup); return { outcome: "rejected", symbol: ctx.pair.code, setup, schemes: { A: { pass: false }, B: { pass: false } } }; } });
+  assert.deepEqual([...slots].sort(), [1, 2, 3, 4]);
+  assert.deepEqual(Object.fromEntries(Object.entries(setupsBySlot).map(([k, v]) => [k, [...v].sort()])), { 1: ["A"], 2: ["A"], 3: ["A", "B"], 4: ["B"] });
 });
 
 // ADR と当日高安: NY17時（夏 JST6:00／冬 JST7:00）以降の確定足の高安、ADR20 は日足の直近20セッションの平均値幅

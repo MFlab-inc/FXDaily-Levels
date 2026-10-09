@@ -28,7 +28,8 @@ function synthDaily(pair, { endDate = "2026-10-07", n = 700 } = {}) {
   });
 }
 
-function synthH1(pair, { fromLabel = "2026-08-20 00:00", toLabel = "2026-10-08 05:00" } = {}) {
+// wickPct: 各足の上下のひげ（価格に対する割合）。小さくするとATRが小さい（10pipsのSL下限に届かない）データになる
+function synthH1(pair, { fromLabel = "2026-08-20 00:00", toLabel = "2026-10-08 05:00", wickPct = 0.0010 } = {}) {
   const p0 = P0[pair.code];
   const round = (v) => Number(v.toFixed(pair.digits));
   const price = (t) => p0 * (1 + 0.003 * Math.sin((2 * Math.PI * (t / J.HR)) / 36));
@@ -36,7 +37,7 @@ function synthH1(pair, { fromLabel = "2026-08-20 00:00", toLabel = "2026-10-08 0
   for (let t = J.parseJstLabel(fromLabel); t <= J.parseJstLabel(toLabel); t += J.HR) {
     if (isFxClosedMs(t)) continue;
     const o = price(t), c = price(t + J.HR);
-    const wick = p0 * 0.0010;
+    const wick = p0 * wickPct;
     bars.push({ t, o: round(o), h: round(Math.max(o, c) + wick), l: round(Math.min(o, c) - wick), c: round(c) });
   }
   return bars;
