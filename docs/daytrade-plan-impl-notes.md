@@ -30,7 +30,7 @@
 | `fill.js` | 到達・SL/TP1先着の判定。採点とバックテストが同じ関数を使う |
 | `plan.js` / `render.js` | 計画の組み立て（design / status）と txt の描画 |
 | `log.js` / `csvio.js` / `score.js` | `log.csv`（追記のみ）、採点 |
-| `inputs.js` / `riskfeed.js` / `schedule.js` | 入力と鮮度、risk-feed 取得、cron の解決（夏冬） |
+| `inputs.js` / `riskfeed.js` / `schedule.js` | 入力と鮮度、risk-feed 取得、実行の種類の自動判定（設計の枠の窓・夏冬・土日） |
 | `h1history.js` / `histctx.js` / `backtest.js` / `report.js` | H1履歴CSV、過去の設計時刻の入力の再構成、バックテスト、レポート |
 | `typeb.js` | 型Bの追加時刻（JST 16:00〜21:59。Q09）。ライブとバックテストが同じ定義を使う |
 | `num.js` | 価格をティック（最小刻み）の整数で計算する道具（「ちょうど」の境界で1ティック違いの誤判定をしない） |
