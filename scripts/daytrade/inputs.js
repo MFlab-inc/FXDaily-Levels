@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { MIN, parseIso, parseJstLabel, jstLabel } = require("./jst");
 const { lastCompletedSessionDate } = require("../../mtf/lib/ny-time");
-const { pairOf } = require("./pairs");
+const { PAIRS, pairOf } = require("./pairs");
 
 /**
  * 入力の読み込みと鮮度（仕様 1節）。既存のファイルは読むだけ（変更しない）。
@@ -12,6 +12,7 @@ const { pairOf } = require("./pairs");
  *  日次レベルとMTFは、日付が直近に確定したNYセッション日と一致するかで確認する [Q15]。
  */
 const FRESH_LIMIT_MIN = 20;
+const RISK_PCT_MAX = 5; // これを超える risk_pct は入力ミスとみなす（仕様の値は 0.5）
 const FILES = {
   intraday: "intraday.json", daily: "daily-levels.json", h1: "h1-bars.json", ctx: "daytrade-context.json",
   mtf: "mtf-feed.json", calendar: "economic-calendar.json",
@@ -52,10 +53,26 @@ function loadInputs({ dataDir, repoRoot, nowMs }) {
   const acc = readJson(path.join(dataDir, "daytrade", "accounts.json"));
   if (acc.problem) problems.push(acc.problem);
 
+  // 口座設定（人が手で書くファイル）。上限ロットの元になるので、読めない・範囲外のときは『発注不可』（accountProblems）にする。
+  // daily_loss_pct・commission_per_lot_jpy は表示だけなので、おかしくても発注不可にはせず問題として出す
   const accounts = {};
+  const accountProblems = [];
+  if (acc.problem) accountProblems.push(acc.problem);
   for (const [id, a] of Object.entries(acc.value?.accounts || {})) {
-    if (Number.isFinite(a?.equity_jpy)) accounts[id] = { equity_jpy: a.equity_jpy, role: a.role || null };
+    if (Number.isFinite(a?.equity_jpy) && a.equity_jpy > 0) accounts[id] = { equity_jpy: a.equity_jpy, role: a.role || null };
+    else accountProblems.push(`accounts.json: 口座 ${id} の equity_jpy が正の数ではありません`);
   }
+  if (!acc.problem && !Object.keys(accounts).length) accountProblems.push("accounts.json: 有効な口座がありません");
+  const riskPctRaw = acc.value?.risk_pct;
+  const riskPctOk = Number.isFinite(riskPctRaw) && riskPctRaw > 0 && riskPctRaw <= RISK_PCT_MAX;
+  if (!acc.problem && !riskPctOk) accountProblems.push(`accounts.json: risk_pct が 0 超 ${RISK_PCT_MAX} 以下の数ではありません（${JSON.stringify(riskPctRaw ?? null)}）`);
+  const dlp = acc.value?.daily_loss_pct, cpl = acc.value?.commission_per_lot_jpy;
+  if (!acc.problem && !(Number.isFinite(dlp) && dlp >= 0)) problems.push("accounts.json: daily_loss_pct が 0 以上の数ではありません（本日の損失上限は表示できません）");
+  if (!acc.problem && !(Number.isFinite(cpl) && cpl >= 0)) problems.push("accounts.json: commission_per_lot_jpy が 0 以上の数ではありません（往復手数料は表示できません）");
+  // イベント停止の対象通貨表。無いと停止時間が全く出せない（黙って停止なしになる）ので『発注不可』にする
+  const pc = rules.value?.pair_currencies;
+  const rulesOk = Boolean(pc && typeof pc === "object" && PAIRS.every((p) => Array.isArray(pc[p.code]) && pc[p.code].length));
+  if (!rulesOk && !rules.problem) problems.push("config/daytrade-rules.json: pair_currencies が読めません（10銘柄の通貨の対応表が必要）");
   const expectedSession = lastCompletedSessionDate(nowMs);
 
   const feeds = [];
@@ -89,8 +106,8 @@ function loadInputs({ dataDir, repoRoot, nowMs }) {
         : dailyErrors.length ? `daily-levels.json に errors があります（${dailyErrors.length}件）` : "daily-levels.json に pairs がありません";
 
   return {
-    raw, rules: rules.value, accounts, riskPct: Number.isFinite(acc.value?.risk_pct) ? acc.value.risk_pct : null,
-    dailyLossPct: Number.isFinite(acc.value?.daily_loss_pct) ? acc.value.daily_loss_pct : null, commissionPerLotJpy: Number.isFinite(acc.value?.commission_per_lot_jpy) ? acc.value.commission_per_lot_jpy : null,
+    raw, rules: rules.value, rulesOk, accounts, accountProblems, riskPct: riskPctOk ? riskPctRaw : null,
+    dailyLossPct: Number.isFinite(dlp) && dlp >= 0 ? dlp : null, commissionPerLotJpy: Number.isFinite(cpl) && cpl >= 0 ? cpl : null,
     h1, problems, expectedSession,
     freshness: { limit_min: FRESH_LIMIT_MIN, feeds, ctx_m15: ctxM15, h1_last_closed: h1Last, stale: feeds.some((f) => f.stale), daily: { ok: dailyOk, reason: dailyReason, session_date: daily?.session_date ?? null, as_of: daily?.as_of ?? null } },
   };

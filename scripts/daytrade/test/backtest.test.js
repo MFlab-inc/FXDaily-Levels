@@ -485,19 +485,22 @@ test("型B追加: 評価の回は 設計①②=型Aのみ／設計③=型A・型
   assert.equal(win.stats.designs, 9);
 });
 
-test("型B追加: 17:00 の追加は slot 4。追加時刻より前の足では到達せず、追加時刻に始まる足から到達する。同じ銘柄・向きの2回目以降は追加しない", () => {
+test("型B追加: 17:00 の追加は slot 4。追加時刻（17:00 の5分後）より前に始まる足では到達せず、次の時間に始まる足から到達する。同じ銘柄・向きの2回目以降は追加しない", () => {
   const rule = ({ hour }) => (hour >= 17 && hour <= 20 ? sellCand() : null); // 17:00 からブレイクが続いて見つかる。設計③(21:00)は無し
-  // 16:00 の足は追加(17:00)より前 → 未到達（追加時刻に始まる足からしか使わない）
+  // 16:00 の足は追加より前 → 未到達
   let r = runB({ D: DS, rule, touch: { [at(DS, "16:00")]: { h: 1.1045 } } });
   assert.equal(r.eu.length, 1);
   assert.equal(r.eu[0].slot, 4);
   assert.equal(r.eu[0].reached, "未到達");
-  // 17:00 開始の足は追加(17:00)と同時に始まる足 → 到達
+  // 17:00 開始の足は追加（17:05）より前に始まる足 → 使わない（ライブの実行は :00 の数分後で、その足は途中から）
   r = runB({ D: DS, rule, touch: { [at(DS, "17:00")]: { h: 1.1045 } } });
+  assert.equal(r.eu[0].reached, "未到達");
+  // 18:00 開始の足から到達できる
+  r = runB({ D: DS, rule, touch: { [at(DS, "18:00")]: { h: 1.1045 } } });
   assert.equal(r.eu.length, 1);
   assert.equal(r.eu[0].reached, "到達");
-  assert.equal(r.eu[0].reached_ms, J.jstAt(DS, "17:00"));
-  assert.equal(r.eu[0].fill_hour, 17);
+  assert.equal(r.eu[0].reached_ms, J.jstAt(DS, "18:00"));
+  assert.equal(r.eu[0].fill_hour, 18);
   assert.equal(SLOT_LABEL[r.eu[0].slot], "状態更新（型B追加）");
   // 追加は1回だけ（18・19・20時は同じ銘柄・向きが既にあるので追加しない）
   assert.equal(r.stats.bAdded, 1);
@@ -582,9 +585,10 @@ test("設計③と追加された版: 追加した版が先に約定していれ
 
 test("冬の計画日: 21:00 は型B追加（slot 4）、設計③は 22:00。21:00 開始の足（22:00に終わる）は取消される追加版も使える／22:00 開始の足は設計③の版", () => {
   const add = (c) => (c.hour === 21 && c.slot === 4 ? sellCand() : c.slot === 3 ? sellCand({ sl: 1.1051 }) : null);
+  // 21:00 の追加（21:05 から）は 21:00 開始の足を使えない。次の足は設計③（22:00）の取消にかかる（22:00 開始の足は設計③の版の時間）ので、追加版は到達できず取消になる
   let r = runB({ D: DW, rule: add, season: "winter", touch: { [at(DW, "21:00")]: { h: 1.1045 } } });
-  assert.deepEqual(r.eu.map((x) => [x.slot, x.reached, x.reached_ms]), [[4, "到達", J.jstAt(DW, "21:00")]]); // 設計③の版は数えない
-  assert.equal(r.stats.suppressed, 1);
+  assert.equal(r.eu.find((x) => x.slot === 4).reached, "未到達");
+  assert.equal(r.eu.find((x) => x.slot === 4).cancelled_unreached, true);
   r = runB({ D: DW, rule: add, season: "winter", touch: { [at(DW, "22:00")]: { h: 1.1045 } } });
   const bySlot = Object.fromEntries(r.eu.map((x) => [x.slot, x]));
   assert.equal(bySlot[4].reached, "未到達");
@@ -676,4 +680,57 @@ test("SL下限方式 (a)(b): ATRが小さいデータでは、(b) にだけ『�
   const bKeys = new Set(b.map((r) => `${idea(r)}|${r.sl_pips.toFixed(6)}`));
   const bFilled = new Set(b.filter((r) => r.reached === "到達").map(idea));
   for (const r of a) assert.ok(bKeys.has(`${idea(r)}|${r.sl_pips.toFixed(6)}`) || bFilled.has(idea(r)), `(a) の案が (b) に無い: ${idea(r)}`);
+});
+
+// ---- 未来を見ていないこと（look-ahead） ----
+test("histctx: 設計時刻より後の足・基準日より後の日足を壊しても、入力（ctx）は変わらない（設計①②③・型B追加の時刻、型A・型B）", () => {
+  const { barsByCode, rowsByCode } = allSynth();
+  const base = createHistory({ barsByCode, rowsByCode });
+  const dates = ["2026-09-29", "2026-10-01", "2026-10-06"];
+  const times = [["06:30", "A"], ["15:30", "A"], ["17:00", "B"], ["19:00", "B"], ["21:00", "B"]];
+  let checked = 0;
+  for (const d of dates) for (const [hm, setup] of times) {
+    const t = J.jstAt(d, hm);
+    const a = base.ctxAt(eu, t, setup);
+    if (a.skip) continue;
+    const prevHourEnd = Math.floor(t / J.HR) * J.HR; // この時刻までに確定した足は、開始+1時間 <= prevHourEnd
+    const bad = (v) => v * 3 + 1;
+    const corruptBars = Object.fromEntries(Object.entries(barsByCode).map(([c, bars]) => [c, bars.map((b) => (b.t + J.HR > t ? { ...b, o: bad(b.o), h: bad(b.h), l: bad(b.l), c: bad(b.c) } : b))]));
+    const corruptRows = Object.fromEntries(Object.entries(rowsByCode).map(([c, rows]) => [c, rows.map((r) => (r.date > a.meta.asOf ? { ...r, open: bad(r.open), high: bad(r.high), low: bad(r.low), close: bad(r.close) } : r))]));
+    const b = createHistory({ barsByCode: corruptBars, rowsByCode: corruptRows }).ctxAt(eu, t, setup);
+    assert.deepEqual(b, a, `${d} ${hm} ${setup}: 未来のデータで入力が変わった`);
+    assert.ok(prevHourEnd <= t);
+    checked++;
+  }
+  assert.ok(checked >= 12, `検査できた時刻が少なすぎる: ${checked}`);
+});
+
+test("バックテスト: ある計画日までの記録は、その案の失効（翌3:00）より後の足と、その日より後の日足を壊しても変わらない", () => {
+  const { barsByCode, rowsByCode } = allSynth();
+  const D = "2026-10-01";
+  const cut = J.jstAt(J.addDaysJst(D, 1), "03:00");
+  const bad = (v) => v * 3 + 1;
+  const corruptBars = Object.fromEntries(Object.entries(barsByCode).map(([c, bars]) => [c, bars.map((b) => (b.t >= cut ? { ...b, o: bad(b.o), h: bad(b.h), l: bad(b.l), c: bad(b.c) } : b))]));
+  const corruptRows = Object.fromEntries(Object.entries(rowsByCode).map(([c, rows]) => [c, rows.map((r) => (r.date > D ? { ...r, open: bad(r.open), high: bad(r.high), low: bad(r.low), close: bad(r.close) } : r))]));
+  for (const slFloor of ["reject", "widen"]) {
+    const a = runBacktest({ barsByCode, rowsByCode, nowMs: NOW, windowDays: 10, slFloor }).records.filter((r) => r.plan_date <= D);
+    const b = runBacktest({ barsByCode: corruptBars, rowsByCode: corruptRows, nowMs: NOW, windowDays: 10, slFloor }).records.filter((r) => r.plan_date <= D);
+    assert.ok(a.length >= 3, `検査する記録が少なすぎる(${slFloor}): ${a.length}`);
+    assert.deepEqual(b, a, `${slFloor}: 失効より後のデータで記録が変わった`);
+  }
+});
+
+test("CLI: --dry-run は何も書かない（H1履歴も結果の .md / .csv も）。件数だけ表示する", async () => {
+  const dataDir = path.join(tmpDir(), "data");
+  try {
+    fs.mkdirSync(dataDir, { recursive: true });
+    writeHistory(dataDir);
+    const list = () => fs.readdirSync(dataDir, { recursive: true }).sort().join("\n");
+    const before = list();
+    const q = quiet();
+    await btMain([`--data-dir=${dataDir}`, "--no-risk-feed", "--now=2026-10-08T12:00:00+09:00", "--window-days=10", "--dry-run"], {}, q.io);
+    assert.equal(list(), before);
+    assert.ok(!fs.existsSync(path.join(dataDir, "daytrade", "backtest-2026-10-08.md")));
+    assert.match(q.out.join("\n"), /dry-run/);
+  } finally { rm(path.dirname(dataDir)); }
 });

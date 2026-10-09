@@ -365,8 +365,8 @@ test("出力: 3項目目は『1案1行』で理由だけ（価格を書かない
     const sec = txt.slice(txt.indexOf("== 3."), txt.indexOf("== 4."));
     const lines = sec.split("\n").filter((l) => /^  \S+ 型[AB] [AB]案: /.test(l));
     assert.equal(lines.length, 12); // 方向のない6銘柄 × 型A × A/B案
-    assert.ok(lines.includes("  USDJPY 型A A案: 方向根拠なし（監視のみ（2/3 Up だが逆向きの時間足あり））".replace("2/3 Up だが逆向きの時間足あり", "2/3 Up だが逆向きの時間足あり")));
-    assert.ok(lines.includes("  NZDUSD 型A B案: 方向根拠なし（MTF未収録）"));
+    assert.ok(lines.includes("  USDJPY 型A A案: 方向根拠なし: 監視のみ（2/3 Up だが逆向きの時間足あり）"));
+    assert.ok(lines.includes("  NZDUSD 型A B案: 方向根拠なし: MTF未収録"));
     for (const l of lines) assert.ok(!/\d+\.\d+/.test(l), `価格を書かない: ${l}`);
     assert.ok(sec.indexOf("── 参考情報 ──") > sec.indexOf("USDJPY 型A A案"));
     for (const k of ["候補数: 4件", "不採用の内訳（件数）", "ボラの状態", "参考：既存ゲート"]) assert.ok(sec.includes(k), k);

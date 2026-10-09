@@ -8,6 +8,6 @@
 | `log.csv` | 生成器（`daytrade.yml`、`daytrade-score.js`） | 案の記録。追記のみ（仕様 5節・6-1）。`run` は design（設計）／design-b（状態更新で追加した型B）／status（取消・採点の結果）。`filled_ticket_*` は本人が週1回、MT4の取引記録と照合して手で埋める（bot は書き換えない） |
 | `backtest-<日付>.md` / `.csv` | `daytrade-backtest.js`（手動） | バックテストの集計（仕様 6-2）。CSV の先頭列 `sl_floor` は SL下限方式（`a_reject`＝丸め後10pips未満は不採用〔ライブの規則〕、`b_widen`＝max(k×ATR, 10pips) で採用） |
 
-`equity_jpy` を変えたら、次の生成から上限ロットに反映される。
+`equity_jpy` を変えたとき、1項目目の『本日の損失上限』は次の生成（状態更新を含む）から変わる。各案の上限ロットは案を設計した時点の値で、次の設計（または状態更新で追加する型B）から反映される（設計済みの案の上限ロットは、次の設計まで変わらない）。
 
 関連: `data/daytrade-plan.txt`・`data/daytrade-plan.json`（生成物、公開）、`data/history/h1-<銘柄>.csv`（バックテスト用のH1履歴。1回だけ取得）。

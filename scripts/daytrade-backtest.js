@@ -1,7 +1,8 @@
 "use strict";
 /**
  * バックテスト（仕様 6-2）。手動実行だけ（自動では動かさない）。
- *   node scripts/daytrade-backtest.js [--no-fetch] [--window-days=365] [--now=<ISO>] [--data-dir=<dir>] [--no-guard] [--no-risk-feed] [--spacing-ms=3000]
+ *   node scripts/daytrade-backtest.js [--no-fetch] [--window-days=365] [--now=<ISO>] [--data-dir=<dir>] [--no-guard] [--no-risk-feed] [--spacing-ms=3000] [--dry-run]
+ *   --dry-run … 何も書かない（H1履歴の保存も、結果の .md / .csv も）。件数だけ表示する
  * 1) H1履歴 data/history/h1-<銘柄>.csv が無い銘柄だけ Twelve Data から取得して保存する（既にあれば再取得しない）。
  *    1分あたり55回を超えないよう、1銘柄ずつ約3秒おき（毎分20回前後、直近60秒で30回まで）。環境変数 TWELVE_DATA_API_KEY。
  *    GitHub Actions 上では、他の Daily / Intraday が動いている間と、その起動分は避ける（mtf/lib/guard.js）。
@@ -57,8 +58,10 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
       fetched.set(pair.code, { bars, verify: v });
     }
     // 全銘柄そろってから置く（途中で失敗したら何も書かない）
-    store.writeAll(dataDir, [...fetched].map(([code, x]) => ({ file: path.join("history", `h1-${code}.csv`), content: H.toCsv(x.bars, PAIRS.find((p) => p.code === code)) })));
-    io.log(`[backtest] H1履歴を保存: ${[...fetched.keys()].join(", ")}（リクエスト ${client.stats.requests}回）`);
+    if (!args["dry-run"]) {
+      store.writeAll(dataDir, [...fetched].map(([code, x]) => ({ file: path.join("history", `h1-${code}.csv`), content: H.toCsv(x.bars, PAIRS.find((p) => p.code === code)) })));
+      io.log(`[backtest] H1履歴を保存: ${[...fetched.keys()].join(", ")}（リクエスト ${client.stats.requests}回）`);
+    }
   } else if (missing.length) throw new Error(`H1履歴が無い銘柄があります（${missing.map((p) => p.code).join(",")}）。--no-fetch を外してください`);
 
   // 2) 読み込み
@@ -92,11 +95,13 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
   const rows = aggregate(records);
   const day = jstIso(nowMs).slice(0, 10);
   const md = toMarkdown(rows, { nowMs, window: { first: stats.first, last: stats.last }, stats, statsByMode, floorRows: floorBreakdown(records), history, regimeSource, noMtf });
-  store.writeAll(dataDir, [
-    { file: path.join("daytrade", `backtest-${day}.md`), content: md },
-    { file: path.join("daytrade", `backtest-${day}.csv`), content: toCsv(rows) },
-  ]);
-  io.log(`[backtest] 完了: 案 ${records.length}件（SL下限方式 (a)(b) の合計。A案・B案を別に数える）、設計 ${stats.designs}回、型B追加の出来事 ${stats.adds}回、評価 ${stats.evaluations}件（1方式あたり） → data/daytrade/backtest-${day}.md / .csv`);
+  if (!args["dry-run"]) {
+    store.writeAll(dataDir, [
+      { file: path.join("daytrade", `backtest-${day}.md`), content: md },
+      { file: path.join("daytrade", `backtest-${day}.csv`), content: toCsv(rows) },
+    ]);
+  }
+  io.log(`[backtest] 完了${args["dry-run"] ? "（--dry-run: 何も書いていません）" : ""}: 案 ${records.length}件（SL下限方式 (a)(b) の合計。A案・B案を別に数える）、設計 ${stats.designs}回、型B追加の出来事 ${stats.adds}回、評価 ${stats.evaluations}件（1方式あたり）${args["dry-run"] ? "" : ` → data/daytrade/backtest-${day}.md / .csv`}`);
   return { records, rows, stats, statsByMode };
 }
 

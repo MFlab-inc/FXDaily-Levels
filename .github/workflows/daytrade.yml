@@ -12,7 +12,7 @@ name: Daytrade Plan
 #   設計①＋採点  06:00〜08:59 の最初の実行（NY冬時間は 07:00〜09:59）
 #   設計②        15:00〜16:59 の最初の実行
 #   設計③        21:00〜22:59 の最初の実行（冬時間は 22:00〜23:59）
-#   状態更新      それ以外（07:00〜翌02:59。毎時1回まで）。JST 16:00〜21:59 の状態更新では、型B を追加で設計する（run=design-b）
+#   状態更新      それ以外（07:00〜翌02:59。毎時1回まで。前の実行が古い入力だったときは同じ時間内にやり直す）。JST 16:00〜21:59 の状態更新では、型B を追加で設計する（run=design-b）
 # 土日の計画日は何もしない。手動（workflow_dispatch）は run と slot を指定して使う（auto なら自動と同じ判定）。
 on:
   workflow_run:
@@ -39,7 +39,9 @@ permissions:
   contents: write
 
 # 起動が重なっても、同じ data/ へ同時に書かないようにする。待機中の run は1つしか持たれず、新しい run に置き換わるが、
-# 設計は『その枠で最初の実行』で決まる（設計が済んでいなければ次の実行が設計になる）ので、置き換わっても設計が抜けない。
+# 設計は『その枠で最初の実行』で決まる（設計が済んでいなければ次の実行が設計になる）ので、同じ窓の中に次の実行が来れば設計は抜けない。
+# 窓の中に Intraday Snapshot の完了が1回も来なければ、その枠の設計は作られない（手動の workflow_dispatch で作れる）。
+# 古い入力・日次レベル未更新で作った設計は『済み』にしない（窓の中の次の実行でやり直す）。
 concurrency:
   group: daytrade-plan
   cancel-in-progress: false
@@ -75,7 +77,9 @@ jobs:
       - name: Score previous plans
         if: ${{ steps.resolve.outputs.action == 'design' }}
         continue-on-error: true   # 採点の失敗で設計を止めない（次の設計で再試行される）
-        run: node scripts/daytrade-score.js
+        env:
+          NOW: ${{ steps.resolve.outputs.now }}
+        run: node scripts/daytrade-score.js --now="$NOW"
 
       - name: Generate plan
         if: ${{ steps.resolve.outputs.action == 'design' || steps.resolve.outputs.action == 'status' }}
@@ -83,7 +87,9 @@ jobs:
           DAYTRADE_RUN: ${{ inputs.run != 'auto' && inputs.run || '' }}
           DAYTRADE_SLOT: ${{ inputs.slot }}
           FORCE: ${{ inputs.force && '--force' || '' }}
-        run: node scripts/daytrade-plan.js $FORCE
+          NOW: ${{ steps.resolve.outputs.now }}
+        # 起動の解決（Resolve action）と同じ時刻を使う（手順ごとに時刻を取り直すと、設計の窓の端で判定が変わり得る）
+        run: node scripts/daytrade-plan.js --now="$NOW" $FORCE
 
       - name: Commit and push
         if: ${{ steps.resolve.outputs.action == 'design' || steps.resolve.outputs.action == 'status' }}

@@ -76,13 +76,36 @@ test("自動（run 指定なし）: 実行時刻の窓と済みの設計で種�
     assert.deepEqual(st.plan.designs.map((x) => x.slot), [2]); // 状態更新は設計の履歴を引き継ぐ
     assert.match((await auto("2026-10-09T04:00:00+09:00")).skipped, /時間帯/);
     assert.match((await auto("2026-10-10T10:00:00+09:00")).skipped, /土日/);
-    // 候補が0件の設計でも『済み』になる（log.csv に行が残らなくても plan.json の履歴で分かる）
-    const empty = makeScenario({ mtfStatus: "partial", nowIso: "2026-10-08T15:20:00+09:00" });
+    // 発注できる状態の入力で作った設計は、候補が0件でも『済み』（log.csv に行が残らなくても plan.json の履歴で分かる）
+    const none = Object.fromEntries(["USDJPY", "EURUSD", "GBPUSD", "AUDUSD", "XAUUSD", "EURJPY", "USDCAD", "EURGBP"].map((c) => [c, { score: "Mixed", dirs: ["↑", "↓", "→"] }]));
+    const empty = makeScenario({ nowIso: "2026-10-08T15:20:00+09:00", spec: none });
     try {
       const a2 = (iso) => main([`--data-dir=${empty.dataDir}`, "--no-risk-feed", `--now=${iso}`], {}, quiet().io);
-      assert.equal((await a2("2026-10-08T15:20:00+09:00")).plan.candidates.length, 0);
+      const e1 = await a2("2026-10-08T15:20:00+09:00");
+      assert.equal(e1.plan.candidates.length, 0);
+      assert.equal(e1.plan.designs[0].inputs_ok, true);
+      assert.equal(fs.existsSync(path.join(empty.dataDir, "daytrade", "log.csv")), false); // 行が残らない
       assert.equal((await a2("2026-10-08T16:10:00+09:00")).plan.run, "status"); // 設計②を繰り返さない
     } finally { cleanup(empty); }
+    // 発注できる状態でない入力（MTFが使えない）で作った設計は『済み』にしない: 窓の中の次の実行で設計をやり直し、入力が整えば済みになる
+    const bad = makeScenario({ mtfStatus: "partial", nowIso: "2026-10-08T15:20:00+09:00" });
+    try {
+      const a3 = (iso) => main([`--data-dir=${bad.dataDir}`, "--no-risk-feed", `--now=${iso}`], {}, quiet().io);
+      const b1 = await a3("2026-10-08T15:20:00+09:00");
+      assert.equal(b1.plan.designs[0].inputs_ok, false);
+      assert.equal(b1.plan.inputs_ok, false);
+      const b2 = await a3("2026-10-08T15:40:00+09:00");
+      assert.equal(b2.plan.run, "design"); // 窓（15:00〜16:59）の中なので、もう一度設計する
+      // MTF が使えるようになった → 設計し直して『済み』になり、次は状態更新
+      const mtf = JSON.parse(read(bad, "mtf-feed.json")); mtf.status = "ok";
+      fs.writeFileSync(path.join(bad.dataDir, "mtf-feed.json"), JSON.stringify(mtf));
+      for (const f of ["intraday.json", "h1-bars.json", "daytrade-context.json"]) { const j = JSON.parse(read(bad, f)); j.as_of = "2026-10-08T15:45:00+09:00"; fs.writeFileSync(path.join(bad.dataDir, f), JSON.stringify(j)); }
+      const b3 = await a3("2026-10-08T15:50:00+09:00");
+      assert.equal(b3.plan.run, "design");
+      assert.equal(b3.plan.designs.at(-1).inputs_ok, true);
+      assert.equal(b3.plan.designs.length, 1); // 同じ枠の履歴は置き換わる
+      assert.equal((await a3("2026-10-08T16:20:00+09:00")).plan.run, "status");
+    } finally { cleanup(bad); }
   } finally { cleanup(sc); }
 });
 
@@ -104,9 +127,20 @@ test("status: 同じ時間内の二重実行は何もしない。Entry・SL・TP
     assert.deepEqual(r.plan.candidates.map((c) => c.band), design.candidates.map((c) => c.band));
     assert.deepEqual(r.plan.candidates.map((c) => c.schemes.A.sl), design.candidates.map((c) => c.schemes.A.sl));
     assert.equal(read(sc, "daytrade/log.csv"), logBefore); // 毎時の状態更新はログに書かない
+    // 前の状態更新が古い入力（発注不可）だったので、同じ時間内でも新しい入力でやり直す
+    assert.equal(r.plan.inputs_ok, false);
     const again = await main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", "--now=2026-10-08T16:20:00+09:00", "--run=status"], {}, q.io);
-    assert.equal(again.skipped, "done");
+    assert.equal(again.plan.run, "status");
   } finally { cleanup(sc); }
+  // 入力が新しい状態更新は、同じ時間内の2回目を何もしない
+  const fresh = makeScenario({ nowIso: "2026-10-08T16:05:00+09:00" });
+  try {
+    const f = (iso) => main([`--data-dir=${fresh.dataDir}`, "--no-risk-feed", `--now=${iso}`, "--run=status"], {}, quiet().io);
+    const s1 = await f("2026-10-08T16:05:00+09:00");
+    assert.equal(s1.plan.inputs_ok, true);
+    assert.equal((await f("2026-10-08T16:12:00+09:00")).skipped, "done");
+    assert.equal((await f("2026-10-08T17:02:00+09:00")).plan.run, "status"); // 次の時間は動く
+  } finally { cleanup(fresh); }
 });
 
 test("--resolve: 自動なら実行時刻と済みの設計から、手動（run 指定）ならその指定を、key=value で出力する", async () => {

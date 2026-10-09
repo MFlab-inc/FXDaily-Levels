@@ -19,13 +19,15 @@ const J = require("../jst");
  */
 const DATA = path.join(__dirname, "..", "..", "..", "data");
 const GOLDEN = path.join(DATA, "daytrade", "backtest-2026-10-09.csv");
+const LAST_DATE = "2026-10-07";
 
 test("バックテスト: コミット済みの履歴から、コミット済みの結果 CSV を再現できる", { skip: !fs.existsSync(GOLDEN) }, () => {
   const barsByCode = {}, rowsByCode = {};
   for (const p of PAIRS) {
     barsByCode[p.code] = H.readH1(DATA, p.code);
-    const rows = store.readRows(DATA, p.code);
-    if (rows && rows.length) rowsByCode[p.code] = rows;
+    // 日足（data/mtf）は毎日の更新で増えていく。結果の窓の最終日（2026-10-07）までに切ることで、あとから追記された行で結果が変わらないようにする
+    const rows = (store.readRows(DATA, p.code) || []).filter((r) => r.date <= LAST_DATE);
+    if (rows.length) rowsByCode[p.code] = rows;
   }
   const { records } = runBacktestModes({ barsByCode, rowsByCode, nowMs: J.parseIso("2026-10-09T00:30:00+09:00"), windowDays: 365 });
   assert.equal(toCsv(aggregate(records)), fs.readFileSync(GOLDEN, "utf8"));

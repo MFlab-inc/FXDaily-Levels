@@ -27,6 +27,8 @@ const { lastCompletedSessionDate } = require("../../mtf/lib/ny-time");
 const SLOT_LABEL = { 1: "設計①", 2: "設計②", 3: "設計③", 4: "状態更新（型B追加）" };
 const DESIGN_SLOTS = [1, 2, 3];
 const ADD_SLOT = 4; // 型B追加の版の『設計の回』
+// 型B追加の版は、毎時00分の評価から5分後（intraday の完了と生成器の実行の遅れ）に出たものとして追跡する。その時間に始まる足は使えない [Q57]
+const ADD_LATENCY_MS = 5 * 60000;
 const SLOT_SETUPS = { 1: ["A"], 2: ["A"], 3: ["A", "B"], 4: ["B"] };
 const SL_FLOOR_MODES = [
   { id: "reject", code: "a_reject", tag: "(a)", label: "(a) 現行：丸め後のSL幅が10pips未満は不採用" },
@@ -102,7 +104,7 @@ function runBacktest({ barsByCode, rowsByCode, nowMs, windowDays = 365, threshol
       if (ev.kind === "add") {
         for (const c of ev.cands) {
           if (bSeen.has(`${c.res.symbol}|${c.res.side}`)) { stats.bAddDup++; continue; }
-          born(c, ev.t);
+          born(c, ev.t + ADD_LATENCY_MS);
           stats.bAdded++;
         }
         continue;

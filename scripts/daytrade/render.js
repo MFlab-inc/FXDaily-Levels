@@ -17,7 +17,7 @@ const yen = (v) => (Number.isFinite(v) ? `${Math.round(v).toLocaleString("en-US"
 function lotText(s, accts) {
   return Object.keys(accts).map((a) => {
     const v = s.lots?.[a];
-    if (v === null || v === undefined) return `${a}=—（円換算レート不足）`;
+    if (v === null || v === undefined) return `${a}=—（上限ロットを計算できません）`;
     const c = s.commission_jpy?.[a];
     return `${a}=${v.toFixed(2)}${v === 0 ? "（資金に対してSL幅が大きい）" : ""}${Number.isFinite(c) ? `（往復手数料 ${yen(c)}）` : ""}`;
   }).join(" / ");
@@ -95,6 +95,7 @@ function render(plan, accountsParam = {}) {
   L.push(`    M15      : daytrade-context.json ${feedText(feed("daytrade-context.json"))} ／ 確定M15の最終足 最古 ${cm?.oldest_last_closed ?? "—"}・最新 ${cm?.newest_last_closed ?? "—"}${cm?.not_ok?.length ? ` ／ data_status が OK でない銘柄: ${cm.not_ok.join("、")}` : ""}（M15の最終足は発注可否には使わない）`);
   L.push(`    Daily    : daily-levels.json as_of ${dt(fr.daily.as_of)} ／ 最終確定の営業日 session_date ${fr.daily.session_date ?? "—"}（直近に確定した営業日 ${plan.mtf.expected_session}）${fr.daily.ok ? " ＝基準内" : ` ＝未更新: ${fr.daily.reason}`}`);
   const ids = Object.keys(accts);
+  if (!ids.length) L.push("  口座: 設定がありません（data/daytrade/accounts.json）。上限ロットは出せません");
   if (ids.length) {
     L.push(`  口座: ${ids.map((a) => `${a}（${accts[a].role ?? "—"}） equity ${yen(accts[a].equity_jpy)} ／ 本日の損失上限 ${accts[a].daily_loss_limit_jpy === null || accts[a].daily_loss_limit_jpy === undefined ? "—" : yen(accts[a].daily_loss_limit_jpy)}${plan.settings?.daily_loss_pct !== null && plan.settings?.daily_loss_pct !== undefined ? `（${plan.settings.daily_loss_pct}%）` : ""}`).join(" ／ ")}`);
   }
@@ -113,13 +114,17 @@ function render(plan, accountsParam = {}) {
   const sm = plan.summary;
   if (!sm) L.push("  （設計がありません）");
   else {
-    if (!sm.rejected_cases?.length) L.push("  なし");
-    for (const r of sm.rejected_cases || []) L.push(`  ${r.symbol} 型${r.setup} ${r.scheme}案: ${r.reason_text}${r.detail ? `（${r.detail}）` : ""}${r.counted ? "" : "（6分類外）"}`);
+    if (sm.rejected_cases === undefined) L.push("  （旧形式の計画のため一覧はありません。次の設計で作り直します）");
+    else if (!sm.rejected_cases.length) L.push("  なし");
+    for (const r of sm.rejected_cases || []) L.push(`  ${r.symbol} 型${r.setup} ${r.scheme}案: ${r.reason_text}${r.detail ? `: ${r.detail}` : ""}${r.counted ? "" : "（6分類外）"}`);
     L.push("  ── 参考情報 ──");
     L.push(`  候補数: ${sm.candidate_rows}件（A案を通った案 ${sm.scheme_pass.A}、B案を通った案 ${sm.scheme_pass.B}）`);
     L.push(`  不採用の内訳（件数）: ${COUNTED.map((k) => `${REASONS[k]} ${sm.rejections[k]}`).join(" ／ ")}`);
     L.push(`    6分類に数えない理由: ${Object.entries(sm.extra).map(([k, v]) => `${k} ${v}`).join(" ／ ")}`);
-    L.push(`  型B（未成立。不採用に数えない）: ${sm.not_formed.filter((x) => x.setup === "B").length ? [...new Set(sm.not_formed.filter((x) => x.setup === "B").map((x) => x.detail))].join(" ／ ") : "なし"}${plan.design_slot === 3 || (plan.designs || []).some((d) => d.slot === 3) ? "" : "（型Bは設計③と、16:00〜21:59の状態更新で追加される）"}`);
+    const nf = sm.not_formed.filter((x) => x.setup === "B");
+    const bAdded = plan.candidates.filter((c) => c.setup === "B" && c.run === "design-b").length;
+    const hasD3 = (plan.designs || []).some((d) => d.slot === 3);
+    L.push(`  型B（未成立。不採用に数えない）: ${nf.length ? [...new Set(nf.map((x) => `${x.symbol}（${x.detail}）`))].join(" ／ ") : "なし"}${bAdded ? ` ／ 状態更新で追加した型B ${bAdded}件（候補欄を参照）` : ""}${hasD3 ? "" : "（型Bは設計③と、16:00〜21:59の状態更新で追加される。追加時に門で不採用だった型Bは一覧しない）"}`);
   }
   const rf = plan.reference.volatility.risk_feed;
   L.push(`  ボラの状態（risk-feed ${rf.status}${rf.generated_intraday ? `、生成 ${dt(rf.generated_intraday)}・${rf.age_min}分前` : rf.reason ? `：${rf.reason}` : ""}）:`);

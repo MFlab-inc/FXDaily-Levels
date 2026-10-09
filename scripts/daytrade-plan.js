@@ -36,7 +36,9 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
   const planDate = planDateOf(nowMs);
   const logPath = path.join(dataDir, "daytrade", "log.csv");
   const logText = fs.existsSync(logPath) ? fs.readFileSync(logPath, "utf8") : "";
-  const logRows = logText ? L.parseLog(logText) : [];
+  // log.csv が壊れていても生成は止めない（追記だけ行わず、バナーで知らせる）。壊れたファイルを上書きしない
+  let logRows = [], logBroken = null;
+  try { logRows = logText ? L.parseLog(logText) : []; } catch (e) { logBroken = String(e.message || e).slice(0, 160); }
 
   // 1) 起動の種類: 手動（run を指定）か、自動（実行時刻と済みの設計で決める）
   let action, slot = null, reason = null;
@@ -56,6 +58,7 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
   if (args.resolve) {
     io.log(`action=${action}`);
     io.log(`slot=${slot ?? ""}`);
+    io.log(`now=${jstIso(nowMs)}`); // 後続の手順に同じ時刻を渡す（手順ごとに時刻を取り直すと、判定が変わり得る）
     if (reason) io.log(`reason=${reason}`);
     return { action, slot };
   }
@@ -66,7 +69,8 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
     if (manual && action === "design" && designsDone({ planDate, prevPlan, logRows }).has(slot)) { io.log(`[daytrade] 計画日 ${planDate} の設計${slot}は済んでいます。何もしません`); return { skipped: "done" }; }
     if (action === "status" && prevPlan?.status_updated_at) {
       const last = parseIso(prevPlan.status_updated_at);
-      if (Number.isFinite(last) && Math.floor(last / 3600000) === Math.floor(nowMs / 3600000) && prevPlan.plan_date === planDate) {
+      // 同じ時間内の状態更新は1回まで。ただし、前の実行が発注できる状態の入力でなかった（古い入力など）ときは、新しい入力でやり直す
+      if (Number.isFinite(last) && Math.floor(last / 3600000) === Math.floor(nowMs / 3600000) && prevPlan.plan_date === planDate && prevPlan.inputs_ok !== false) {
         io.log("[daytrade] この時間の状態更新は済んでいます。何もしません"); return { skipped: "done" };
       }
     }
@@ -80,17 +84,16 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
   const { plan, logAppend } = action === "design"
     ? buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows })
     : buildStatus({ inputs, riskFeed, nowMs, prevPlan, logRows });
+  if (logBroken) plan.banners.push(`log.csv を読めないため、ログの追記を行っていません（${logBroken}）`);
   const txt = render(plan, inputs.accounts);
 
-  // 5) 書き込み（全部できてから data/ に置く。一時ファイルは data/ の外）
-  const entries = [
-    { file: "daytrade-plan.json", content: JSON.stringify(plan, null, 2) + "\n" },
-    { file: "daytrade-plan.txt", content: txt },
-  ];
-  if (logAppend && logAppend.length) entries.push({ file: path.join("daytrade", "log.csv"), content: L.appendedText(logText, logAppend) });
+  // 5) 書き込み（全部できてから data/ に置く。一時ファイルは data/ の外）。ログを先に置く（途中で止まっても、計画だけが先に公開されて案の記録が抜ける、を避ける）
+  const entries = [];
+  if (!logBroken && logAppend && logAppend.length) entries.push({ file: path.join("daytrade", "log.csv"), content: L.appendedText(logText, logAppend) });
+  entries.push({ file: "daytrade-plan.json", content: JSON.stringify(plan, null, 2) + "\n" }, { file: "daytrade-plan.txt", content: txt });
   if (args["dry-run"]) { io.log(txt); return { plan, logAppend, dry: true }; }
   store.writeAll(dataDir, entries);
-  io.log(`[daytrade] ${action}${action === "design" ? `（設計${slot}）` : ""} 計画日 ${plan.plan_date} / 候補 ${plan.candidates.length}件 / 発注${plan.order_ok ? "可" : "不可"} / log追記 ${logAppend ? logAppend.length : 0}行 / ${jstIso(nowMs)}`);
+  io.log(`[daytrade] ${action}${action === "design" ? `（設計${slot}）` : ""} 計画日 ${plan.plan_date} / 候補 ${plan.candidates.length}件 / 発注${plan.order_ok ? "可" : "不可"} / log追記 ${logBroken ? 0 : logAppend ? logAppend.length : 0}行 / ${jstIso(nowMs)}`);
   return { plan, logAppend };
 }
 

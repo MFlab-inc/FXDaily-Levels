@@ -10,7 +10,7 @@ const { planDateOf } = require("./windows");
  *   設計②       : 15:00〜16:59 の最初の実行
  *   設計③       : 21:00〜22:59 の最初の実行（冬時間は 22:00〜23:59）
  *   それ以外     : 状態更新（07:00〜翌02:59 の実行。毎時1回まで。型Bの追加は 16:00〜21:59 の状態更新の中）
- * 『最初の実行』= その計画日・その枠の設計がまだ無いこと。済みかどうかは plan.json の設計の履歴（designs）と、
+ * 『最初の実行』= その計画日・その枠の設計がまだ無いこと（発注できる状態の入力で作れた設計だけが『済み』。古い入力・日次レベル未更新で作った設計は、窓の中の次の実行でやり直す）。済みかどうかは plan.json の設計の履歴（designs）と、
  * log.csv のその計画日の design 行（生成時刻が窓の中にあるもの）の両方で見る（候補が0件の設計は log.csv に行が残らないため）。
  * 土日の計画日（金曜の設計の有効期限＝土曜 3:00 以降）は何もしない。
  */
@@ -49,7 +49,8 @@ function designsDone({ planDate, prevPlan, logRows = [] }) {
   const done = new Set();
   // plan.json にその計画日の設計の履歴があれば、それが正（手動で窓の外に作った設計を、窓の時刻から別の枠と取り違えない）
   if (prevPlan && prevPlan.plan_date === planDate && Array.isArray(prevPlan.designs) && prevPlan.designs.length) {
-    for (const d of prevPlan.designs) if ([1, 2, 3].includes(d.slot)) done.add(d.slot);
+    // 発注できる状態の入力で作れなかった設計（inputs_ok=false）は『済み』にしない。窓の中の次の実行でやり直す [Q58]
+    for (const d of prevPlan.designs) if ([1, 2, 3].includes(d.slot) && d.inputs_ok !== false) done.add(d.slot);
     return done;
   }
   // 履歴が無いとき（plan.json が無い・別の日のもの）は、log.csv のその計画日の design 行を、生成時刻の窓で枠に当てはめる

@@ -18,7 +18,9 @@ const COLUMNS = [
   "expires_at", "reached", "reached_at", "first_hit_a", "first_hit_b", "filled_ticket_701620", "filled_ticket_702449",
 ];
 
-const keyOf = (r) => [r.plan_date, r.setup, r.symbol, r.side, r.entry_low, r.entry_high, r.sl_a, r.sl_b].join("|");
+// 価格の列は数として正規化して比べる（表計算ソフトを通して 1.10400 が 1.104 になっても、同じ版として扱う）
+const normNum = (v) => { if (v === "" || v === undefined || v === null) return ""; const n = Number(v); return Number.isFinite(n) ? String(n) : String(v); };
+const keyOf = (r) => [r.plan_date, r.setup, r.symbol, r.side, normNum(r.entry_low), normNum(r.entry_high), normNum(r.sl_a), normNum(r.sl_b)].join("|");
 
 function parseLog(text) {
   const rows = csv.parse(text);

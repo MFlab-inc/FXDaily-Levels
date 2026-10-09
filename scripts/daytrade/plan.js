@@ -25,6 +25,7 @@ const N = require("./num");
 const SCHEMA_VERSION = 2;
 
 const fmt = (v, pair) => (Number.isFinite(v) ? v.toFixed(pair.digits) : "");
+const dt16 = (iso) => String(iso ?? "").slice(0, 16).replace("T", " ");
 const pipsOf = (v, pair) => (Number.isFinite(v) ? Number((v / pair.pip).toFixed(1)) : null);
 
 function ratesOf(raw) {
@@ -66,7 +67,7 @@ function schemeOut(s, pair, commissionPerLot = null) {
   if (Number.isFinite(s.sl)) Object.assign(out, { sl: s.sl, sl_pips: Number(s.sl_pips.toFixed(1)) });
   if (Number.isFinite(s.tp)) {
     Object.assign(out, {
-      tp1: s.tp, profit_pips: Number(s.profit_pips.toFixed(1)), rr: Number.isFinite(s.rr) ? Number(s.rr.toFixed(2)) : null,
+      tp1: s.tp, profit_pips: Number(s.profit_pips.toFixed(1)), rr: Number.isFinite(s.rr) ? Number((s.rr + 1e-9).toFixed(2)) : null,
       cost_cap_pips: Number(s.cost_cap_pips.toFixed(2)), cost_threshold_pips: s.cost_threshold_pips,
     });
   }
@@ -176,6 +177,17 @@ function summarize(results) {
   };
 }
 
+// 状態更新で型Bを追加したあと、候補数・A案／B案を通った案の数を、最終の候補から数え直す（不採用の内訳は設計時のまま）
+function summaryWithCandidates(summary, cands) {
+  if (!summary) return summary;
+  return { ...summary, candidate_rows: cands.length, scheme_pass: { A: cands.filter((c) => c.schemes.A?.pass).length, B: cands.filter((c) => c.schemes.B?.pass).length } };
+}
+
+// 発注できる状態の入力か（鮮度・日次レベル・MTF・イベント停止の対象通貨表・口座設定）。満たさない設計は『済み』にしない（窓の中の次の実行でやり直す）
+function inputsOk(inputs, mtfSt) {
+  return !inputs.freshness.stale && inputs.freshness.daily.ok && mtfSt.ok && inputs.rulesOk !== false && !(inputs.accountProblems || []).length;
+}
+
 // 銘柄ごとの方向（表示用）と、その日の停止時間（カレンダーが使えるときだけ）
 function directionsOf(inputs, mtfSt) {
   const out = {};
@@ -206,6 +218,8 @@ function baseHeader(inputs, nowMs, calSt, mtfSt) {
   if (!inputs.freshness.daily.ok) banners.push(`日次レベル未更新: ${inputs.freshness.daily.reason}`);
   if (!mtfSt.ok) banners.push(`方向根拠なし: ${mtfSt.reason}`);
   if (!calSt.ok) banners.push(`イベント未取得: ${calSt.reason}（停止時間なしで生成）`);
+  if (inputs.rulesOk === false) banners.push("イベント停止の対象通貨表（config/daytrade-rules.json の pair_currencies）が読めません: 停止時間を出せないため発注不可");
+  if ((inputs.accountProblems || []).length) banners.push(`口座設定の問題: ${inputs.accountProblems.join(" ／ ")}（上限ロットを出せないため発注不可）`);
   return banners;
 }
 
@@ -240,7 +254,7 @@ function commonPlan({ inputs, riskFeed, nowMs, calSt, mtfSt, run, planDate, logR
     freshness: inputs.freshness,
     ...accountsBlock(inputs),
     events: { status: calSt.ok ? "ok" : "イベント未取得", reason: calSt.reason, as_of: inputs.raw.calendar?.as_of ?? null, date: inputs.raw.calendar?.date ?? null, source: inputs.raw.calendar?.source ?? null, note: "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う" },
-    events_today: dayEvents(inputs.raw.calendar, pairCur, calSt).map((e) => ({ ...e, start: jstIso(e.start), end: jstIso(e.end) })),
+    events_today: dayEvents(inputs.raw.calendar, Object.fromEntries(PAIRS.filter((p) => pairCur[p.code]).map((p) => [p.code, pairCur[p.code]])), calSt).map((e) => ({ ...e, start: jstIso(e.start), end: jstIso(e.end) })),
     mtf: { ok: mtfSt.ok, reason: mtfSt.reason, status: inputs.raw.mtf?.status ?? null, data_base_date: inputs.raw.mtf?.data_base_date ?? null, generated_at: inputs.raw.mtf?.generated_at ?? null, expected_session: inputs.expectedSession },
     directions: directionsOf(inputs, mtfSt),
     stop_windows: stopWindowsOf(inputs, calSt),
@@ -274,17 +288,21 @@ function buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows }) {
       if (res.outcome === "candidate") cands.push(toCandidate(res, pair, { planDate, nowMs, slot, calOk: calSt.ok, windows, ctx, commissionPerLot: inputs.commissionPerLotJpy }));
     }
   }
+  const sameDay = prevPlan && prevPlan.plan_date === planDate;
+  // 設計①②は型Aだけを再設計する。状態更新で追加した型Bは、取消さずにそのまま引き継ぐ（型Bを再設計するのは設計③）
+  if (setups.length === 1 && sameDay && Array.isArray(prevPlan.candidates)) cands.push(...prevPlan.candidates.filter((c) => c.setup === "B"));
   markSameDirection(cands, pairCur);
   rankCandidates(cands);
 
   const rows = L.readLogLike(logRows);
-  const sameDay = prevPlan && prevPlan.plan_date === planDate;
+  const ok = inputsOk(inputs, mtfSt);
   const prevDesigns = sameDay && Array.isArray(prevPlan.designs) ? prevPlan.designs.filter((d) => d.slot !== slot) : [];
   const plan = {
     ...commonPlan({ inputs, riskFeed, nowMs, calSt, mtfSt, run: "design", planDate, logRows }),
     design_slot: slot, generated_at: jstIso(nowMs),
-    designs: [...prevDesigns, { slot, generated_at: jstIso(nowMs) }].sort((a, b) => a.slot - b.slot),
-    order_ok: !inputs.freshness.stale && inputs.freshness.daily.ok && mtfSt.ok,
+    // 発注できる状態の入力で作れた設計だけを『済み』にする（inputs_ok=false の設計は、窓の中の次の実行でやり直す）[Q58]
+    designs: [...prevDesigns, { slot, generated_at: jstIso(nowMs), inputs_ok: ok }].sort((a, b) => a.slot - b.slot),
+    inputs_ok: ok, order_ok: ok,
     banners: baseHeader(inputs, nowMs, calSt, mtfSt),
     design_missing: false,
     candidates: cands,
@@ -344,7 +362,7 @@ function designLogRows(plan, prevPlan, rows, nowMs) {
 // 型B の追加（Q09）: JST 16:00〜21:59 の状態更新で、東京レンジをMTFの向きにブレイクして戻っていない銘柄を新規に設計する。
 // 同じ計画日・同じ銘柄・同じ向きの型Bが既にあれば（計画にもログにも。取消済みも）追加しない。
 function typeBAdditions({ inputs, nowMs, planDate, mtfSt, calSt, pairCur, cands, rows }) {
-  if (!isBAddTime(nowMs) || !inputs.freshness.daily.ok) return [];
+  if (!isBAddTime(nowMs) || !inputsOk(inputs, mtfSt)) return []; // 古い入力・使えない入力では追加しない（追加するとログと『同じ日の同じ型B』の重複判定に残るため）
   const existing = new Set(cands.filter((c) => c.setup === "B").map((c) => `${c.symbol}|${c.side}`));
   for (const r of rows) if (r.plan_date === planDate && r.setup === "B") existing.add(`${r.symbol}|${r.side}`);
   const added = [];
@@ -376,6 +394,9 @@ function buildStatus({ inputs, riskFeed, nowMs, prevPlan, logRows }) {
   const designMissing = designs.length === 0; // 今日の設計が無い（全枠が抜けた・設計①の前・失効後）
   const banners = baseHeader(inputs, nowMs, calSt, mtfSt);
   if (designMissing) banners.unshift(`設計なし（計画日 ${planDate} の設計がまだありません）`);
+  const lastDesign = designs[designs.length - 1];
+  if (lastDesign && lastDesign.inputs_ok === false) banners.push(`設計${lastDesign.slot ?? ""}（${dt16(lastDesign.generated_at)}）は、発注できる状態の入力が整う前に作られました。窓の中の次の実行でやり直します`);
+  const ok = inputsOk(inputs, mtfSt);
 
   const base = same && Array.isArray(prevPlan.candidates) ? prevPlan.candidates : [];
   const cands = base.map((c) => updateCandidate(c, inputs, nowMs, planDate, pairCur, calSt));
@@ -387,9 +408,9 @@ function buildStatus({ inputs, riskFeed, nowMs, prevPlan, logRows }) {
     ...commonPlan({ inputs, riskFeed, nowMs, calSt, mtfSt, run: "status", planDate, logRows }),
     design_slot: same ? prevPlan.design_slot ?? null : null, generated_at: same ? prevPlan.generated_at ?? null : null,
     designs,
-    order_ok: !designMissing && !inputs.freshness.stale && inputs.freshness.daily.ok && mtfSt.ok, banners,
+    inputs_ok: ok, order_ok: !designMissing && ok, banners,
     design_missing: designMissing,
-    candidates: cands, summary: same ? prevPlan.summary ?? null : null,
+    candidates: cands, summary: summaryWithCandidates(same ? prevPlan.summary ?? null : null, cands),
     additions_b: additions.map((c) => c.id),
   };
   const logAppend = additions.map((c) => candRow(c, "design-b", c.generated_at));
