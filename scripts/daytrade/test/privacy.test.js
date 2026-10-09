@@ -33,7 +33,7 @@ test("資金が未設定の口座は『未設定』と出して発注不可。�
     assert.equal(plan.order_ok, false);
     assert.equal(plan.inputs_ok, false);
     assert.equal(plan.designs[0].inputs_ok, false); // 設計も『済み』にしない（窓の中の次の実行でやり直す）
-    assert.match(plan.banners.join("\n"), /口座設定の問題: 口座 A の資金が未設定です（GitHub Actions の Variables DAYTRADE_EQUITY_A を設定してください。上限ロットは出せません）/);
+    assert.match(plan.banners.join("\n"), /口座設定の問題: 口座 A の資金が未設定です（GitHub Actions の Secrets（または Variables）DAYTRADE_EQUITY_A を設定してください。上限ロットは出せません）/);
     assert.deepEqual(plan.accounts.A, { role: "daytrade", equity_status: "unset", daily_loss_limit_jpy: null });
     assert.deepEqual(plan.accounts.B, { role: "swing_daytrade", equity_status: "ok", daily_loss_limit_jpy: 45000 });
     const eu = plan.candidates.find((c) => c.symbol === "EURUSD");
@@ -42,7 +42,7 @@ test("資金が未設定の口座は『未設定』と出して発注不可。�
     assert.equal(eu.schemes.A.lots.B, 1);
     const txt = render(plan, inputs.accounts);
     assert.match(txt, /発注可否: 発注不可/);
-    assert.match(txt, /A（daytrade） 資金 未設定（Variables） ／ 本日の損失上限 — ／ B（swing_daytrade） 本日の損失上限 45,000円（1\.5%）/);
+    assert.match(txt, /A（daytrade） 資金 未設定（Secrets／Variables） ／ 本日の損失上限 — ／ B（swing_daytrade） 本日の損失上限 45,000円（1\.5%）/);
     assert.match(txt, /上限ロット A=未設定 \/ B=1\.00（往復手数料 1,013円）/);
     // ログ（log.csv の行）: 未設定の口座の列は空
     const row = L.parseLog(L.appendedText("", plan.candidates.length ? design(sc).logAppend : []))[0];

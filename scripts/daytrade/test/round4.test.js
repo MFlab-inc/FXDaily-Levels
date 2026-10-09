@@ -157,7 +157,7 @@ test("口座設定・停止対象通貨表の問題は、黙らずバナーに�
   const noAcc = mk(); fs.rmSync(path.join(noAcc.dataDir, "daytrade", "accounts.json")); cases.push([noAcc, /口座設定の問題: .*accounts\.json がありません/, true]);
   const badRisk = mk(); writeJson(badRisk, "daytrade/accounts.json", accJson({ risk_pct: 50 })); cases.push([badRisk, /risk_pct が 0 超 5 以下の数ではありません（50）/, true]); // 上限 5 は残す
   const edge5 = mk(); writeJson(edge5, "daytrade/accounts.json", accJson({ risk_pct: 5 })); cases.push([edge5, null, false]); // 5 ちょうどは有効
-  const unsetA = mk({ env: { DAYTRADE_EQUITY_A: "" } }); cases.push([unsetA, /口座 A の資金が未設定です（GitHub Actions の Variables DAYTRADE_EQUITY_A を設定してください/, true]);
+  const unsetA = mk({ env: { DAYTRADE_EQUITY_A: "" } }); cases.push([unsetA, /口座 A の資金が未設定です（GitHub Actions の Secrets（または Variables）DAYTRADE_EQUITY_A を設定してください/, true]);
   const badEq = mk({ env: { DAYTRADE_EQUITY_B: "-3000000" } }); cases.push([badEq, /口座 B の資金（DAYTRADE_EQUITY_B）が正の整数（円）ではありません/, true]);
   const noRules = mk(); fs.writeFileSync(path.join(noRules.repoRoot, "config", "daytrade-rules.json"), JSON.stringify({ pair_currencies: { EURUSD: ["EUR", "USD"] } })); cases.push([noRules, /pair_currencies）が読めません/, true]);
   const softBad = mk(); writeJson(softBad, "daytrade/accounts.json", { accounts: { A: { role: "daytrade" } }, risk_pct: 0.5 }); cases.push([softBad, null, false]);
@@ -305,7 +305,7 @@ test("CLI: plan.json が無くても、log.csv の design 行があればその�
   } finally { cleanup(sc); }
 });
 
-test("workflow: Resolve と同じ時刻（now）を採点・生成の手順に渡す。この枝が既存ファイルを変えていないことを git の差分で確かめる（origin/main があるときだけ）", () => {
+test("workflow: Resolve と同じ時刻（now）を採点・生成の手順に渡す。この枝がデイトレ以外の既存ファイルを変えていないことを git の差分で確かめる（origin/main があるときだけ）", () => {
   const yml = fs.readFileSync(path.join(__dirname, "..", "..", "..", ".github", "workflows", "daytrade.yml"), "utf8");
   assert.match(yml, /run: node scripts\/daytrade-score\.js --now="\$NOW"/);
   assert.match(yml, /run: node scripts\/daytrade-plan\.js --now="\$NOW" \$FORCE/);
@@ -315,6 +315,11 @@ test("workflow: Resolve と同じ時刻（now）を採点・生成の手順に�
   let diff = null;
   try { diff = execFileSync("git", ["diff", "--name-status", "origin/main...HEAD"], { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }); } catch { /* origin/main が無い（CI の浅い checkout など） */ }
   if (diff === null) return;
-  const nonAdded = diff.split("\n").filter((l) => l && !l.startsWith("A\t"));
-  assert.deepEqual(nonAdded, [], "既存のファイルを変更・削除してはいけない");
+  // デイトレプラン機能のファイル（PR #15 で追加し、main に入った）以外は、変更・追加・削除しない。fetch.js・daytrade.js・intraday.yml・
+  // mtf/・config/・data/*.json（daytrade-context.json を含む）などの既存ファイルには触れない。機能のファイルを直すのは自由
+  const OWN = [/^scripts\/daytrade-(plan|score|backtest)\.js$/, /^scripts\/daytrade\//, /^data\/daytrade\//, /^data\/history\//, /^data\/daytrade-plan\.(txt|json)$/, /^docs\/daytrade-plan-/, /^\.github\/workflows\/daytrade[^/]*\.yml$/];
+  const outside = diff.split("\n").filter((l) => l).map((l) => l.split("\t").slice(1)).flat().filter((f) => !OWN.some((re) => re.test(f)));
+  assert.deepEqual(outside, [], "デイトレ以外の既存のファイルを変更・削除してはいけない");
+  // この判定自体の確認: 既存のファイルの名前は『自分のもの』に入らない
+  for (const f of ["scripts/daytrade.js", "scripts/fetch.js", "data/daytrade-context.json", ".github/workflows/intraday.yml", "mtf/lib/calc.js", "config/daytrade-rules.json"]) assert.ok(!OWN.some((re) => re.test(f)), f);
 });

@@ -17,7 +17,7 @@ const yen = (v) => (Number.isFinite(v) ? `${Math.round(v).toLocaleString("en-US"
 function lotText(s, accts) {
   return Object.keys(accts).map((a) => {
     const v = s.lots?.[a];
-    // 資金が未設定（GitHub Actions の Variables が無い）／不正な口座は、上限ロットを計算せず『未設定』と出す
+    // 資金が未設定（GitHub Actions の Secrets／Variables が無い）／不正な口座は、上限ロットを計算せず『未設定』と出す
     if (accts[a]?.equity_status === "unset") return `${a}=未設定`;
     if (accts[a]?.equity_status === "invalid") return `${a}=未設定（資金の設定が不正）`;
     if (v === null || v === undefined) return `${a}=—（上限ロットを計算できません）`;
@@ -104,7 +104,7 @@ function render(plan, accountsParam = {}) {
     const loss = (a) => (accts[a].daily_loss_limit_jpy === null || accts[a].daily_loss_limit_jpy === undefined ? "—" : yen(accts[a].daily_loss_limit_jpy));
     const pct = plan.settings?.daily_loss_pct;
     const pctText = (a) => (accts[a].daily_loss_limit_jpy !== null && accts[a].daily_loss_limit_jpy !== undefined && pct !== null && pct !== undefined ? `（${pct}%）` : "");
-    const equityNote = (a) => (accts[a].equity_status === "unset" ? " 資金 未設定（Variables） ／" : accts[a].equity_status === "invalid" ? " 資金 未設定（設定が不正） ／" : "");
+    const equityNote = (a) => (accts[a].equity_status === "unset" ? " 資金 未設定（Secrets／Variables） ／" : accts[a].equity_status === "invalid" ? " 資金 未設定（設定が不正） ／" : "");
     L.push(`  口座: ${ids.map((a) => `${a}（${accts[a].role ?? "—"}）${equityNote(a)} 本日の損失上限 ${loss(a)}${pctText(a)}`).join(" ／ ")}`);
   }
 

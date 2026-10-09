@@ -5,9 +5,9 @@ name: Daytrade Plan
 # economic-calendar.json・daytrade-context.json）は読むだけで、書くのは次の3ファイルだけ:
 #   data/daytrade-plan.txt / data/daytrade-plan.json / data/daytrade/log.csv
 # 外部のAPIキー（secrets）は使わない（risk-feed.json は公開URLから読む）。
-# 口座の資金（円・整数）は、リポジトリの Variables DAYTRADE_EQUITY_A（デイトレ専用口座）・DAYTRADE_EQUITY_B（スイング＋デイトレ口座）から読む。
-# ファイル（accounts.json・計画・log.csv）には書かない。未設定なら『上限ロット 未設定・発注不可』になる。設定方法は data/daytrade/README.md。
-# 注意: Variables の値は Actions のログ（Generate plan の env 欄）に平文で出る。ログにも出したくなければ、同名の Secrets に設定する（Secrets が優先され、ログでは *** に伏せられる）。
+# 口座の資金（円・整数）は、リポジトリの Secrets（運用）または Variables の DAYTRADE_EQUITY_A（デイトレ専用口座）・DAYTRADE_EQUITY_B（スイング＋デイトレ口座）から読む。
+# 同名が両方にあれば Secrets が優先。ファイル（accounts.json・計画・log.csv）には書かない。未設定なら『上限ロット 未設定・発注不可』になる。設定方法は data/daytrade/README.md。
+# 注意: Variables の値は Actions のログ（Generate plan の env 欄）に平文で出る。Secrets ならログでは *** に伏せられる。
 #
 # 起動: cron ではなく、intraday のワークフロー（Intraday Snapshot）が完了した直後（workflow_run）。入力が更新された直後に動くので、
 # 鮮度（20分）を満たす。GitHub の schedule が欠落・遅延する問題（daily.yml のコメント参照）の影響も受けない。
