@@ -40,7 +40,7 @@ const QUESTIONS = [
   { id: "Q28", impact: "material", status: "confirmed", answer: "暫定の読みで確定", title: "バックテスト：イベント停止（過去のカレンダーが無い）", provisional: "全期間『停止なし』（仕様の文言どおり）と明記" },
   { id: "Q29", impact: "material", status: "confirmed", answer: "暫定の読みで確定", title: "バックテスト：軸『ボラ状態』の過去分が無い", provisional: "日足（data/mtf）から、risk-feedと同じ定義（ATR14÷終値の過去250営業日パーセンタイル、境界は risk-feed の meta.thresholds）で再計算した近似。見出しに明記" },
   { id: "Q30", impact: "material", status: "confirmed", answer: "暫定の読みで確定", title: "バックテスト：『コスト込み』のコスト、仮想損益の単位", provisional: "グロス（コスト0）と、往復コスト=2-2の下限（1.2／1.6pips）を引いた値の2本。主指標はpipsとR。円は1ロット換算の参考列" },
-  { id: "Q31", impact: "material", status: "confirmed", answer: "暫定の読みで確定", title: "バックテスト：『エントリー時間帯』『曜日』の基準（未到達の案には約定時刻が無い）", provisional: "全指標を設計の回（06:30／15:30／21:00）と設計日の曜日で出す。約定後の指標だけ、約定時刻（JST1時間刻み）の表を別に出す" },
+  { id: "Q31", impact: "material", status: "confirmed", answer: "暫定の読みで確定", title: "バックテスト：『エントリー時間帯』『曜日』の基準（未到達の案には約定時刻が無い）", provisional: "全指標を設計の回（06:30／15:30／21:00。型Bの追加は『状態更新（型B追加）』の回）と設計日の曜日で出す。約定後の指標だけ、約定時刻（JST1時間刻み）の表を別に出す" },
   { id: "Q32", impact: "material", status: "confirmed", answer: "暫定の読みで確定", title: "バックテスト：平均RR・勝率・最大連敗の定義", provisional: "『計画RR平均』と『実現R平均』を別の名前で両方出す。勝率=TP1先着÷約定。最大連敗=集計グループ内を決済時刻順に並べた連続損失。件数(n)を併記、足切りなし" },
   { id: "Q33", impact: "material", status: "confirmed", answer: "暫定の読みで確定", title: "バックテスト：出力の形（軸の掛け合わせ、CSVの中身、ファイル名の日付）", provisional: "型×ATR係数ごとに、各軸の値別の周辺集計。CSVは長形式。ファイル名は実行日（JST）" },
   { id: "Q34", impact: "material", status: "confirmed", answer: "暫定の読みで確定", title: "バックテスト：NZDUSD は MTF の日足が無く向きを再計算できない", provisional: "H1は取得するが案は作らない（ライブと同じ）。mdに明記" },
@@ -56,7 +56,7 @@ const QUESTIONS = [
   { id: "Q44", impact: "minor", status: "confirmed", answer: "暫定の読みで確定", title: "risk_pct=0.5 の単位（式は equity×risk_pct と書かれ、文字どおりだと50%）", provisional: "パーセント（0.5% ）として equity×0.5÷100 で計算" },
   { id: "Q45", impact: "minor", title: "Q09 は『設計②は型Aの再設計だけ』と書くが、設計③の型Bの扱いは書かれていない", provisional: "設計③は仕様 7節どおり型A・型Bの両方を再設計する（状態更新で追加した型Bと同じ版なら続き、版が違えば取消して新しい版）" },
   { id: "Q46", impact: "minor", title: "Q09『16:00〜21:00 の毎時実行』の範囲。実行は intraday の完了ごとで、毎時とは限らない", provisional: "状態更新（run=status）の実行時刻が JST 16:00〜21:59 のものを対象にする（22:00 以降は追加しない）" },
-  { id: "Q47", impact: "minor", title: "Q09『直前に確定した H1 がレンジの外で終値確定し MTF と一致した時点』の判定を、直前の1本に限るか", provisional: "追加の時点で、15:00開始以降に確定した足のどれかがレンジ外で終値確定（evaluate の型B条件＝片方向のみ・MTFと一致・帯の外へ戻っていない）していれば追加する。直前の1本に限らない（実行が間引かれても取りこぼさない）" },
+  { id: "Q47", impact: "minor", title: "Q09『直前に確定した H1 がレンジの外で終値確定し MTF と一致した時点』の判定を、直前の1本に限るか", provisional: "追加の時点で、15:00開始以降に確定した足のどれかがレンジ外で終値確定（evaluate の型B条件＝片方向のみ・MTFと一致・現在値が帯の外へ戻っていない）していれば追加する。直前の1本に限らない（実行が間引かれても取りこぼさない）。直前の足がレンジ内に戻っていても、現在値が帯の中なら成立する（365日のバックテストで追加44件中1件、0.3pipsだけ内側）" },
   { id: "Q48", impact: "minor", title: "設計①②③がすべて抜けた日にも、状態更新で型Bを追加するか", provisional: "追加する（候補は型Bだけ。『設計なし』の印は残り、発注不可）" },
   { id: "Q49", impact: "minor", title: "Q22『最初の実行は log.csv のその計画日・その枠の design 行で判定』— 候補が0件の設計は log.csv に行が残らない。手動で窓の外に作った設計の枠", provisional: "plan.json の設計の履歴（designs）を正とし、履歴が無いときだけ log.csv の design 行を生成時刻の窓で枠に当てはめる" },
   { id: "Q50", impact: "minor", title: "workflow_run の起動条件（Intraday Snapshot が失敗・キャンセルしたとき、main 以外のとき）", provisional: "main の Intraday Snapshot が success または failure で完了したときだけ動く（cancelled・skipped と main 以外は除く）。失敗でも入力の鮮度は出力に出る" },
@@ -64,6 +64,9 @@ const QUESTIONS = [
   { id: "Q52", impact: "minor", title: "『各案の往復手数料（円）』— commission_per_lot_jpy が往復か片道か、何に掛けるか", provisional: "commission_per_lot_jpy を往復・1ロットあたりと読み、各案の口座別の上限ロット×commission_per_lot_jpy（円未満は四捨五入）を表示する" },
   { id: "Q53", impact: "minor", title: "『本日の損失上限 ◯円（1.5%）』の計算", provisional: "口座別に floor(equity_jpy × daily_loss_pct ÷ 100)。表示だけで、判定には使わない" },
   { id: "Q54", impact: "minor", title: "3項目『不採用の理由（1案1行）』の単位と範囲、MTFの方向の一覧の置き場所（7項目に専用の区画がない）", provisional: "1案＝型×銘柄×A/B案。6分類に入らない理由（基準水準なし・障害なし・入力欠落）は『（6分類外）』と併記。型Bの未成立は不採用に数えず参考情報に1行。MTFの方向は、候補の各行（MTF 3/3 Down…）と不採用の理由（方向根拠なし〔監視のみ …〕）に出し、全銘柄の方向は JSON の directions に残す" },
+  { id: "Q55", impact: "minor", title: "Q09『同じ日に同じ銘柄・同じ方向の型Bが既にあれば追加しない』の『ある』は、門で不採用になった評価を含むか", provisional: "含まない。門を通った案（候補）が計画またはログにある場合だけ『ある』。RR不足などで不採用だった時刻の評価は数えず、後の時刻に通れば追加する（ライブとバックテストで同じ）" },
+  { id: "Q56", impact: "minor", title: "バックテストの SL下限方式 (b) の細部：『下限が幅を決めた』の定義と、(a)(b) で版の連鎖が変わる点", provisional: "sl_floored＝広げた後のSLが、広げない場合の丸め後SLと違うとき（＝(a)なら『SL幅不足』で不採用になる案）。基準水準が0.5pip刻みに乗らず丸め後がすでに10pipsを超える場合は広げず sl_floored=false。(b) では広げた版が約定して後の同じ水準の版を抑えるため、(b) の『広げていない案』の集合は (a) より小さくなり得る（型A×A案 108件 対 109件）" },
+  { id: "Q57", impact: "minor", title: "バックテストの型B追加の時刻：ライブは intraday の完了ごと（16:00〜21:59 の任意の時刻）に評価するが、過去には毎時00分の足しか使えない", provisional: "毎時00分（16:00〜21:00）の状態更新として再現する（夏時間の21:00は設計③そのもの）。ライブでは最大1時間早く追加され得るので、バックテストの追加時刻はライブより遅めの近似" },
 ];
 
 const byId = new Map(QUESTIONS.map((q) => [q.id, q]));
