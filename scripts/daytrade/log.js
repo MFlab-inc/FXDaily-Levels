@@ -6,7 +6,8 @@ const csv = require("./csvio");
 /**
  * data/daytrade/log.csv（仕様 5節・6-1）。追記のみ [Q18]。
  *  design の行 … 設計の案ごと（設計のたびに追記。同じ版の再設計は追記しない）
- *  status の行 … 後から分かった状態（取消（再設計）、採点の結果）。毎時の状態更新は書かない
+ *  design-b の行 … 状態更新（JST 16:00〜21:59）で追加した型B（Q09）。設計と同じ扱いで採点される
+ *  status の行 … 後から分かった状態（取消（再設計）、採点の結果）。毎時の状態更新そのものは書かない（型Bの追加だけ design-b として書く）
  *  版の識別: (plan_date, setup, symbol, side, entry_low, entry_high, sl_a, sl_b) の一致
  *  filled_ticket_* は人が埋める。bot は書き換えず、行を足すときに同じ版の直近の行から引き継ぐだけ。
  */

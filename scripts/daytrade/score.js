@@ -31,7 +31,7 @@ function scoreRows({ rows, barsByCode, nowMs }) {
   const newRows = [];
   const held = [];
   for (const row of latest.values()) {
-    if (row.run !== "design") continue; // 直近の行が status（採点済み・取消済み）なら対象外
+    if (row.run !== "design" && row.run !== "design-b") continue; // 直近の行が status（採点済み・取消済み）なら対象外。design-b は状態更新で追加した型B
     if (expiresAtMs(row.plan_date) > nowMs) continue; // まだ有効期限前
     const bars = barsByCode[row.symbol] || [];
     if (!coversExpiry(bars, row.plan_date)) { held.push({ key: L.keyOf(row), reason: "H1足が有効期限まで届いていません" }); continue; }

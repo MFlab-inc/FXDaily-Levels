@@ -44,4 +44,21 @@ function stopWindows(cal, currencies, calStatus) {
 
 const activeStops = (windows, nowMs) => windows.filter((w) => nowMs >= w.start && nowMs <= w.end);
 
-module.exports = { BEFORE_MIN, AFTER_MIN, STALE_MIN, calendarStatus, stopWindows, activeStops };
+/**
+ * 当日のイベント一覧（出力の5項目目）。economic-calendar.json の High・Medium すべて（日本時間）。
+ * 各イベントに停止時間（前15分〜後30分）と、対象銘柄（pair_currencies にその通貨を含む銘柄）を付ける。カレンダーが使えなければ空。
+ */
+function dayEvents(cal, pairCurrencies, calStatus) {
+  if (!calStatus.ok || !Array.isArray(cal?.events)) return [];
+  const out = [];
+  for (const ev of cal.events) {
+    if (ev.impact !== "High" && ev.impact !== "Medium") continue;
+    const t = parseIso(ev.datetime_jst);
+    if (!Number.isFinite(t)) continue;
+    const symbols = Object.entries(pairCurrencies || {}).filter(([, cur]) => Array.isArray(cur) && cur.includes(ev.currency)).map(([code]) => code);
+    out.push({ time_jst: ev.time_jst ?? null, datetime_jst: ev.datetime_jst, currency: ev.currency, impact: ev.impact, event: ev.event, start: t - BEFORE_MIN * MIN, end: t + AFTER_MIN * MIN, symbols });
+  }
+  return out.sort((a, b) => a.start - b.start);
+}
+
+module.exports = { BEFORE_MIN, AFTER_MIN, STALE_MIN, calendarStatus, stopWindows, activeStops, dayEvents };

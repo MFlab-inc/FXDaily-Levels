@@ -36,7 +36,7 @@ test("入力: 鮮度・日次レベル・MTF の基準日が整っていれば�
   } finally { cleanup(sc); }
 });
 
-test("設計②: 方向のある4銘柄が型Aの候補、型Bは15:30では成立しない（ブレイクが確定しない）", () => {
+test("設計②: 方向のある4銘柄が型Aの候補。型Bは設計②では作らない", () => {
   const sc = makeScenario();
   try {
     const { plan } = build(sc);
@@ -57,11 +57,10 @@ test("設計②: 方向のある4銘柄が型Aの候補、型Bは15:30では成�
     const xau = plan.candidates.find((c) => c.symbol === "XAUUSD");
     assert.equal(xau.side, "buy");
     assert.equal(xau.note, "過去の実績が悪い"); // 落とさずに注記
-    const nb = plan.summary.not_formed.filter((x) => x.setup === "B");
-    assert.equal(nb.length, 10); // 型Bの未成立は不採用の内訳に数えない（一覧にだけ出す）
-    assert.equal(nb.filter((x) => /ブレイク未成立/.test(x.detail)).length, 4); // 方向のある4銘柄: 15:30 ではブレイクが確定しない
-    assert.equal(nb.filter((x) => /MTFの向きなし/.test(x.detail)).length, 6);
-    assert.equal(plan.summary.rejections.no_direction, 12); // 型Bの方向なしは入っていない
+    // 設計②は型Aの再設計だけ（Q09）。型Bは設計③と、16:00〜21:59 の状態更新で追加する
+    assert.equal(plan.summary.not_formed.filter((x) => x.setup === "B").length, 0);
+    assert.ok(plan.candidates.every((c) => c.setup === "A"));
+    assert.equal(plan.summary.rejections.no_direction, 12);
   } finally { cleanup(sc); }
 });
 
@@ -195,7 +194,7 @@ test("イベント未取得（date が当日でない・古い・ファイルな
       assert.match(plan.banners.join("\n"), /イベント未取得/);
       assert.equal(plan.candidates.length, 4); // エラーにしない
       assert.ok(plan.candidates.every((c) => c.entry_state.ok && c.stops.length === 0 && c.calendar_ok === false));
-      assert.match(render(plan, inputs.accounts), /イベント未取得のため、停止時間は出せません/);
+      assert.match(render(plan, inputs.accounts), /イベント未取得（.+）。停止時間なしで生成しています/);
     } finally { cleanup(sc); }
   }
 });
@@ -229,8 +228,9 @@ test("型B（設計③ 21:00）: 東京レンジを下に抜けた売りのMTF�
     const b = bs.find((c) => c.symbol === "EURUSD");
     assert.equal(b.side, "sell");
     assert.equal(b.ref.label, "東京レンジ安値");
-    assert.equal(b.confirm, null); // 型Bには M15 確認条件を付けない（Q39）
+    assert.match(b.confirm, /^帯に到達したあと、M15がレンジ安値（[\d.]+）より下で陰線確定$/); // 型Bにも M15 の確認条件（売り=レンジ安値より下で陰線、買い=レンジ高値より上で陽線）
     assert.equal(bs.find((c) => c.symbol === "AUDUSD").ref.label, "東京レンジ高値");
+    assert.match(bs.find((c) => c.symbol === "AUDUSD").confirm, /M15がレンジ高値（[\d.]+）より上で陽線確定/);
     const gb = plan.summary.not_formed.find((x) => x.symbol === "GBPUSD" && x.setup === "B");
     assert.match(gb.detail, /不一致/);
   } finally { cleanup(sc); }
@@ -328,7 +328,7 @@ test("log: 設計のたびに版ごとに追記。同じ版は追記せず、消
 });
 
 // ---- 出力 ----
-test("出力: 7つの区画が順に並び、判定文を出さず、参考：既存ゲートとボラの『未収録』『未取得』を示す", () => {
+test("出力: テンプレ v1.2 の7項目の見出しが順に並ぶ。判定文を出さず、参考：既存ゲートとボラの『未収録』『未取得』を示す", () => {
   const sc = makeScenario();
   try {
     const riskFeed = {
@@ -337,8 +337,8 @@ test("出力: 7つの区画が順に並び、判定文を出さず、参考：�
     };
     const { plan, inputs } = build(sc, { riskFeed });
     const txt = render(plan, inputs.accounts);
-    const heads = [...txt.matchAll(/^== (\d)\. /gm)].map((m) => m[1]);
-    assert.deepEqual(heads, ["1", "2", "3", "4", "5", "6", "7"]);
+    const heads = [...txt.matchAll(/^== (\d)\. ([^（=\s]+)/gm)].map((m) => `${m[1]}.${m[2]}`);
+    assert.deepEqual(heads, ["1.データ鮮度", "2.候補", "3.不採用の理由", "4.価格根拠", "5.イベント", "6.前営業日の結果記録", "7.出典"]);
     assert.match(txt, /参考：既存ゲート/);
     assert.match(txt, /GBPUSD: 未収録/);
     assert.match(txt, /EURUSD: 当日レンジ 52\.1 ／ ADR比 0\.84 ／ 急変フラグ false/);
@@ -348,8 +348,61 @@ test("出力: 7つの区画が順に並び、判定文を出さず、参考：�
     const t2 = render(build(sc).plan, inputs.accounts);
     assert.match(t2, /ボラの状態（risk-feed 未取得/);
     assert.match(t2, /EURUSD: 未取得/);
-    // 上限ロット: 口座ごと、0.00 は 0.00 と出す
-    assert.match(txt, /701620=0\.20 \/ 702449=1\.56/);
+    // 1項目目: 口座別の本日の損失上限（equity×1.5%）。2項目目: 口座別の上限ロットと往復手数料（1,013円×ロット）
+    assert.match(txt, /701620（daytrade） equity 610,273円 ／ 本日の損失上限 9,154円（1\.5%）/);
+    assert.match(txt, /702449（swing_daytrade） equity 4,682,566円 ／ 本日の損失上限 70,238円（1\.5%）/);
+    assert.match(txt, /701620=0\.20（往復手数料 203円） \/ 702449=1\.56（往復手数料 1,580円）/);
+    // 1項目目: Feed生成時刻・Daily/Intraday/H1/M15 の最終確定足・鮮度基準内か
+    for (const k of ["Intraday :", "H1       :", "M15      :", "Daily    :", "＝基準内"]) assert.ok(txt.includes(k), k);
+  } finally { cleanup(sc); }
+});
+
+test("出力: 3項目目は『1案1行』で理由だけ（価格を書かない）。末尾に参考情報（候補数・内訳の件数・ボラ・既存ゲート）", () => {
+  const sc = makeScenario();
+  try {
+    const { plan, inputs } = build(sc);
+    const txt = render(plan, inputs.accounts);
+    const sec = txt.slice(txt.indexOf("== 3."), txt.indexOf("== 4."));
+    const lines = sec.split("\n").filter((l) => /^  \S+ 型[AB] [AB]案: /.test(l));
+    assert.equal(lines.length, 12); // 方向のない6銘柄 × 型A × A/B案
+    assert.ok(lines.includes("  USDJPY 型A A案: 方向根拠なし（監視のみ（2/3 Up だが逆向きの時間足あり））".replace("2/3 Up だが逆向きの時間足あり", "2/3 Up だが逆向きの時間足あり")));
+    assert.ok(lines.includes("  NZDUSD 型A B案: 方向根拠なし（MTF未収録）"));
+    for (const l of lines) assert.ok(!/\d+\.\d+/.test(l), `価格を書かない: ${l}`);
+    assert.ok(sec.indexOf("── 参考情報 ──") > sec.indexOf("USDJPY 型A A案"));
+    for (const k of ["候補数: 4件", "不採用の内訳（件数）", "ボラの状態", "参考：既存ゲート"]) assert.ok(sec.includes(k), k);
+    // 理由が『6分類』のどれかに当たる案は、その理由の名前だけを出す
+    const sc2 = makeScenario({ spec: { EURUSD: { adr_used_pct: 85 } } });
+    try {
+      const t2 = render(build(sc2).plan, inputs.accounts);
+      assert.match(t2, /  EURUSD 型A A案: ADR消化超過\n/);
+      assert.match(t2, /  EURUSD 型A B案: ADR消化超過\n/);
+    } finally { cleanup(sc2); }
+  } finally { cleanup(sc); }
+});
+
+test("出力: 4項目目は価格根拠（基準水準・SL・TP1の障害・日次レベル・H1高安群を数値で）、5項目目は日本時間のイベントと停止時間、7項目目は出典", () => {
+  const ev = [{ time_jst: "15:40", datetime_jst: "2026-10-08T15:40:00+09:00", currency: "EUR", impact: "Medium", event: "ECB Speaks" }];
+  const sc = makeScenario({ events: ev });
+  try {
+    const { plan, inputs } = build(sc);
+    const txt = render(plan, inputs.accounts);
+    const sec4 = txt.slice(txt.indexOf("== 4."), txt.indexOf("== 5."));
+    assert.match(sec4, /\[2\] EURUSD 売り 型A/);
+    assert.match(sec4, /Entry: 基準水準 1\.10400（Pivot）→ 帯 1\.10400〜1\.10420/);
+    assert.match(sec4, /SL\(A案\): 1\.10500 = 基準水準 ＋ 0\.5×H1 ATR14（20pips）/);
+    assert.match(sec4, /TP1: 1\.09005 = 最初の障害 S1 1\.09000 の手前 0\.5pips/);
+    assert.match(sec4, /日次レベル: Pivot 1\.10400 ／ R1 1\.11500 ／ R2 1\.12500 ／ S1 1\.09000 ／ S2 1\.08000 ／ 前日高値 1\.12000 ／ 前日安値 1\.08500/);
+    assert.match(sec4, /H1高値群（直近24本）: なし ／ H1安値群: なし/);
+    const sec5 = txt.slice(txt.indexOf("== 5."), txt.indexOf("== 6."));
+    assert.match(sec5, /15:40 \[EUR\/Medium\] ECB Speaks → 停止 15:25〜16:10（対象: EURUSD、EURJPY、EURGBP）/);
+    const sec7 = txt.slice(txt.indexOf("== 7."));
+    for (const k of ["mtf-feed.json 生成", "data_base_date 2026-10-07", "intraday.json", "economic-calendar.json", "risk-feed:", "設計の履歴: 設計2"]) assert.ok(sec7.includes(k), k);
+    // イベント未取得
+    const sc2 = makeScenario({ calDate: "2026-10-07", events: ev });
+    try {
+      const b = build(sc2);
+      assert.match(render(b.plan, b.inputs.accounts).slice(render(b.plan, b.inputs.accounts).indexOf("== 5.")), /イベント未取得（カレンダーの date/);
+    } finally { cleanup(sc2); }
   } finally { cleanup(sc); }
 });
 
@@ -357,8 +410,12 @@ test("出力 JSON: 暫定判断の番号を持ち、候補に上限を設けな�
   const sc = makeScenario();
   try {
     const { plan } = build(sc);
-    assert.ok(plan.provisional.open_questions.includes("Q01"));
-    assert.equal(plan.schema_version, 1);
+    assert.ok(Array.isArray(plan.provisional.open_questions));
+    assert.equal(plan.schema_version, 2);
+    assert.deepEqual(plan.designs.map((d) => d.slot), [2]);
+    assert.equal(plan.accounts[701620].daily_loss_limit_jpy, 9154);
+    assert.equal(plan.settings.commission_per_lot_jpy, 1013);
+    assert.equal(plan.candidates[0].schemes.A.commission_jpy[701620], 203);
     assert.equal(typeof plan.reference.existing_gate.states.EURUSD, "string");
     assert.equal(plan.reference.existing_gate.note.includes("参考：既存ゲート"), true);
   } finally { cleanup(sc); }
@@ -452,7 +509,7 @@ test("出力: daytrade-context の確定M15の最終足と data_status を参考
     assert.equal(plan.freshness.ctx_m15.oldest_last_closed, "2026-10-08 14:45");
     assert.deepEqual(plan.freshness.ctx_m15.not_ok, ["XAUUSD:DEGRADED"]);
     assert.equal(plan.order_ok, true);
-    assert.match(render(plan, inputs.accounts), /確定M15の最終足: 最古 2026-10-08 14:45 ／ data_status が OK でない銘柄: XAUUSD:DEGRADED。発注可否には使わない/);
+    assert.match(render(plan, inputs.accounts), /確定M15の最終足 最古 2026-10-08 14:45・最新 2026-10-08 15:15 ／ data_status が OK でない銘柄: XAUUSD:DEGRADED（M15の最終足は発注可否には使わない）/);
   } finally { cleanup(sc); }
 });
 
@@ -495,4 +552,117 @@ test("log: 取消の行を足さないのは、計画日が違う前の設計／
     // (3) 取消されていない版は、今回の設計で無くなれば取消される
     assert.equal(build(gone, { prevPlan: first.plan, logRows: first.logAppend }).logAppend.length, 4);
   } finally { cleanup(sc); cleanup(gone); cleanup(next); }
+});
+
+// ---- Q09: 型B は 16:00〜21:59 の状態更新で追加する（run=design-b） ----
+const downEU = { EURUSD: { bars: { dir: "down" } } };
+test("型B（Q09）: 16:00〜21:59 の状態更新で、東京レンジを下に抜けてMTFの向きと一致した銘柄を新規に設計して追加する。log.csv には run=design-b", () => {
+  const d = makeScenario({ spec: downEU });                                              // 15:30 の設計②（型Aだけ）
+  const s17 = makeScenario({ nowIso: "2026-10-08T17:00:00+09:00", spec: downEU });       // 17:00 の状態更新（16:00開始の足まで確定）
+  try {
+    const design = build(d);
+    assert.ok(design.plan.candidates.every((c) => c.setup === "A"));
+    const inputs = loadInputs({ dataDir: s17.dataDir, repoRoot: s17.repoRoot, nowMs: s17.nowMs });
+    const { plan, logAppend } = buildStatus({ inputs, riskFeed: noFeed, nowMs: s17.nowMs, prevPlan: design.plan, logRows: design.logAppend });
+    // 追加: EURUSD 売り（下抜け）、AUDUSD 買い・XAUUSD 買い（上抜け）。GBPUSD は売りのMTFなのに上抜けなので追加しない
+    const adds = plan.candidates.filter((c) => c.run === "design-b");
+    assert.deepEqual(adds.map((c) => c.symbol).sort(), ["AUDUSD", "EURUSD", "XAUUSD"]);
+    assert.deepEqual(plan.additions_b.sort(), adds.map((c) => c.id).sort());
+    assert.ok(adds.every((c) => c.setup === "B" && c.added_by === "status" && c.design_slot === null && c.generated_at === "2026-10-08T17:00:00+09:00"));
+    assert.equal(plan.candidates.filter((c) => c.setup === "A").length, 4); // 型Aは設計のまま
+    assert.deepEqual(plan.designs.map((x) => x.slot), [2]);                 // 設計の履歴は増えない
+    assert.equal(plan.run, "status");
+    // 順位・同方向の印は、追加した案も含めて付け直す
+    assert.deepEqual(plan.candidates.map((c) => c.rank), plan.candidates.map((_, i) => i + 1));
+    assert.ok(plan.candidates.find((c) => c.id.includes("B:AUDUSD")).same_direction_group.includes("USD売り"));
+    // log.csv: design-b の行だけ追記（状態更新の行は書かない）
+    assert.equal(logAppend.length, 3);
+    assert.ok(logAppend.every((r) => r.run === "design-b" && r.setup === "B" && r.generated_at === "2026-10-08T17:00:00+09:00"));
+    const eu = logAppend.find((r) => r.symbol === "EURUSD");
+    assert.equal(eu.side, "sell");
+    // Entry・SL・TP は型Aと同じ規則（東京レンジ安値を基準、帯は安値から上へ）
+    const b = adds.find((c) => c.symbol === "EURUSD");
+    assert.equal(b.ref.label, "東京レンジ安値");
+    assert.equal(b.band.low, b.ref.price);
+    assert.ok(Math.abs(b.band.high - b.band.low - 0.0002) < 1e-9);
+    // 同じ計画日・銘柄・向きの型Bが既にあれば追加しない（計画にも、ログにも）
+    const again = buildStatus({ inputs, riskFeed: noFeed, nowMs: s17.nowMs + 30 * J.MIN, prevPlan: plan, logRows: [...design.logAppend, ...logAppend] });
+    assert.equal(again.logAppend.length, 0);
+    assert.equal(again.plan.candidates.filter((c) => c.setup === "B").length, 3);
+    const logOnly = buildStatus({ inputs, riskFeed: noFeed, nowMs: s17.nowMs + 30 * J.MIN, prevPlan: design.plan, logRows: [...design.logAppend, ...logAppend] });
+    assert.equal(logOnly.logAppend.length, 0); // 計画に無くてもログに（取消済みも含めて）あれば追加しない
+  } finally { cleanup(d); cleanup(s17); }
+});
+
+test("型B（Q09）: 16:00 の状態更新ではまだブレイクが確定していない（15:00開始の足は16:00に確定、終値はレンジ内）。22:00 以降は追加しない", () => {
+  const s16 = makeScenario({ nowIso: "2026-10-08T16:00:00+09:00", spec: downEU });
+  const s22 = makeScenario({ nowIso: "2026-10-08T22:00:00+09:00", spec: downEU });
+  try {
+    for (const [sc, expected] of [[s16, 0], [s22, 0]]) {
+      const inputs = loadInputs({ dataDir: sc.dataDir, repoRoot: sc.repoRoot, nowMs: sc.nowMs });
+      const r = buildStatus({ inputs, riskFeed: noFeed, nowMs: sc.nowMs, prevPlan: null, logRows: [] });
+      assert.equal(r.logAppend.length, expected);
+    }
+    // 21:00 の状態更新（冬時間の21時台など）はまだ追加できる
+    const s21 = makeScenario({ nowIso: "2026-10-08T21:30:00+09:00", spec: downEU });
+    try {
+      const inputs = loadInputs({ dataDir: s21.dataDir, repoRoot: s21.repoRoot, nowMs: s21.nowMs });
+      const r = buildStatus({ inputs, riskFeed: noFeed, nowMs: s21.nowMs, prevPlan: null, logRows: [] });
+      assert.ok(r.logAppend.length >= 1);
+    } finally { cleanup(s21); }
+  } finally { cleanup(s16); cleanup(s22); }
+});
+
+test("型B（Q09）: 設計が無くても追加できる（候補は型Bだけ。『設計なし』の印は残る）。追加した案は次の状態更新にも引き継がれる", () => {
+  const s17 = makeScenario({ nowIso: "2026-10-08T17:00:00+09:00", spec: downEU });
+  try {
+    const inputs = loadInputs({ dataDir: s17.dataDir, repoRoot: s17.repoRoot, nowMs: s17.nowMs });
+    const r = buildStatus({ inputs, riskFeed: noFeed, nowMs: s17.nowMs, prevPlan: null, logRows: [] });
+    assert.equal(r.plan.design_missing, true);
+    assert.equal(r.plan.order_ok, false);
+    assert.ok(r.plan.candidates.length >= 1 && r.plan.candidates.every((c) => c.setup === "B"));
+    assert.match(r.plan.banners[0], /設計なし/);
+    const next = buildStatus({ inputs, riskFeed: noFeed, nowMs: s17.nowMs + J.HR, prevPlan: r.plan, logRows: r.logAppend });
+    assert.equal(next.plan.design_missing, true);
+    assert.equal(next.plan.candidates.filter((c) => c.setup === "B").length, r.plan.candidates.length); // 引き継がれる
+    assert.equal(next.logAppend.length, 0);
+  } finally { cleanup(s17); }
+});
+
+test("型B（Q09）: 設計③は型Aと型Bの両方を再設計する。追加した型Bと同じ版なら続きで取消もしない／版が変わっていれば取消して新しい版", () => {
+  const s17 = makeScenario({ nowIso: "2026-10-08T17:00:00+09:00", spec: downEU });
+  const s21 = makeScenario({ nowIso: "2026-10-08T21:00:00+09:00", spec: downEU });
+  try {
+    const in21 = loadInputs({ dataDir: s21.dataDir, repoRoot: s21.repoRoot, nowMs: s21.nowMs });
+    // (1) 同じ入力で、状態更新（21:00）で型Bを追加 → 5分後の設計③。同じ版なので続き
+    const st = buildStatus({ inputs: in21, riskFeed: noFeed, nowMs: s21.nowMs, prevPlan: null, logRows: [] });
+    const same = buildDesign({ inputs: in21, riskFeed: noFeed, nowMs: s21.nowMs + 5 * J.MIN, slot: 3, prevPlan: st.plan, logRows: st.logAppend });
+    assert.ok(same.plan.candidates.some((c) => c.setup === "B" && c.run === "design"));
+    assert.deepEqual(same.plan.designs.map((x) => x.slot), [3]);
+    assert.ok(!same.logAppend.some((r) => r.setup === "B"), JSON.stringify(same.logAppend.map((r) => [r.run, r.setup, r.symbol])));
+    // (2) 17:00 に追加した型B（別の入力）と、設計③の型Bで版が違う → 17:00 の版は取消、設計③の版が新しい design の行
+    const in17 = loadInputs({ dataDir: s17.dataDir, repoRoot: s17.repoRoot, nowMs: s17.nowMs });
+    const st17 = buildStatus({ inputs: in17, riskFeed: noFeed, nowMs: s17.nowMs, prevPlan: null, logRows: [] });
+    const d3 = buildDesign({ inputs: in21, riskFeed: noFeed, nowMs: s21.nowMs, slot: 3, prevPlan: st17.plan, logRows: st17.logAppend });
+    const bRows = d3.logAppend.filter((r) => r.setup === "B");
+    assert.ok(bRows.some((r) => r.run === "status" && r.reached === "取消(再設計)"));
+    assert.ok(bRows.some((r) => r.run === "design"));
+  } finally { cleanup(s17); cleanup(s21); }
+});
+
+test("採点: 状態更新で追加した型B（run=design-b）も、有効期限後に採点される", () => {
+  const { scoreRows } = require("../score");
+  const row = {
+    plan_date: "2026-10-08", generated_at: "2026-10-08T17:00:00+09:00", run: "design-b", setup: "B", symbol: "EURUSD", side: "sell", same_direction_group: "",
+    entry_low: "1.10400", entry_high: "1.10420", sl_a: "1.10500", tp_a: "1.09900", sl_b: "", tp_b: "", rr_a: "", rr_b: "", cost_cap_a: "",
+    lot_cap_a_701620: "", lot_cap_b_701620: "", lot_cap_a_702449: "", lot_cap_b_702449: "", expires_at: "2026-10-09T03:00:00+09:00",
+    reached: "", reached_at: "", first_hit_a: "", first_hit_b: "", filled_ticket_701620: "", filled_ticket_702449: "",
+  };
+  const bar = (hm, h, l, date = "2026-10-08") => ({ t: J.jstAt(date, hm), o: (h + l) / 2, h, l, c: (h + l) / 2 });
+  const bars = [bar("18:00", 1.1045, 1.1035), bar("20:00", 1.1030, 1.0985), bar("02:00", 1.1020, 1.1010, "2026-10-09")];
+  const r = scoreRows({ rows: [row], barsByCode: { EURUSD: bars }, nowMs: J.parseIso("2026-10-09T06:30:00+09:00") });
+  assert.equal(r.newRows.length, 1);
+  assert.equal(r.newRows[0].run, "status");
+  assert.equal(r.newRows[0].reached, "到達");
+  assert.equal(r.newRows[0].first_hit_a, "TP1");
 });

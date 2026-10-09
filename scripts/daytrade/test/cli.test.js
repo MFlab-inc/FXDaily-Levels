@@ -26,7 +26,7 @@ test("design: plan.json・plan.txt・log.csv を書く。既存の入力ファ�
     const plan = JSON.parse(read(sc, "daytrade-plan.json"));
     assert.equal(plan.run, "design");
     assert.equal(plan.design_slot, 2);
-    assert.match(read(sc, "daytrade-plan.txt"), /== 7\. 停止時間と新規不可の時間帯 ==/);
+    assert.match(read(sc, "daytrade-plan.txt"), /== 7\. 出典 ==/);
     assert.equal(L.parseLog(read(sc, "daytrade/log.csv")).length, 4);
     // 一時ファイルを data/ に残さない（data/ の隣の一時フォルダも消す）
     assert.deepEqual(fs.readdirSync(path.dirname(sc.dataDir)).filter((n) => n.startsWith(".mtf-tmp-")), []);
@@ -48,20 +48,41 @@ test("design: 同じ枠が済んでいれば何もしない（--force で再実�
   } finally { cleanup(sc); }
 });
 
-test("design: 遅れて動いた設計は見送る（次の枠の名目時刻を過ぎている／後の枠が済んでいる）", async () => {
+test("design（手動）: 時刻にかかわらず枠を指定して作れる。同じ枠が済んでいれば何もしない（枠の窓は自動のときだけ見る）", async () => {
   const sc = makeScenario({ nowIso: "2026-10-08T16:00:00+09:00" });
   try {
-    const r1 = await run(sc, ["--run=design", "--slot=1"]);
-    assert.match(r1.r.skipped, /次の枠/);
-    assert.equal(fs.existsSync(path.join(sc.dataDir, "daytrade-plan.json")), false);
-    // 設計②を実行 → その後の設計①は『後の枠が既にある』で見送り
-    await run(sc, ["--run=design", "--slot=2"]);
-    const sc2 = { ...sc, nowIso: "2026-10-08T15:40:00+09:00" };
-    const r2 = await run(sc2, ["--run=design", "--slot=1"]);
-    assert.match(r2.r.skipped, /後の枠|次の枠/);
-    // --force なら見送らない
-    const r3 = await run(sc, ["--run=design", "--slot=1", "--force"]);
-    assert.ok(r3.r.plan);
+    const r1 = await run(sc, ["--run=design", "--slot=1"]); // 設計①の窓(06:00〜08:59)の外でも、手動なら作る
+    assert.equal(r1.r.plan.design_slot, 1);
+    const r2 = await run(sc, ["--run=design", "--slot=1"]);
+    assert.equal(r2.r.skipped, "done");
+    const r3 = await run(sc, ["--run=design", "--slot=2"]); // 別の枠は作れる
+    assert.equal(r3.r.plan.design_slot, 2);
+    assert.deepEqual(r3.r.plan.designs.map((d) => d.slot), [1, 2]); // 設計の履歴
+    const r4 = await run(sc, ["--run=design", "--slot=1", "--force"]);
+    assert.ok(r4.r.plan);
+  } finally { cleanup(sc); }
+});
+
+test("自動（run 指定なし）: 実行時刻の窓と済みの設計で種類を決める。設計②→同じ時間内は何もしない→次の時間は状態更新→窓の外・土日は何もしない", async () => {
+  const sc = makeScenario(); // 15:30（設計②の窓）
+  try {
+    const auto = (iso, extra = []) => main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", `--now=${iso}`, ...extra], {}, quiet().io);
+    const d = await auto("2026-10-08T15:30:00+09:00");
+    assert.equal(d.plan.run, "design");
+    assert.equal(d.plan.design_slot, 2);
+    assert.equal((await auto("2026-10-08T15:50:00+09:00")).skipped, "done"); // 設計②が済み → 状態更新だが、同じ時間内
+    const st = await auto("2026-10-08T16:05:00+09:00");
+    assert.equal(st.plan.run, "status");
+    assert.deepEqual(st.plan.designs.map((x) => x.slot), [2]); // 状態更新は設計の履歴を引き継ぐ
+    assert.match((await auto("2026-10-09T04:00:00+09:00")).skipped, /時間帯/);
+    assert.match((await auto("2026-10-10T10:00:00+09:00")).skipped, /土日/);
+    // 候補が0件の設計でも『済み』になる（log.csv に行が残らなくても plan.json の履歴で分かる）
+    const empty = makeScenario({ mtfStatus: "partial", nowIso: "2026-10-08T15:20:00+09:00" });
+    try {
+      const a2 = (iso) => main([`--data-dir=${empty.dataDir}`, "--no-risk-feed", `--now=${iso}`], {}, quiet().io);
+      assert.equal((await a2("2026-10-08T15:20:00+09:00")).plan.candidates.length, 0);
+      assert.equal((await a2("2026-10-08T16:10:00+09:00")).plan.run, "status"); // 設計②を繰り返さない
+    } finally { cleanup(empty); }
   } finally { cleanup(sc); }
 });
 
@@ -88,32 +109,32 @@ test("status: 同じ時間内の二重実行は何もしない。Entry・SL・TP
   } finally { cleanup(sc); }
 });
 
-test("--resolve: cron の文字列から実行の種類を決めて出力する（夏冬）", async () => {
-  const q = quiet();
-  const sum = await main(["--resolve", "--now=2026-07-15T06:30:00+09:00", "--cron=30 21 * * 0-4"], {}, q.io);
-  assert.deepEqual(sum, { action: "design", slot: 1 });
-  assert.deepEqual(q.out.slice(0, 2), ["action=design", "slot=1"]);
-  const q2 = quiet();
-  const win = await main(["--resolve", "--now=2026-12-15T06:30:00+09:00", "--cron=30 21 * * 0-4"], {}, q2.io);
-  assert.equal(win.action, "skip");
-  assert.match(q2.out.join("\n"), /reason=.*冬/);
-  const q3 = quiet();
-  assert.deepEqual(await main(["--resolve", "--now=2026-07-15T21:00:00+09:00"], { DAYTRADE_CRON: "0 12 * * 1-5" }, q3.io), { action: "design", slot: 3 });
-  const q4 = quiet();
-  assert.deepEqual(await main(["--resolve", "--now=2026-12-15T21:00:00+09:00"], { DAYTRADE_CRON: "0 12 * * 1-5" }, q4.io), { action: "status", slot: null });
-  // 夏冬が合わない cron は何もしない（実行は skip）
-  const q5 = quiet();
-  const sk = await main(["--now=2026-12-15T06:30:00+09:00"], { DAYTRADE_CRON: "30 21 * * 0-4" }, q5.io);
-  assert.ok(sk.skipped);
+test("--resolve: 自動なら実行時刻と済みの設計から、手動（run 指定）ならその指定を、key=value で出力する", async () => {
+  const sc = makeScenario();
+  try {
+    const res = async (iso, argv = [], env = {}) => { const q = quiet(); const r = await main(["--resolve", `--data-dir=${sc.dataDir}`, `--now=${iso}`, ...argv], env, q.io); return { r, out: q.out }; };
+    let x = await res("2026-07-15T06:30:00+09:00");
+    assert.deepEqual(x.r, { action: "design", slot: 1 });
+    assert.deepEqual(x.out.slice(0, 2), ["action=design", "slot=1"]);
+    x = await res("2026-12-15T06:30:00+09:00"); // 冬の06時台は何もしない
+    assert.equal(x.r.action, "skip");
+    assert.match(x.out.join("\n"), /reason=/);
+    x = await res("2026-07-15T12:00:00+09:00", [], { DAYTRADE_RUN: "status" }); // 手動（環境変数）
+    assert.deepEqual(x.r, { action: "status", slot: null });
+    x = await res("2026-07-15T12:00:00+09:00", [], { DAYTRADE_RUN: "design", DAYTRADE_SLOT: "3" });
+    assert.deepEqual(x.r, { action: "design", slot: 3 });
+    x = await res("2026-07-15T12:00:00+09:00", ["--run=status"]);
+    assert.equal(x.r.action, "status");
+  } finally { cleanup(sc); }
 });
 
 test("引数の誤りは例外（黙って別の動きをしない）", async () => {
-  await assert.rejects(() => main(["--now=2026-10-08T15:30:00+09:00"], {}, quiet().io), /--run=design\|status/);
-  await assert.rejects(() => main(["--run=design", "--slot=9", "--now=2026-10-08T15:30:00+09:00"], {}, quiet().io), /--slot/);
-  await assert.rejects(() => main(["--run=design", "--now=garbage"], {}, quiet().io), /--now/);
-  await assert.rejects(() => main(["--run=design", "--now=2026-10-08T15:30:00+09:00"], {}, quiet().io), /設計の枠/);
+  await assert.rejects(() => main(["--run=foo", "--now=2026-10-08T15:30:00+09:00", "--dry-run", "--data-dir=/nonexistent-daytrade-test"], {}, quiet().io), /--run は design か status/);
+  await assert.rejects(() => main(["--run=design", "--slot=9", "--now=2026-10-08T15:30:00+09:00", "--dry-run", "--data-dir=/nonexistent-daytrade-test"], {}, quiet().io), /--slot/);
+  await assert.rejects(() => main(["--run=design", "--now=garbage", "--dry-run", "--data-dir=/nonexistent-daytrade-test"], {}, quiet().io), /--now/);
+  await assert.rejects(() => main(["--run=design", "--now=2026-10-08T15:30:00+09:00", "--dry-run", "--data-dir=/nonexistent-daytrade-test"], {}, quiet().io), /設計の枠/);
   // 起動の解決の段階で（採点より前に）失敗させる
-  await assert.rejects(() => main(["--resolve", "--run=design", "--now=2026-10-08T15:30:00+09:00"], {}, quiet().io), /設計の枠/);
+  await assert.rejects(() => main(["--resolve", "--run=design", "--now=2026-10-08T15:30:00+09:00", "--dry-run", "--data-dir=/nonexistent-daytrade-test"], {}, quiet().io), /設計の枠/);
 });
 
 test("--dry-run は何も書かない", async () => {
@@ -200,4 +221,31 @@ test("score: log.csv や h1-bars.json が無ければ何もしない（失敗に
     assert.equal(r.newRows.length, 0);
     assert.match(q.out.join("\n"), /保留/);
   } finally { cleanup(sc); }
+});
+
+test("自動: 17:05 の状態更新で型Bが追加され、log.csv に run=design-b の行が追記される。同じ時間内にもう一度動いても追加しない", async () => {
+  const d = makeScenario({ spec: { EURUSD: { bars: { dir: "down" } } } });
+  const s17 = makeScenario({ nowIso: "2026-10-08T17:05:00+09:00", spec: { EURUSD: { bars: { dir: "down" } } } });
+  try {
+    const q = quiet();
+    await main([`--data-dir=${d.dataDir}`, "--no-risk-feed", `--now=${d.nowIso}`], {}, q.io); // 自動 → 設計②
+    fs.copyFileSync(path.join(d.dataDir, "daytrade-plan.json"), path.join(s17.dataDir, "daytrade-plan.json"));
+    fs.mkdirSync(path.join(s17.dataDir, "daytrade"), { recursive: true });
+    fs.copyFileSync(path.join(d.dataDir, "daytrade", "log.csv"), path.join(s17.dataDir, "daytrade", "log.csv"));
+    const before = L.parseLog(read(s17, "daytrade/log.csv"));
+    assert.equal(before.length, 4);
+    const r = await main([`--data-dir=${s17.dataDir}`, "--no-risk-feed", `--now=${s17.nowIso}`], {}, q.io);
+    assert.equal(r.plan.run, "status");
+    assert.equal(r.logAppend.length, 3);
+    const rows = L.parseLog(read(s17, "daytrade/log.csv"));
+    assert.equal(rows.length, 7);
+    assert.deepEqual(rows.slice(0, 4), before); // 旧行は変えない
+    assert.deepEqual(rows.slice(4).map((x) => [x.run, x.setup]).sort(), [["design-b", "B"], ["design-b", "B"], ["design-b", "B"]]);
+    assert.match(read(s17, "daytrade-plan.txt"), /型Bの追加（状態更新 17:05）/);
+    assert.equal((await main([`--data-dir=${s17.dataDir}`, "--no-risk-feed", "--now=2026-10-08T17:40:00+09:00"], {}, q.io)).skipped, "done");
+    // 強制で動かしても二重に追加しない
+    const again = await main([`--data-dir=${s17.dataDir}`, "--no-risk-feed", "--now=2026-10-08T17:40:00+09:00", "--force"], {}, q.io);
+    assert.equal(again.logAppend.length, 0);
+    assert.equal(L.parseLog(read(s17, "daytrade/log.csv")).length, 7);
+  } finally { cleanup(d); cleanup(s17); }
 });

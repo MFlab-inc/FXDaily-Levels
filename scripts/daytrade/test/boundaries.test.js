@@ -7,7 +7,6 @@ const { referenceLevel } = require("../levels");
 const { tokyoRange } = require("../tokyo");
 const { simulate } = require("../fill");
 const { scoreRows } = require("../score");
-const { designStale } = require("../schedule");
 const { rankCandidates, entryStateOf } = require("../plan");
 const L = require("../log");
 const { createHistory, upperBound } = require("../histctx");
@@ -74,7 +73,7 @@ test("fill: SL・TP1 にちょうど触れた足も『届いた』。始値がSL
   assert.equal(simulate(sellCand({ generated_at_ms: J.jstAt(D, "16:00") }), [bar("16:00", 1.1045, 1.1035)]).reached, "到達");
 });
 
-test("score: 有効期限ちょうどの時刻に採点できる。設計済みの枠の遅れ判定は同じ枠を見送らない", () => {
+test("score: 有効期限ちょうどの時刻に採点できる", () => {
   const row = {
     plan_date: D, generated_at: "2026-10-08T15:30:00+09:00", run: "design", setup: "A", symbol: "EURUSD", side: "sell", same_direction_group: "",
     entry_low: "1.10400", entry_high: "1.10420", sl_a: "1.10500", tp_a: "1.09900", sl_b: "", tp_b: "", rr_a: "", rr_b: "", cost_cap_a: "",
@@ -84,7 +83,6 @@ test("score: 有効期限ちょうどの時刻に採点できる。設計済み�
   const bars = [bar("16:00", 1.1030, 1.1020), bar("02:00", 1.1030, 1.1020, undefined, undefined, "2026-10-09")];
   assert.equal(scoreRows({ rows: [row], barsByCode: { EURUSD: bars }, nowMs: J.parseIso("2026-10-09T03:00:00+09:00") }).newRows.length, 1);
   assert.equal(scoreRows({ rows: [row], barsByCode: { EURUSD: bars }, nowMs: J.parseIso("2026-10-09T02:59:59+09:00") }).newRows.length, 0);
-  assert.equal(designStale({ slot: 2, nowMs: J.parseIso("2026-07-15T15:40:00+09:00"), lastDesignSlot: 2 }), null);
 });
 
 test("順位: 同点は銘柄名順。RRは通っているA案・B案のうち小さい方", () => {

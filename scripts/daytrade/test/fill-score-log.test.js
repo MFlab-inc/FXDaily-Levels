@@ -206,36 +206,72 @@ test("score: 前日の結果の集計（最新の採点済みの計画日。版�
 // ---- スケジュール ----
 const SUMMER = J.parseIso("2026-07-15T06:30:00+09:00");
 const WINTER = J.parseIso("2026-12-15T07:30:00+09:00");
-test("schedule: 夏冬の判定（NY夏時間）と各 cron の解決。該当しない側は何もしない", () => {
-  assert.equal(S.isNyDst(SUMMER), true);
-  assert.equal(S.isNyDst(WINTER), false);
-  const r = (cron, ms) => S.resolveAction(cron, ms);
-  assert.deepEqual(r("30 21 * * 0-4", SUMMER), { action: "design", slot: 1 });
-  assert.equal(r("30 21 * * 0-4", WINTER).action, "skip");
-  assert.deepEqual(r("30 22 * * 0-4", WINTER), { action: "design", slot: 1 });
-  assert.equal(r("30 22 * * 0-4", SUMMER).action, "skip");
-  assert.deepEqual(r("30 6 * * 1-5", SUMMER), { action: "design", slot: 2 });
-  assert.deepEqual(r("30 6 * * 1-5", WINTER), { action: "design", slot: 2 });
-  assert.deepEqual(r("0 12 * * 1-5", SUMMER), { action: "design", slot: 3 });
-  assert.deepEqual(r("0 12 * * 1-5", WINTER), { action: "status", slot: null });
-  assert.deepEqual(r("0 13 * * 1-5", WINTER), { action: "design", slot: 3 });
-  assert.deepEqual(r("0 13 * * 1-5", SUMMER), { action: "status", slot: null });
-  assert.equal(r("0 22,23 * * 0-4", SUMMER).action, "status");
-  assert.equal(r("0 0-11,14-17 * * 1-5", WINTER).action, "status");
-  assert.equal(r("1 2 3 4 5", SUMMER).action, null);
-});
-test("schedule: ミリ秒つきの現在時刻（Date.now()）でも夏冬を正しく判定する", () => {
+test("schedule: 夏冬の判定はミリ秒つきの現在時刻（Date.now()）でも正しい", () => {
   for (const ms of [0, 1, 123, 999]) {
     assert.equal(S.isNyDst(SUMMER + ms), true);
     assert.equal(S.isNyDst(WINTER + ms), false);
-    assert.deepEqual(S.resolveAction("30 21 * * 0-4", SUMMER + ms), { action: "design", slot: 1 });
-    assert.equal(S.resolveAction("30 22 * * 0-4", SUMMER + ms).action, "skip");
-    assert.deepEqual(S.resolveAction("0 12 * * 1-5", J.parseIso("2026-07-15T21:00:00+09:00") + ms), { action: "design", slot: 3 });
-    assert.deepEqual(S.resolveAction("0 13 * * 1-5", J.parseIso("2026-07-15T22:00:00+09:00") + ms), { action: "status", slot: null });
-    assert.deepEqual(S.resolveAction("30 22 * * 0-4", WINTER + ms), { action: "design", slot: 1 });
     assert.equal(J.jstHm(S.slotNominalMs(1, "2026-07-15", SUMMER + ms)), "06:30");
+    assert.equal(J.jstHm(S.slotNominalMs(3, "2026-12-15", WINTER + ms)), "22:00");
   }
 });
+
+const T = (s) => J.parseIso(s);
+const plan = (planDate, slots) => ({ plan_date: planDate, designs: slots.map((slot) => ({ slot, generated_at: `${planDate}T10:00:00+09:00` })) });
+test("schedule: 設計の枠の窓（JST。夏は ①06:00〜08:59・③21:00〜22:59、冬は ①07:00〜09:59・③22:00〜23:59、②は15:00〜16:59）", () => {
+  const w = (slot, d, ms) => { const x = S.slotWindow(slot, d, ms); return [J.jstHm(x.start), J.jstHm(x.end)]; };
+  assert.deepEqual(w(1, "2026-07-15", SUMMER), ["06:00", "09:00"]);
+  assert.deepEqual(w(1, "2026-12-15", WINTER), ["07:00", "10:00"]);
+  assert.deepEqual(w(2, "2026-07-15", SUMMER), ["15:00", "17:00"]);
+  assert.deepEqual(w(3, "2026-07-15", SUMMER), ["21:00", "23:00"]);
+  assert.deepEqual(w(3, "2026-12-15", WINTER), ["22:00", "00:00"]);
+  assert.equal(S.slotOfTime(T("2026-07-15T08:59:59+09:00"), "2026-07-15"), 1);
+  assert.equal(S.slotOfTime(T("2026-07-15T09:00:00+09:00"), "2026-07-15"), null);
+  assert.equal(S.slotOfTime(T("2026-07-15T16:59:00+09:00"), "2026-07-15"), 2);
+  assert.equal(S.slotOfTime(T("2026-07-15T22:59:00+09:00"), "2026-07-15"), 3);
+  assert.equal(S.slotOfTime(T("2026-12-15T21:30:00+09:00"), "2026-12-15"), null); // 冬の21時台は設計③の窓の前
+  assert.equal(S.slotOfTime(T("2026-12-15T22:00:00+09:00"), "2026-12-15"), 3);
+});
+
+test("schedule: 自動の種類 — 窓の中の『最初の実行』が設計、その後や窓の外は状態更新。済みは plan.json の履歴と log.csv の両方で見る", () => {
+  const auto = (iso, prevPlan = null, logRows = []) => S.resolveAuto({ nowMs: T(iso), prevPlan, logRows });
+  // 夏: 06:00〜08:59 の最初の実行 = 設計①。済みなら状態更新
+  assert.deepEqual(auto("2026-07-15T06:10:00+09:00"), { action: "design", slot: 1 });
+  assert.deepEqual(auto("2026-07-15T08:50:00+09:00"), { action: "design", slot: 1 });
+  assert.equal(auto("2026-07-15T06:40:00+09:00", plan("2026-07-15", [1])).action, "skip"); // 設計①の済んだ06時台は、状態更新の時間帯（07:00〜）の前
+  assert.deepEqual(auto("2026-07-15T09:05:00+09:00"), { action: "status", slot: null }); // 窓を過ぎた設計①は作らない
+  // 冬: ①は 07:00〜09:59。06時台は状態更新の時間帯ではないので何もしない
+  assert.deepEqual(auto("2026-12-15T07:20:00+09:00"), { action: "design", slot: 1 });
+  assert.equal(auto("2026-12-15T06:30:00+09:00").action, "skip");
+  // 設計②・③
+  assert.deepEqual(auto("2026-07-15T15:10:00+09:00", plan("2026-07-15", [1])), { action: "design", slot: 2 });
+  assert.deepEqual(auto("2026-07-15T16:10:00+09:00", plan("2026-07-15", [1, 2])), { action: "status", slot: null });
+  assert.deepEqual(auto("2026-07-15T21:05:00+09:00", plan("2026-07-15", [1, 2])), { action: "design", slot: 3 });
+  assert.deepEqual(auto("2026-12-15T21:30:00+09:00", plan("2026-12-15", [1, 2])), { action: "status", slot: null });
+  assert.deepEqual(auto("2026-12-15T22:10:00+09:00", plan("2026-12-15", [1, 2])), { action: "design", slot: 3 });
+  // 設計が済んでいるかは log.csv の design 行（生成時刻が窓の中）でも分かる。別の計画日の履歴は数えない
+  const row = (planDate, generated_at, run = "design") => ({ plan_date: planDate, generated_at, run });
+  assert.deepEqual(auto("2026-07-15T16:10:00+09:00", null, [row("2026-07-15", "2026-07-15T15:32:00+09:00")]), { action: "status", slot: null });
+  assert.deepEqual(auto("2026-07-15T16:10:00+09:00", null, [row("2026-07-14", "2026-07-14T15:32:00+09:00")]), { action: "design", slot: 2 });
+  assert.deepEqual(auto("2026-07-15T16:10:00+09:00", null, [row("2026-07-15", "2026-07-15T15:32:00+09:00", "status")]), { action: "design", slot: 2 }); // status の行は設計ではない
+  assert.deepEqual(auto("2026-07-15T16:10:00+09:00", plan("2026-07-14", [2])), { action: "design", slot: 2 }); // 前日の plan.json の履歴は数えない
+  // plan.json にその日の履歴があれば、それが正（log.csv の時刻から別の枠と取り違えない）
+  assert.deepEqual(auto("2026-07-15T16:10:00+09:00", plan("2026-07-15", [1]), [row("2026-07-15", "2026-07-15T15:32:00+09:00")]), { action: "design", slot: 2 });
+});
+
+test("schedule: 状態更新の時間帯（JST 07:00〜翌02:59）以外と、土日の計画日は何もしない。金曜夜〜土曜2時台は金曜の計画日", () => {
+  const auto = (iso) => S.resolveAuto({ nowMs: T(iso), prevPlan: null, logRows: [] });
+  for (const h of ["03:00", "04:30", "05:59"]) assert.equal(auto(`2026-07-15T${h}:00+09:00`.replace("::", ":")).action, "skip", h);
+  assert.equal(auto("2026-07-16T02:30:00+09:00").action, "status"); // 水曜の計画日の翌2時台
+  assert.equal(auto("2026-07-15T23:30:00+09:00").action, "status");
+  // 金曜(2026-07-17)の計画日: 土曜 02:59 までは状態更新、03:00 から土曜の計画日 = 何もしない
+  assert.equal(auto("2026-07-18T02:59:00+09:00").action, "status");
+  assert.equal(auto("2026-07-18T03:00:00+09:00").action, "skip");
+  assert.match(auto("2026-07-18T08:00:00+09:00").reason, /土日/); // 土曜朝は設計①の窓でも作らない
+  assert.equal(auto("2026-07-19T15:30:00+09:00").action, "skip"); // 日曜
+  assert.equal(auto("2026-07-20T01:00:00+09:00").action, "skip"); // 月曜 0:00〜2:59 は日曜の計画日
+  assert.deepEqual(auto("2026-07-20T06:30:00+09:00"), { action: "design", slot: 1 }); // 月曜の設計①（日曜夜のUTCの intraday の後）
+});
+
 test("schedule: 夏冬の切り替え日（NY 3/8・11/1）でも判定が合う", () => {
   assert.equal(S.isNyDst(Date.parse("2026-03-08T06:59:00Z")), false);
   assert.equal(S.isNyDst(Date.parse("2026-03-08T07:00:00Z")), true);
@@ -251,17 +287,6 @@ test("schedule: 設計の枠の名目時刻（夏 06:30/21:00、冬 07:30/22:00�
   assert.equal(hm(3, "2026-07-15", SUMMER), "21:00");
   assert.equal(hm(3, "2026-12-15", WINTER), "22:00");
 });
-test("schedule: 遅れて動いた設計は見送る（次の枠の名目時刻以後、後の枠の設計が既にある、設計③は翌1:00以後）", () => {
-  const t = (s) => J.parseIso(s);
-  assert.equal(S.designStale({ slot: 1, nowMs: t("2026-07-15T08:00:00+09:00"), lastDesignSlot: null }), null);
-  assert.match(S.designStale({ slot: 1, nowMs: t("2026-07-15T15:30:00+09:00"), lastDesignSlot: null }), /次の枠/);
-  assert.match(S.designStale({ slot: 1, nowMs: t("2026-07-15T08:00:00+09:00"), lastDesignSlot: 2 }), /後の枠/);
-  assert.equal(S.designStale({ slot: 2, nowMs: t("2026-07-15T16:10:00+09:00"), lastDesignSlot: 1 }), null);
-  assert.match(S.designStale({ slot: 2, nowMs: t("2026-07-15T21:00:00+09:00"), lastDesignSlot: 1 }), /次の枠/);
-  assert.equal(S.designStale({ slot: 3, nowMs: t("2026-07-16T00:59:00+09:00"), lastDesignSlot: 2 }), null);
-  assert.match(S.designStale({ slot: 3, nowMs: t("2026-07-16T01:00:00+09:00"), lastDesignSlot: 2 }), /翌1:00/);
-});
-
 // ---- risk-feed ----
 const feed = () => ({
   meta: { generated_intraday: "2026-10-08T16:10:00+09:00" },

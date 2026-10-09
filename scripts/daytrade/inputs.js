@@ -1,7 +1,7 @@
 "use strict";
 const fs = require("fs");
 const path = require("path");
-const { MIN, parseIso, parseJstLabel } = require("./jst");
+const { MIN, parseIso, parseJstLabel, jstLabel } = require("./jst");
 const { lastCompletedSessionDate } = require("../../mtf/lib/ny-time");
 const { pairOf } = require("./pairs");
 
@@ -66,14 +66,19 @@ function loadInputs({ dataDir, repoRoot, nowMs }) {
   }
 
   // daytrade-context.json の『確定M15の最終足』（仕様 1節は鮮度確認用と書く）。20分の判定には使わず、最古の最終足と data_status が OK でない銘柄を参考表示する [Q42]
-  const ctxM15 = { oldest_last_closed: null, not_ok: [] };
-  let oldestT = null;
+  const ctxM15 = { oldest_last_closed: null, newest_last_closed: null, not_ok: [] };
+  let oldestT = null, newestT = null;
   for (const [code, p] of Object.entries(raw.ctx?.pairs || {})) {
     if (!pairOf(code)) continue;
     const t = parseJstLabel(p?.m15?.last_closed?.time_jst);
     if (Number.isFinite(t) && (oldestT === null || t < oldestT)) { oldestT = t; ctxM15.oldest_last_closed = p.m15.last_closed.time_jst; }
+    if (Number.isFinite(t) && (newestT === null || t > newestT)) { newestT = t; ctxM15.newest_last_closed = p.m15.last_closed.time_jst; }
     if (p?.data_status && p.data_status !== "OK") ctxM15.not_ok.push(`${code}:${p.data_status}`);
   }
+  // h1-bars.json の最終確定足（開始時刻）。10銘柄の最古と最新
+  const h1 = parseH1(raw.h1);
+  const lastStarts = Object.entries(h1).filter(([c]) => pairOf(c)).map(([, bars]) => (bars.length ? bars[bars.length - 1].t : null)).filter(Number.isFinite);
+  const h1Last = { oldest: lastStarts.length ? jstLabel(Math.min(...lastStarts)) : null, newest: lastStarts.length ? jstLabel(Math.max(...lastStarts)) : null };
 
   const daily = raw.daily;
   const dailyErrors = Array.isArray(daily?.errors) ? daily.errors : [];
@@ -85,9 +90,9 @@ function loadInputs({ dataDir, repoRoot, nowMs }) {
 
   return {
     raw, rules: rules.value, accounts, riskPct: Number.isFinite(acc.value?.risk_pct) ? acc.value.risk_pct : null,
-    dailyLossPct: acc.value?.daily_loss_pct ?? null, commissionPerLotJpy: acc.value?.commission_per_lot_jpy ?? null,
-    h1: parseH1(raw.h1), problems, expectedSession,
-    freshness: { limit_min: FRESH_LIMIT_MIN, feeds, ctx_m15: ctxM15, stale: feeds.some((f) => f.stale), daily: { ok: dailyOk, reason: dailyReason, session_date: daily?.session_date ?? null, as_of: daily?.as_of ?? null } },
+    dailyLossPct: Number.isFinite(acc.value?.daily_loss_pct) ? acc.value.daily_loss_pct : null, commissionPerLotJpy: Number.isFinite(acc.value?.commission_per_lot_jpy) ? acc.value.commission_per_lot_jpy : null,
+    h1, problems, expectedSession,
+    freshness: { limit_min: FRESH_LIMIT_MIN, feeds, ctx_m15: ctxM15, h1_last_closed: h1Last, stale: feeds.some((f) => f.stale), daily: { ok: dailyOk, reason: dailyReason, session_date: daily?.session_date ?? null, as_of: daily?.as_of ?? null } },
   };
 }
 
