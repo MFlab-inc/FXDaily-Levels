@@ -5,7 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const H = require("../h1history");
 const { createHistory, dailyLevelsFrom, atrPctSeries, regimeAt } = require("../histctx");
-const { runBacktest, runBacktestModes, aggregate, floorBreakdown, metrics, planDates, SLOT_LABEL, SL_FLOOR_MODES } = require("../backtest");
+const { runBacktest, runBacktestModes, aggregate, floorBreakdown, obstacleBreakdown, metrics, planDates, SLOT_LABEL, SL_FLOOR_MODES, OBSTACLE_DEFS, BACKTEST_MODES, BASE_MODE, modeKey } = require("../backtest");
 const { toCsv, toMarkdown, CSV_COLUMNS } = require("../report");
 const { main: btMain } = require("../../daytrade-backtest");
 const store = require("../../../mtf/lib/store");
@@ -162,6 +162,8 @@ test("backtest: 記録の整合 — A案(0.5)/B案(1.0)を別に数え、TP1 は
     assert.ok(["到達", "未到達", "失効後到達"].includes(r.reached));
     assert.ok(r.plan_rr >= 1 && r.sl_pips >= 10);
     assert.equal(r.sl_floor, "reject"); // 既定は現行の規則 (a)
+    assert.equal(r.obstacle, "both"); // 障害の定義も既定は現行の規則 (a)
+    assert.equal(r.obstacle_changed, false);
     assert.equal(r.sl_floored, false);
     if (r.setup === "B") assert.ok([3, 4].includes(r.slot), `型B は設計③か型B追加だけ（slot=${r.slot}）`); // 設計①②は型Aのみ
     else assert.ok([1, 2, 3].includes(r.slot), `型A は設計①②③だけ（slot=${r.slot}）`);
@@ -222,28 +224,34 @@ test("backtest: metrics の手計算（勝率・実現R・pips・最大連敗・
   assert.equal(metrics([]).win_rate, null);
 });
 
-test("report: Markdown に軸・確定した規則・H1履歴の品質が出る。CSV の見出しは固定で、先頭列は sl_floor", () => {
+test("report: Markdown に軸・確定した規則・H1履歴の品質が出る。CSV の見出しは固定で、先頭の2列は sl_floor・obstacle", () => {
   const { records, stats, statsByMode } = runBacktestModes({ ...allSynth(), nowMs: NOW, windowDays: 10 });
   const rows = aggregate(records);
   const history = PAIRS.map((p) => ({ code: p.code, bars: 100, first: "2026-08-20", last: "2026-10-08 04:00", gaps: 0, verify: { overlap: 10, mismatch: 0 }, fetched: false }));
-  const md = toMarkdown(rows, { nowMs: NOW, window: { first: stats.first, last: stats.last }, stats, statsByMode, floorRows: floorBreakdown(records), history, regimeSource: "試験", noMtf: ["USDCHF"] });
-  for (const s of ["# デイトレプラン バックテスト（実行日 2026-10-08）", "## (a) と (b) の比較（全体）", "### (b) の内訳", "### 型B の内訳",
-    "## (a) 現行：丸め後のSL幅が10pips未満は不採用（詳細）", "## (b) SL=max(係数×ATR, 10pips) に広げて採用（詳細）", "### (a) 型A × A案（ATR係数 0.5）", "### (b) 型B × B案（ATR係数 1.0）", "#### 軸: 銘柄", "#### 軸: 設計日の曜日", "#### 軸: ボラ状態", "#### 軸: 約定時刻(JST)", "#### 軸: 設計の回",
-    "**Q25**", "**Q35**", "USDCHF は MTF の日足が無く", "保証ではありません", "`a_reject`", "`b_widen`", "状態更新（型B追加）"]) assert.ok(md.includes(s), s);
-  // 古い説明（設計②で型Bを作る）が残っていない。型Bの新しい規則と、追加の定義・重複の扱い・SL下限方式の定義が書いてある
+  const md = toMarkdown(rows, { nowMs: NOW, window: { first: stats.first, last: stats.last }, stats, statsByMode, floorRows: floorBreakdown(records), obstacleRows: obstacleBreakdown(records), history, regimeSource: "試験", noMtf: ["USDCHF"] });
+  for (const s of ["# デイトレプラン バックテスト（実行日 2026-10-08）", "## 方式の比較（全体）: SL下限方式 × 障害の定義", "### SL下限方式 (b) の内訳", "### 障害の定義 (b) の内訳", "### 型B の内訳",
+    "## SL下限(a)×障害(a)（詳細）", "## SL下限(b)×障害(a)（詳細）", "## SL下限(a)×障害(b)（詳細）", "## SL下限(b)×障害(b)（詳細）",
+    "### SL下限(a)×障害(a) 型A × A案（ATR係数 0.5）", "### SL下限(b)×障害(b) 型B × B案（ATR係数 1.0）", "#### 軸: 銘柄", "#### 軸: 設計日の曜日", "#### 軸: ボラ状態", "#### 軸: 約定時刻(JST)", "#### 軸: 設計の回",
+    "**Q25**", "**Q35**", "USDCHF は MTF の日足が無く", "保証ではありません", "`a_reject`", "`b_widen`", "`a_both`", "`b_forward`", "状態更新（型B追加）"]) assert.ok(md.includes(s), s);
+  // 古い説明（設計②で型Bを作る）が残っていない。型Bの新しい規則と、追加の定義・重複の扱い・2つの軸の定義が書いてある
   assert.ok(!md.includes("設計②（15:30、型A・型B）"));
-  for (const s of ["設計②（15:30、**型Aのみ**）", "Q09", "毎時 16:00〜21:00", "同じ計画日・同じ銘柄・同じ向きの型Bが既にあれば", "夏の21:00", "丸めたあとの SL 幅が 10pips 未満なら『SL幅不足』で不採用", "max(係数×ATR, 10pips)", "ライブの規則は (a) のまま"]) assert.ok(md.includes(s), s);
-  // 比較表: 型×案ごとに (a)(b) の2行（4×2=8行）。見出しの列は依頼の項目
-  const cmp = md.split("## (a) と (b) の比較（全体）")[1].split("\n### ")[0].split("\n").filter((l) => l.startsWith("|"));
-  assert.equal(cmp.length, 2 + 8);
-  assert.equal(cmp[0], "| 型 × 案 | SL下限方式 | n | 到達 | 到達率 | TP1 | SL | 時間切れ | 勝率 | 計画RR平均 | 実現R(グロス) | 実現R(コスト込) | pips合計(グロス) | pips合計(コスト込) | 最大連敗 |");
-  assert.deepEqual(cmp.slice(2).map((l) => l.split(" | ").slice(0, 2).join("|").replace(/^\| /, "")), ["型A × A案（ATR係数 0.5）|(a)", "型A × A案（ATR係数 0.5）|(b)", "型A × B案（ATR係数 1.0）|(a)", "型A × B案（ATR係数 1.0）|(b)", "型B × A案（ATR係数 0.5）|(a)", "型B × A案（ATR係数 0.5）|(b)", "型B × B案（ATR係数 1.0）|(a)", "型B × B案（ATR係数 1.0）|(b)"]);
+  for (const s of ["設計②（15:30、**型Aのみ**）", "Q09", "毎時 16:00〜21:00", "同じ計画日・同じ銘柄・同じ向きの型Bが既にあれば", "夏の21:00", "丸めたあとの SL 幅が 10pips 未満なら『SL幅不足』で不採用", "max(係数×ATR, 10pips)",
+    "日次レベル7本＋H1高値群・安値群の両方", "日次レベル7本＋進行方向側の群だけ（売りは安値群、買いは高値群）", "逆側の群（売りの手前にある高値群、買いの手前にある安値群）は障害に数えない", "基準水準（Entry の元）の選び方は変えない", "ライブの規則は SL下限 (a)・障害 (a) のまま"]) assert.ok(md.includes(s), s);
+  // 比較表: 型×案ごとに 4方式（SL下限 (a)(b) × 障害 (a)(b)）の行（4×4=16行）。見出しの列は依頼の項目
+  const cmp = md.split("## 方式の比較（全体）: SL下限方式 × 障害の定義")[1].split("\n### ")[0].split("\n").filter((l) => l.startsWith("|"));
+  assert.equal(cmp.length, 2 + 16);
+  assert.equal(cmp[0], "| 型 × 案 | SL下限方式 | 障害の定義 | n | 到達 | 到達率 | TP1 | SL | 時間切れ | 勝率 | 計画RR平均 | 実現R(グロス) | 実現R(コスト込) | pips合計(グロス) | pips合計(コスト込) | 最大連敗 |");
+  const first3 = cmp.slice(2).map((l) => l.split(" | ").slice(0, 3).join("|").replace(/^\| /, ""));
+  const names = ["型A × A案（ATR係数 0.5）", "型A × B案（ATR係数 1.0）", "型B × A案（ATR係数 0.5）", "型B × B案（ATR係数 1.0）"];
+  assert.deepEqual(first3, names.flatMap((n) => ["(a)|(a)", "(b)|(a)", "(a)|(b)", "(b)|(b)"].map((m) => `${n}|${m}`)));
   const csv = toCsv(rows);
   assert.equal(csv.split("\n")[0], CSV_COLUMNS.join(","));
-  assert.equal(CSV_COLUMNS[0], "sl_floor");
+  assert.deepEqual(CSV_COLUMNS.slice(0, 3), ["sl_floor", "obstacle", "setup"]);
   assert.equal(csv.trim().split("\n").length, rows.length + 1);
-  assert.deepEqual([...new Set(csv.trim().split("\n").slice(1).map((l) => l.split(",")[0]))], ["a_reject", "b_widen"]);
+  assert.deepEqual([...new Set(csv.trim().split("\n").slice(1).map((l) => l.split(",").slice(0, 2).join(",")))], ["a_reject,a_both", "b_widen,a_both", "a_reject,b_forward", "b_widen,b_forward"]);
   assert.throws(() => toMarkdown(rows, { nowMs: NOW, window: { first: "a", last: "b" }, stats, history, regimeSource: "試験", noMtf: [] }), /statsByMode/);
+  // 4方式がそろっていなければ作らない
+  assert.throws(() => toMarkdown(rows, { nowMs: NOW, window: { first: "a", last: "b" }, stats, statsByMode: { [BASE_MODE]: stats }, history, regimeSource: "試験", noMtf: [] }), /statsByMode/);
 });
 
 // ---- CLI ----
@@ -276,10 +284,10 @@ test("CLI: H1履歴がすべてあれば取得せず（APIキー不要）、md �
     assert.equal(fs.readFileSync(path.join(dataDir, "history", "h1-EURUSD.csv"), "utf8"), before);
     const md = fs.readFileSync(path.join(dataDir, "daytrade", "backtest-2026-10-08.md"), "utf8");
     assert.match(md, /^# デイトレプラン バックテスト/);
-    assert.ok(md.includes("## (a) と (b) の比較（全体）") && md.includes("### (b) の内訳"));
+    assert.ok(md.includes("## 方式の比較（全体）: SL下限方式 × 障害の定義") && md.includes("### SL下限方式 (b) の内訳") && md.includes("### 障害の定義 (b) の内訳"));
     const csv = fs.readFileSync(path.join(dataDir, "daytrade", "backtest-2026-10-08.csv"), "utf8");
     assert.equal(csv.split("\n")[0], CSV_COLUMNS.join(","));
-    assert.ok(csv.includes("\na_reject,") && csv.includes("\nb_widen,"));
+    assert.ok(csv.includes("\na_reject,a_both,") && csv.includes("\nb_widen,a_both,") && csv.includes("\na_reject,b_forward,") && csv.includes("\nb_widen,b_forward,"));
     assert.match(q.out.join("\n"), /完了/);
   } finally { rm(path.dirname(dataDir)); }
 });
@@ -450,7 +458,7 @@ const buyCand = () => ({
   schemes: { A: { pass: true, sl: 1.094, tp: 1.1, sl_pips: 10, profit_pips: 50, rr: 5 }, B: { pass: false } },
 });
 
-// rule({hour, slot, t, slFloor}) → EURUSD・型B の候補（無ければ null）。touch: { "YYYY-MM-DD HH:MM": 足の上書き }
+// rule({hour, slot, t, slFloor, obstacle}) → EURUSD・型B の候補（無ければ null）。touch: { "YYYY-MM-DD HH:MM": 足の上書き }
 function runB({ D, rule, touch = {}, season = "summer", modes = false }) {
   const { barsByCode, rowsByCode } = SYN[season];
   const from = J.jstAt(D, "07:00"), to = J.jstAt(J.addDaysJst(D, 1), "03:00");
@@ -461,8 +469,8 @@ function runB({ D, rule, touch = {}, season = "summer", modes = false }) {
   const calls = [];
   const evaluateImpl = (ctx, setup, info) => {
     const mine = ctx.pair.code === "EURUSD" && J.jstDate(info.t - 3 * J.HR) === D;
-    if (mine) calls.push({ setup, slot: info.slot, hm: J.jstLabel(info.t).slice(11), slFloor: info.slFloor });
-    const c = mine && setup === "B" ? rule({ hour: J.jstHour(info.t), slot: info.slot, t: info.t, slFloor: info.slFloor }) : null;
+    if (mine) calls.push({ setup, slot: info.slot, hm: J.jstLabel(info.t).slice(11), slFloor: info.slFloor, obstacle: info.obstacle });
+    const c = mine && setup === "B" ? rule({ hour: J.jstHour(info.t), slot: info.slot, t: info.t, slFloor: info.slFloor, obstacle: info.obstacle }) : null;
     return c || NONE(ctx, setup);
   };
   const args = { barsByCode: { ...barsByCode, EURUSD: eub }, rowsByCode, nowMs: season === "summer" ? NOW_S : NOW_W, windowDays: 3, evaluateImpl };
@@ -603,54 +611,85 @@ test("冬の計画日: 21:00 は型B追加（slot 4）、設計③は 22:00。21
 });
 
 test("SL下限方式: evaluateImpl に slFloor が渡り、記録に sl_floor と sl_floored が付く。(a) では出ない案が (b) にだけ現れる", () => {
-  // (b) のときだけ候補を出す（SL幅の狭い案を 10pips に広げた想定）
-  const rule = ({ hour, slot, slFloor }) => (slFloor === "widen" && slot === 4 && hour === 17 ? sellCand({ floored: true }) : null);
+  // SL下限 (b)・障害 (a) のときだけ候補を出す（SL幅の狭い案を 10pips に広げた想定）
+  const rule = ({ hour, slot, slFloor, obstacle }) => (slFloor === "widen" && obstacle === "both" && slot === 4 && hour === 17 ? sellCand({ floored: true }) : null);
   const r = runB({ D: DS, rule, modes: true });
-  assert.ok(r.calls.every((c) => c.slFloor === "reject" || c.slFloor === "widen"));
-  assert.equal(r.calls.filter((c) => c.slFloor === "widen").length, r.calls.filter((c) => c.slFloor === "reject").length); // 同じ評価を2方式で
+  assert.ok(r.calls.every((c) => (c.slFloor === "reject" || c.slFloor === "widen") && (c.obstacle === "both" || c.obstacle === "forward")));
+  for (const m of BACKTEST_MODES) assert.equal(r.calls.filter((c) => c.slFloor === m.slFloor && c.obstacle === m.obstacle).length, r.calls.length / 4); // 同じ評価を4方式で
   assert.equal(r.eu.length, 1);
   assert.equal(r.eu[0].sl_floor, "widen");
+  assert.equal(r.eu[0].obstacle, "both");
   assert.equal(r.eu[0].sl_floored, true);
-  assert.equal(r.statsByMode.reject.bAdded, 0);
-  assert.equal(r.statsByMode.widen.bAdded, 1);
-  assert.deepEqual(r.records.map((x) => x.sl_floor), ["widen"]); // (a) は空
-  // 集計は sl_floor で分かれる: (a) の行は無く、(b) の行だけ。CSV の先頭列は b_widen
+  assert.equal(r.statsByMode[modeKey("reject", "both")].bAdded, 0);
+  assert.equal(r.statsByMode[modeKey("widen", "both")].bAdded, 1);
+  assert.equal(r.statsByMode[modeKey("widen", "forward")].bAdded, 0);
+  assert.deepEqual(r.records.map((x) => x.sl_floor), ["widen"]); // ほかの3方式は空
+  // 集計は sl_floor・obstacle で分かれる: 該当の方式の行だけ。CSV の先頭2列は b_widen,a_both
   const rows = aggregate(r.records);
-  assert.deepEqual([...new Set(rows.map((x) => x.sl_floor))], ["widen"]);
-  assert.ok(toCsv(rows).trim().split("\n").slice(1).every((l) => l.startsWith("b_widen,B,")));
-  // (b) の内訳
+  assert.deepEqual([...new Set(rows.map((x) => `${x.sl_floor}|${x.obstacle}`))], [modeKey("widen", "both")]);
+  assert.ok(toCsv(rows).trim().split("\n").slice(1).every((l) => l.startsWith("b_widen,a_both,B,")));
+  // SL下限 (b) の内訳（障害の定義ごと）
   const fb = floorBreakdown(r.records);
-  assert.deepEqual(fb.map((x) => [x.setup, x.scheme, x.value.startsWith("10pips下限で広げた案") ? "floored" : "same", x.n]), [["B", "A", "same", 0], ["B", "A", "floored", 1]]);
-  // 同じ候補が両方式に出る場合は、同じ記録が sl_floor だけ違って2件になる（(a)(b) を別々に数える）
-  const both = runB({ D: DS, rule: ({ hour, slot }) => (slot === 4 && hour === 17 ? sellCand({ floored: false }) : null), modes: true });
-  assert.deepEqual(both.eu.map((x) => [x.sl_floor, x.slot, x.sl_floored]), [["reject", 4, false], ["widen", 4, false]]);
-  const rows2 = aggregate(both.records);
-  const total = (m) => rows2.find((x) => x.sl_floor === m && x.axis === "全体" && x.setup === "B" && x.scheme === "A");
-  assert.equal(total("reject").n, 1);
-  assert.equal(total("widen").n, 1);
+  assert.deepEqual(fb.map((x) => [x.obstacle, x.setup, x.scheme, x.value.startsWith("10pips下限で広げた案") ? "floored" : "same", x.n]), [["both", "B", "A", "same", 0], ["both", "B", "A", "floored", 1]]);
+  // 同じ候補が全方式に出る場合は、同じ記録が sl_floor・obstacle だけ違って4件になる（4方式を別々に数える）
+  const all4 = runB({ D: DS, rule: ({ hour, slot }) => (slot === 4 && hour === 17 ? sellCand({ floored: false }) : null), modes: true });
+  assert.deepEqual(all4.eu.map((x) => [x.sl_floor, x.obstacle, x.slot, x.sl_floored]), [["reject", "both", 4, false], ["widen", "both", 4, false], ["reject", "forward", 4, false], ["widen", "forward", 4, false]]);
+  const rows2 = aggregate(all4.records);
+  for (const m of BACKTEST_MODES) assert.equal(rows2.find((x) => x.sl_floor === m.slFloor && x.obstacle === m.obstacle && x.axis === "全体" && x.setup === "B" && x.scheme === "A").n, 1, m.key);
 });
 
-test("runBacktest／aggregate／toCsv: 不正な slFloor は受け付けない", () => {
+test("障害の定義: evaluateImpl に obstacle が渡り、記録に obstacle と obstacle_changed が付く。障害 (b) にだけ現れる案は (b) の記録だけに出る", () => {
+  const rule = ({ hour, slot, obstacle }) => (obstacle === "forward" && slot === 4 && hour === 17 ? { ...sellCand(), obstacle_changed: true } : null);
+  const r = runB({ D: DS, rule, modes: true });
+  assert.equal(r.eu.length, 2); // SL下限 (a)(b) の両方
+  assert.deepEqual(r.eu.map((x) => [x.sl_floor, x.obstacle, x.obstacle_changed]), [["reject", "forward", true], ["widen", "forward", true]]);
+  assert.deepEqual(r.records.map((x) => x.obstacle), ["forward", "forward"]);
+  assert.equal(r.statsByMode[modeKey("reject", "both")].bAdded, 0);
+  assert.equal(r.statsByMode[modeKey("reject", "forward")].bAdded, 1);
+  const rows = aggregate(r.records);
+  assert.deepEqual([...new Set(rows.map((x) => `${x.obstacle}|${x.sl_floor}`))], ["forward|reject", "forward|widen"]);
+  assert.ok(toCsv(rows).trim().split("\n").slice(1).every((l) => /^(a_reject|b_widen),b_forward,B,/.test(l)));
+  // 障害 (b) の内訳: TP1 が変わった案 / 変わらなかった案（SL下限方式ごと）
+  const ob = obstacleBreakdown(r.records);
+  assert.deepEqual(ob.map((x) => [x.sl_floor, x.setup, x.scheme, x.value.startsWith("障害が変わった案") ? "changed" : "same", x.n]),
+    [["reject", "B", "A", "same", 0], ["reject", "B", "A", "changed", 1], ["widen", "B", "A", "same", 0], ["widen", "B", "A", "changed", 1]]);
+  // 障害 (a) の記録には obstacle_changed が付かない（false）。obstacleBreakdown は障害 (b) の記録だけを分ける
+  const bothOnly = runB({ D: DS, rule: ({ hour, slot, obstacle }) => (obstacle === "both" && slot === 4 && hour === 17 ? sellCand() : null), modes: true });
+  assert.ok(bothOnly.records.every((x) => x.obstacle === "both" && x.obstacle_changed === false));
+  assert.deepEqual(obstacleBreakdown(bothOnly.records), []);
+});
+
+test("runBacktest／aggregate／toCsv: 不正な slFloor・obstacle は受け付けない", () => {
   assert.throws(() => runBacktest({ ...allSynth(), nowMs: NOW, windowDays: 1, slFloor: "wide" }), /slFloor/);
-  assert.throws(() => aggregate([{ sl_floor: "wide", setup: "A", scheme: "A" }]), /sl_floor/);
-  assert.throws(() => toCsv([{ sl_floor: undefined }]), /sl_floor/);
+  assert.throws(() => runBacktest({ ...allSynth(), nowMs: NOW, windowDays: 1, obstacle: "forwards" }), /obstacle/);
+  assert.throws(() => aggregate([{ sl_floor: "wide", obstacle: "both", setup: "A", scheme: "A" }]), /sl_floor/);
+  assert.throws(() => aggregate([{ sl_floor: "reject", obstacle: "fwd", setup: "A", scheme: "A" }]), /obstacle/);
+  assert.throws(() => aggregate([{ sl_floor: "reject", setup: "A", scheme: "A" }]), /obstacle/);
+  assert.throws(() => toCsv([{ sl_floor: undefined, obstacle: "both" }]), /sl_floor/);
+  assert.throws(() => toCsv([{ sl_floor: "reject", obstacle: undefined }]), /obstacle/);
   assert.deepEqual(SL_FLOOR_MODES.map((m) => m.code), ["a_reject", "b_widen"]);
+  assert.deepEqual(OBSTACLE_DEFS.map((o) => o.code), ["a_both", "b_forward"]);
+  assert.deepEqual(BACKTEST_MODES.map((m) => m.key), ["reject|both", "widen|both", "reject|forward", "widen|forward"]);
+  assert.equal(BASE_MODE, "reject|both"); // ライブと同じ方式が先頭
 });
 
-test("aggregate: SL下限方式 × 型 × ATR係数で分かれ、設計の回の軸に『状態更新（型B追加）』が設計③の次に出る。曜日は月→金の順", () => {
-  const both = runB({ D: DS, rule: ({ hour, slot, slFloor }) => (slot === 4 && hour === 17 ? sellCand() : slot === 3 && slFloor === "widen" ? sellCand({ sl: 1.1051, floored: true }) : null), modes: true });
-  const rows = aggregate(both.records);
-  for (const m of ["reject", "widen"]) {
-    const slotRows = rows.filter((x) => x.sl_floor === m && x.setup === "B" && x.scheme === "A" && x.axis === "設計の回").map((x) => x.value);
-    assert.deepEqual(slotRows, m === "widen" ? ["設計③", "状態更新（型B追加）"] : ["状態更新（型B追加）"]);
+test("aggregate: 障害の定義 × SL下限方式 × 型 × ATR係数で分かれ、設計の回の軸に『状態更新（型B追加）』が設計③の次に出る。曜日は月→金の順", () => {
+  const all4 = runB({ D: DS, rule: ({ hour, slot, slFloor }) => (slot === 4 && hour === 17 ? sellCand() : slot === 3 && slFloor === "widen" ? sellCand({ sl: 1.1051, floored: true }) : null), modes: true });
+  const rows = aggregate(all4.records);
+  for (const m of BACKTEST_MODES) {
+    const mine = (x) => x.sl_floor === m.slFloor && x.obstacle === m.obstacle && x.setup === "B" && x.scheme === "A";
+    const slotRows = rows.filter((x) => mine(x) && x.axis === "設計の回").map((x) => x.value);
+    assert.deepEqual(slotRows, m.slFloor === "widen" ? ["設計③", "状態更新（型B追加）"] : ["状態更新（型B追加）"], m.key);
     // 方式ごとの全体 n = その方式の記録の数。どの軸でも足すと全体になる
-    const n = both.records.filter((x) => x.sl_floor === m && x.setup === "B" && x.scheme === "A").length;
-    assert.equal(rows.find((x) => x.sl_floor === m && x.axis === "全体" && x.setup === "B" && x.scheme === "A").n, n);
-    for (const ax of ["銘柄", "設計の回", "設計日の曜日", "ボラ状態", "売買（参考）"]) assert.equal(rows.filter((x) => x.sl_floor === m && x.setup === "B" && x.scheme === "A" && x.axis === ax).reduce((a, x) => a + x.n, 0), n, `${m} ${ax}`);
+    const n = all4.records.filter((x) => x.sl_floor === m.slFloor && x.obstacle === m.obstacle && x.setup === "B" && x.scheme === "A").length;
+    assert.ok(n > 0, m.key);
+    assert.equal(rows.find((x) => mine(x) && x.axis === "全体").n, n, m.key);
+    for (const ax of ["銘柄", "設計の回", "設計日の曜日", "ボラ状態", "売買（参考）"]) assert.equal(rows.filter((x) => mine(x) && x.axis === ax).reduce((a, x) => a + x.n, 0), n, `${m.key} ${ax}`);
   }
-  // 行の並び: 方式 (a) → (b) の順
-  const order = rows.map((x) => x.sl_floor);
-  assert.ok(order.indexOf("widen") > order.lastIndexOf("reject"));
+  // 行の並び: 障害 (a) の SL下限 (a)→(b)、次に障害 (b) の SL下限 (a)→(b)
+  const firstIdx = (m) => rows.findIndex((x) => x.sl_floor === m.slFloor && x.obstacle === m.obstacle);
+  assert.deepEqual(BACKTEST_MODES.map(firstIdx), [...BACKTEST_MODES.map(firstIdx)].sort((a, b) => a - b));
+  assert.ok(BACKTEST_MODES.every((m) => firstIdx(m) >= 0));
   // 曜日の軸は月→金の順
   const real = aggregate(synthRun().records);
   const groups = new Set(real.map((x) => `${x.setup}${x.scheme}`));
@@ -662,24 +701,26 @@ test("aggregate: SL下限方式 × 型 × ATR係数で分かれ、設計の回�
 });
 
 // ---- 本物の evaluate（差し替えなし）で、ATR が小さい模擬データ: (a) は SL幅不足で落ち、(b) は 10pips に広げて採用 ----
-test("SL下限方式 (a)(b): ATRが小さいデータでは、(b) にだけ『広げた案』が現れ、(a) の案は (b) にも同じSLで残る。型B追加も出る", () => {
+test("SL下限方式 (a)(b): ATRが小さいデータでは、(b) にだけ『広げた案』が現れ、(a) の案は (b) にも同じSLで残る。型B追加も出る（障害の定義ごと）", () => {
   const { barsByCode, rowsByCode } = allSynth({ h1: { wickPct: 0.0001 } });
   const { records, statsByMode } = runBacktestModes({ barsByCode, rowsByCode, nowMs: NOW, windowDays: 10 });
-  const a = records.filter((r) => r.sl_floor === "reject"), b = records.filter((r) => r.sl_floor === "widen");
-  assert.ok(a.length > 0 && b.length > a.length, `a=${a.length} b=${b.length}`);
-  assert.ok(a.every((r) => r.sl_pips >= 10 && r.sl_floored === false));
-  assert.ok(b.every((r) => r.sl_pips >= 10 - 1e-6));
-  const floored = b.filter((r) => r.sl_floored);
-  assert.ok(floored.length > 0);
-  assert.ok(floored.every((r) => Math.abs(r.sl_pips - 10) < 0.7), "広げた案のSL幅は 10pips 付近（0.5pip丸め・基準水準の位置で最大 +0.5pip）");
-  assert.ok(b.some((r) => r.setup === "B" && r.slot === 4), "型B追加の版が (b) に出る");
-  assert.ok(statsByMode.widen.bAdded >= statsByMode.reject.bAdded);
+  for (const o of OBSTACLE_DEFS) {
+    const a = records.filter((r) => r.sl_floor === "reject" && r.obstacle === o.id), b = records.filter((r) => r.sl_floor === "widen" && r.obstacle === o.id);
+    assert.ok(a.length > 0 && b.length > a.length, `${o.id}: a=${a.length} b=${b.length}`);
+    assert.ok(a.every((r) => r.sl_pips >= 10 && r.sl_floored === false));
+    assert.ok(b.every((r) => r.sl_pips >= 10 - 1e-6));
+    const floored = b.filter((r) => r.sl_floored);
+    assert.ok(floored.length > 0);
+    assert.ok(floored.every((r) => Math.abs(r.sl_pips - 10) < 0.7), "広げた案のSL幅は 10pips 付近（0.5pip丸め・基準水準の位置で最大 +0.5pip）");
+    assert.ok(statsByMode[modeKey("widen", o.id)].bAdded >= statsByMode[modeKey("reject", o.id)].bAdded);
+    // (a) の案は (b) にも同じ案（同じ日・型・銘柄・向き・基準水準・SL幅）がある。無いものは、(b) で先に約定した同じ考えの版に抑えられた分だけ
+    const idea = (r) => [r.plan_date, r.setup, r.scheme, r.symbol, r.side, r.ref].join("|");
+    const bKeys = new Set(b.map((r) => `${idea(r)}|${r.sl_pips.toFixed(6)}`));
+    const bFilled = new Set(b.filter((r) => r.reached === "到達").map(idea));
+    for (const r of a) assert.ok(bKeys.has(`${idea(r)}|${r.sl_pips.toFixed(6)}`) || bFilled.has(idea(r)), `(a) の案が (b) に無い: ${idea(r)}`);
+  }
+  assert.ok(records.some((r) => r.sl_floor === "widen" && r.obstacle === "both" && r.setup === "B" && r.slot === 4), "型B追加の版が (b) に出る");
   assert.ok(records.every((r) => (r.setup === "B" ? [3, 4].includes(r.slot) : [1, 2, 3].includes(r.slot))));
-  // (a) の案は (b) にも同じ案（同じ日・型・銘柄・向き・基準水準・SL幅）がある。無いものは、(b) で先に約定した同じ考えの版に抑えられた分だけ
-  const idea = (r) => [r.plan_date, r.setup, r.scheme, r.symbol, r.side, r.ref].join("|");
-  const bKeys = new Set(b.map((r) => `${idea(r)}|${r.sl_pips.toFixed(6)}`));
-  const bFilled = new Set(b.filter((r) => r.reached === "到達").map(idea));
-  for (const r of a) assert.ok(bKeys.has(`${idea(r)}|${r.sl_pips.toFixed(6)}`) || bFilled.has(idea(r)), `(a) の案が (b) に無い: ${idea(r)}`);
 });
 
 // ---- 未来を見ていないこと（look-ahead） ----
@@ -712,11 +753,11 @@ test("バックテスト: ある計画日までの記録は、その案の失効
   const bad = (v) => v * 3 + 1;
   const corruptBars = Object.fromEntries(Object.entries(barsByCode).map(([c, bars]) => [c, bars.map((b) => (b.t >= cut ? { ...b, o: bad(b.o), h: bad(b.h), l: bad(b.l), c: bad(b.c) } : b))]));
   const corruptRows = Object.fromEntries(Object.entries(rowsByCode).map(([c, rows]) => [c, rows.map((r) => (r.date > D ? { ...r, open: bad(r.open), high: bad(r.high), low: bad(r.low), close: bad(r.close) } : r))]));
-  for (const slFloor of ["reject", "widen"]) {
-    const a = runBacktest({ barsByCode, rowsByCode, nowMs: NOW, windowDays: 10, slFloor }).records.filter((r) => r.plan_date <= D);
-    const b = runBacktest({ barsByCode: corruptBars, rowsByCode: corruptRows, nowMs: NOW, windowDays: 10, slFloor }).records.filter((r) => r.plan_date <= D);
-    assert.ok(a.length >= 3, `検査する記録が少なすぎる(${slFloor}): ${a.length}`);
-    assert.deepEqual(b, a, `${slFloor}: 失効より後のデータで記録が変わった`);
+  for (const m of BACKTEST_MODES) {
+    const a = runBacktest({ barsByCode, rowsByCode, nowMs: NOW, windowDays: 10, slFloor: m.slFloor, obstacle: m.obstacle }).records.filter((r) => r.plan_date <= D);
+    const b = runBacktest({ barsByCode: corruptBars, rowsByCode: corruptRows, nowMs: NOW, windowDays: 10, slFloor: m.slFloor, obstacle: m.obstacle }).records.filter((r) => r.plan_date <= D);
+    assert.ok(a.length >= 3, `検査する記録が少なすぎる(${m.key}): ${a.length}`);
+    assert.deepEqual(b, a, `${m.key}: 失効より後のデータで記録が変わった`);
   }
 });
 

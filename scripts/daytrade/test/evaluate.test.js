@@ -538,3 +538,107 @@ test("SL下限方式 widen: 下限が効かない案は既定と同じ結果。�
     }
   }
 });
+
+// ---- 障害の定義（opts.obstacle）: 'both'（既定・ライブ）／'forward'（バックテストの比較用）----
+const FWD = { obstacle: "forward" };
+const HI_BELOW = { highs: [{ min: 1.0960, max: 1.0970, count: 2 }], lows: [], window: 24 };   // 売りの Entry より下にある高値群（近い端 1.097）
+const LO_BELOW = { highs: [], lows: [{ min: 1.0950, max: 1.0980, count: 2 }], window: 24 };    // 売りの Entry より下にある安値群（近い端 1.098）
+
+test("障害の定義: 既定（opts なし／空／'both'）は従来どおり。obstacle_changed は付かない", () => {
+  const ctx = evalCtx({ groups: HI_BELOW });
+  const base = evaluate(ctx, "A");
+  for (const opts of [undefined, {}, null, { obstacle: "both" }, { slFloor: "reject" }, { t: 1, slot: 2 }]) {
+    const r = evaluate(ctx, "A", opts);
+    assert.deepEqual(r, base);
+    assert.equal("obstacle_changed" in r, false);
+  }
+  assert.deepEqual(base.obstacle, { label: "H1高値群", price: 1.097 }); // 現行は逆側（高値群）も障害に数える
+  assert.throws(() => evaluate(evalCtx(), "A", { obstacle: "fwd" }), /obstacle/);
+  assert.throws(() => evaluate(evalCtx(), "A", { obstacle: "forwards" }), /obstacle/);
+});
+
+test("障害の定義 forward・売り: 手前の高値群は障害に数えず、TP1 は次の障害（日次レベル／安値群）の手前。obstacle_changed=true", () => {
+  const r = evaluate(evalCtx({ groups: HI_BELOW }), "A", FWD);
+  assert.equal(r.outcome, "candidate");
+  assert.deepEqual(r.obstacle, { label: "S1", price: 1.09 });
+  assert.equal(r.obstacle_changed, true);
+  assert.equal(r.schemes.A.tp, 1.09005); // S1 1.0900 の手前 0.5pip
+  near(r.schemes.A.profit_pips, 139.5);
+  // 'both' ではその高値群（近い端 1.097）が障害 → TP1 は近くなる
+  const b = evaluate(evalCtx({ groups: HI_BELOW }), "A");
+  assert.equal(b.schemes.A.tp, 1.09705);
+  near(b.schemes.A.profit_pips, 69.5);
+  // 基準水準・Entry帯・SL・距離は変わらない（障害の定義は TP1 だけに効く）
+  for (const k of ["ref", "band", "worst_entry", "distance_pips", "side"]) assert.deepEqual(r[k], b[k], k);
+  for (const n of ["A", "B"]) { assert.equal(r.schemes[n].sl, b.schemes[n].sl); near(r.schemes[n].sl_pips, b.schemes[n].sl_pips); }
+  // 進行方向側の安値群は障害になる（近い端 1.098 は S1 より近い）
+  const l = evaluate(evalCtx({ groups: LO_BELOW }), "A", FWD);
+  assert.deepEqual(l.obstacle, { label: "H1安値群", price: 1.098 });
+  assert.equal(l.obstacle_changed, false); // 'both' でも同じ障害
+  assert.deepEqual({ ...l, obstacle_changed: undefined }, { ...evaluate(evalCtx({ groups: LO_BELOW }), "A"), obstacle_changed: undefined });
+});
+
+test("障害の定義 forward・買い: 手前の安値群は障害に数えず、進行方向側の高値群だけ。obstacle_changed は価格が違うときだけ true", () => {
+  const buy = (groups) => evalCtx({ price: 1.1100, direction: OK_DIR("buy"), daily: { ...DAILY, pivot: 1.1060, s1: 1.1060 }, groups });
+  const LO_ABOVE = { highs: [], lows: [{ min: 1.1200, max: 1.1210, count: 2 }], window: 24 };   // 買いの Entry より上の安値群（近い端=最小値 1.120）
+  const HI_ABOVE = { highs: [{ min: 1.1250, max: 1.1260, count: 2 }], lows: [], window: 24 };   // 買いの Entry より上の高値群（近い端=最小値 1.125）
+  let r = evaluate(buy(LO_ABOVE), "A", FWD);
+  assert.deepEqual(r.obstacle, { label: "R1", price: 1.115 }); // R1 1.115 のほうが安値群（近い端 1.120）より近いので、どちらの定義でも R1
+  assert.equal(r.obstacle_changed, false);
+  const lo2 = { highs: [], lows: [{ min: 1.1120, max: 1.1130, count: 2 }], window: 24 };
+  r = evaluate(buy(lo2), "A", FWD);
+  assert.deepEqual(r.obstacle, { label: "R1", price: 1.115 });
+  assert.equal(r.obstacle_changed, true);  // 'both' では安値群 1.112 が先
+  assert.deepEqual(evaluate(buy(lo2), "A").obstacle, { label: "H1安値群", price: 1.112 });
+  r = evaluate(buy(HI_ABOVE), "A", FWD);
+  assert.deepEqual(r.obstacle, { label: "R1", price: 1.115 });
+  assert.equal(r.obstacle_changed, false);
+  const hi2 = { highs: [{ min: 1.1130, max: 1.1140, count: 2 }], lows: [], window: 24 };
+  r = evaluate(buy(hi2), "A", FWD);
+  assert.deepEqual(r.obstacle, { label: "H1高値群", price: 1.113 });
+  assert.equal(r.obstacle_changed, false);
+});
+
+test("障害の定義 forward: 進行方向側に障害が1つも無くなれば『障害なし』で不採用（obstacle_changed=true）。型Bにも同じ定義が効く", () => {
+  const noDaily = { pivot: 1.1040, r1: 1.1150, r2: 1.1250, s1: NaN, s2: NaN, prev_high: 1.1200, prev_low: NaN };
+  const ctx = evalCtx({ daily: noDaily, groups: HI_BELOW });
+  const b = evaluate(ctx, "A");
+  assert.equal(b.outcome, "candidate");
+  assert.deepEqual(b.obstacle, { label: "H1高値群", price: 1.097 });
+  const f = evaluate(ctx, "A", FWD);
+  assert.equal(f.outcome, "rejected");
+  assert.equal(f.obstacle, null);
+  assert.equal(f.obstacle_changed, true);
+  assert.equal(f.schemes.A.reason, "no_obstacle");
+  assert.equal(f.schemes.B.reason, "no_obstacle");
+  // 障害が両方の定義でともに無いなら変わらない（false）
+  const none = evaluate(evalCtx({ daily: noDaily }), "A", FWD);
+  assert.equal(none.obstacle, null);
+  assert.equal(none.obstacle_changed, false);
+  // 型B（東京レンジ安値を基準にした売り）
+  const bctx = evalCtx({ price: 1.1048, daily: B_DAILY, tokyo: tokyo(), groups: { highs: [{ min: 1.0980, max: 1.0990, count: 2 }], lows: [], window: 24 } });
+  assert.deepEqual(evaluate(bctx, "B").obstacle, { label: "H1高値群", price: 1.099 });
+  const bf = evaluate(bctx, "B", FWD);
+  assert.deepEqual(bf.obstacle, { label: "S1", price: 1.09 });
+  assert.equal(bf.obstacle_changed, true);
+  assert.deepEqual(bf.ref, evaluate(bctx, "B").ref);
+});
+
+test("障害の定義と SL下限方式は独立: 2つを同時に指定でき、TP1 は障害の定義、SL幅は SL下限方式だけで決まる", () => {
+  const ctx = evalCtx({ atr: 0.0019, groups: HI_BELOW }); // A案 9.5pips
+  const r00 = evaluate(ctx, "A");
+  const r10 = evaluate(ctx, "A", { slFloor: "widen" });
+  const r01 = evaluate(ctx, "A", FWD);
+  const r11 = evaluate(ctx, "A", { slFloor: "widen", obstacle: "forward" });
+  assert.equal(r00.schemes.A.reason, "sl_narrow");
+  assert.equal(r01.schemes.A.reason, "sl_narrow");
+  assert.equal(r10.schemes.A.pass, true);
+  assert.equal(r11.schemes.A.pass, true);
+  assert.equal(r11.schemes.A.sl_floored, true);
+  assert.equal(r10.schemes.A.sl, r11.schemes.A.sl);
+  assert.equal(r10.schemes.A.tp, 1.09705);
+  assert.equal(r11.schemes.A.tp, 1.09005);
+  assert.equal(r01.schemes.A.tp, 1.09005);
+  assert.equal("obstacle_changed" in r10, false);
+  assert.equal(r11.obstacle_changed, true);
+});

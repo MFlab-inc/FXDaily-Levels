@@ -76,6 +76,33 @@ test("levels: firstObstacle は Entry を含まず進行方向で最初の水準
   assert.equal(firstObstacle("buy", 1.4, daily, { highs: [], lows: [] }), null);
 });
 
+test("levels: firstObstacle の mode — 'both'（既定・現行）は高値群・安値群の両方、'forward' は進行方向側の群だけ（売り=安値群、買い=高値群）", () => {
+  const daily = { pivot: 1.1040, r1: 1.1150, r2: 1.1250, s1: 1.0900, s2: 1.0800, prev_high: 1.1200, prev_low: 1.0850 };
+  // 売り: Entry 1.1040 より下に、高値群（近い端=最大値 1.097）と安値群（近い端=最大値 1.093）。S1 1.09
+  const g = { highs: [{ min: 1.0950, max: 1.0970, count: 2 }], lows: [{ min: 1.0910, max: 1.0930, count: 2 }], window: 24 };
+  assert.deepEqual(firstObstacle("sell", 1.1040, daily, g), { label: "H1高値群", price: 1.097 });             // 既定 = 'both'
+  assert.deepEqual(firstObstacle("sell", 1.1040, daily, g, "both"), { label: "H1高値群", price: 1.097 });
+  assert.deepEqual(firstObstacle("sell", 1.1040, daily, g, "forward"), { label: "H1安値群", price: 1.093 }); // 売りは安値群だけ
+  assert.deepEqual(firstObstacle("sell", 1.1040, daily, { highs: g.highs, lows: [] }, "forward"), { label: "S1", price: 1.09 }); // 逆側の高値群は数えない → 日次レベル
+  assert.deepEqual(firstObstacle("sell", 1.1040, daily, { highs: g.highs, lows: [] }, "both"), { label: "H1高値群", price: 1.097 });
+  // 買い: Entry 1.1040 より上に、安値群（近い端=最小値 1.106）と高値群（近い端=最小値 1.110）。R1 1.115
+  const gb = { highs: [{ min: 1.1100, max: 1.1110, count: 2 }], lows: [{ min: 1.1060, max: 1.1070, count: 2 }], window: 24 };
+  assert.deepEqual(firstObstacle("buy", 1.1040, daily, gb), { label: "H1安値群", price: 1.106 });
+  assert.deepEqual(firstObstacle("buy", 1.1040, daily, gb, "forward"), { label: "H1高値群", price: 1.11 }); // 買いは高値群だけ
+  assert.deepEqual(firstObstacle("buy", 1.1040, daily, { highs: [], lows: gb.lows }, "forward"), { label: "R1", price: 1.115 });
+  // 日次レベル7本は同じ。群が無ければ両方の定義は同じ結果
+  for (const side of ["sell", "buy"]) for (const e of [1.0, 1.0860, 1.1040, 1.1300]) {
+    assert.deepEqual(firstObstacle(side, e, daily, { highs: [], lows: [] }, "forward"), firstObstacle(side, e, daily, { highs: [], lows: [] }, "both"));
+  }
+  // 障害が進行方向側の群だけのとき: 'forward' では逆側の群しかなければ障害なし
+  const noDaily = { pivot: NaN };
+  assert.equal(firstObstacle("sell", 1.1040, noDaily, { highs: g.highs, lows: [] }, "forward"), null);
+  assert.deepEqual(firstObstacle("sell", 1.1040, noDaily, { highs: g.highs, lows: [] }, "both"), { label: "H1高値群", price: 1.097 });
+  // Entry と同値の群は障害ではない（'forward' でも）
+  assert.equal(firstObstacle("sell", 1.093, noDaily, { highs: [], lows: g.lows }, "forward"), null);
+  assert.throws(() => firstObstacle("sell", 1.1, daily, g, "fwd"), /mode/);
+});
+
 // ---- サイズ ----
 test("sizing: 1pipの円価値は決済通貨ごと。レートが無ければ null", () => {
   const rates = { USDJPY: 150, USDCAD: 1.35, USDCHF: 0.9, GBPUSD: 1.25 };

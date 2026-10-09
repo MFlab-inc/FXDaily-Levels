@@ -6,7 +6,7 @@
 |---|---|---|
 | `accounts.json` | **本人が手で更新** | 口座ごとの `equity_jpy`（資金・円）、`commission_per_lot_jpy`、`risk_pct`、`daily_loss_pct`。生成器は読むだけ。JSON にコメントは書けないので、先頭の `_comment` に説明を入れてある |
 | `log.csv` | 生成器（`daytrade.yml`、`daytrade-score.js`） | 案の記録。追記のみ（仕様 5節・6-1）。`run` は design（設計）／design-b（状態更新で追加した型B）／status（取消・採点の結果）。`filled_ticket_*` は本人が週1回、MT4の取引記録と照合して手で埋める（bot は書き換えない） |
-| `backtest-<日付>.md` / `.csv` | `daytrade-backtest.js`（手動） | バックテストの集計（仕様 6-2）。CSV の先頭列 `sl_floor` は SL下限方式（`a_reject`＝丸め後10pips未満は不採用〔ライブの規則〕、`b_widen`＝max(k×ATR, 10pips) で採用） |
+| `backtest-<日付>.md` / `.csv` | `daytrade-backtest.js`（手動） | バックテストの集計（仕様 6-2）。CSV の先頭2列は比較軸: `sl_floor`＝SL下限方式（`a_reject`＝丸め後10pips未満は不採用〔ライブの規則〕、`b_widen`＝max(k×ATR, 10pips) で採用）、`obstacle`＝障害の定義（`a_both`＝TP1の障害に日次レベル7本＋H1高値群・安値群の両方〔ライブの規則〕、`b_forward`＝日次レベル7本＋進行方向側の群だけ）。2×2の4通りを別々に集計 |
 
 `equity_jpy` を変えたとき、1項目目の『本日の損失上限』は次の生成（状態更新を含む）から変わる。各案の上限ロットは案を設計した時点の値で、次の設計（または状態更新で追加する型B）から反映される（設計済みの案の上限ロットは、次の設計まで変わらない）。
 

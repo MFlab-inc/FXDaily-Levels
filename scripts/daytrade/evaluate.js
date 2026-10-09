@@ -1,6 +1,6 @@
 "use strict";
 const N = require("./num");
-const { referenceLevel, firstObstacle } = require("./levels");
+const { referenceLevel, firstObstacle, OBSTACLE_MODES } = require("./levels");
 const { pipValueJpy, costThresholdPips, tpMarginPips, lotRaw, lotCap } = require("./sizing");
 
 /**
@@ -22,6 +22,10 @@ const { pipValueJpy, costThresholdPips, tpMarginPips, lotRaw, lotCap } = require
  *   'widen'         = SL幅を max(係数×ATR, 10pips) にしてから外側へ 0.5pip 単位に丸め、SL幅では落とさない。
  *                     RR・コスト・ADR・届く・ロット（広げた後のSL幅で計算、B案の半分の規則も同じ）は変えない。
  *                     SLが下限で決まった（= 現行の規則なら『SL幅不足』になる）案には sl_floored: true を付ける。
+ * opts.obstacle（障害の定義。バックテストの比較用。ライブは既定の 'both' のまま使う）:
+ *   'both'（既定）  = TP1 の障害に日次レベル7本＋H1高値群・安値群の両方を使う（現行の規則）。
+ *   'forward'       = 日次レベル7本＋進行方向側の群だけ（売りは安値群、買いは高値群）。基準水準の選び方は変えない。
+ *                     結果に obstacle_changed を付ける（'both' で選んだ障害と価格が違う、または障害が無くなるとき true）。
  */
 const SCHEMES = [{ name: "A", k: 0.5 }, { name: "B", k: 1.0 }];
 const SL_MIN_PIPS = 10;
@@ -45,6 +49,8 @@ function evaluate(ctx, setup, opts = {}) {
   const slFloor = (opts && opts.slFloor) || "reject";
   if (!SL_FLOOR_OPTIONS.includes(slFloor)) throw new Error(`evaluate: slFloor は 'reject' か 'widen' です（${String(slFloor)}）`);
   const widen = slFloor === "widen";
+  const obstacleMode = (opts && opts.obstacle) || "both";
+  if (!OBSTACLE_MODES.includes(obstacleMode)) throw new Error(`evaluate: obstacle は 'both' か 'forward' です（${String(obstacleMode)}）`);
   const { pair } = ctx;
   const base = { setup, symbol: pair.code, side: null, schemes: {} };
   const rejectAll = (reason, detail, extra = {}) => ({
@@ -102,7 +108,9 @@ function evaluate(ctx, setup, opts = {}) {
   const adrOver = N.gt(ctx.adr.used_pct, ADR_MAX_PCT);
 
   // 3) TP1（最初の障害の手前）
-  const obstacle = firstObstacle(side, ref.price, ctx.daily, ctx.groups);
+  const obstacle = firstObstacle(side, ref.price, ctx.daily, ctx.groups, obstacleMode);
+  // 'forward' のとき、現行の定義（'both'）が選ぶ障害と価格が違うか（違えば TP1 が変わる）
+  const obstacleChanged = obstacleMode === "forward" ? (firstObstacle(side, ref.price, ctx.daily, ctx.groups, "both")?.price ?? null) !== (obstacle?.price ?? null) : undefined;
   let tpT = null;
   if (obstacle) {
     const marginT = tpMarginPips(pair) * tpPip;
@@ -159,9 +167,9 @@ function evaluate(ctx, setup, opts = {}) {
     band, worst_entry: px(Lt, pair),
     price: ctx.price, distance_pips: distancePips, atr: ctx.atr, atr_pips: ctx.atr / pair.pip,
     adr_used_pct: ctx.adr.used_pct, adr_remaining_pips: ctx.adr.remaining / pair.pip,
-    obstacle, pip_value_jpy: pipVal,
+    obstacle, ...(obstacleChanged === undefined ? {} : { obstacle_changed: obstacleChanged }), pip_value_jpy: pipVal,
     schemes,
   };
 }
 
-module.exports = { evaluate, SCHEMES, REASONS, COUNTED, SL_MIN_PIPS, ADR_MAX_PCT, BAND_ATR, SL_FLOOR_OPTIONS };
+module.exports = { evaluate, SCHEMES, REASONS, COUNTED, SL_MIN_PIPS, ADR_MAX_PCT, BAND_ATR, SL_FLOOR_OPTIONS, OBSTACLE_MODES };

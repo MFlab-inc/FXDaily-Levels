@@ -23,6 +23,9 @@ const { lastCompletedSessionDate } = require("../../mtf/lib/ny-time");
  *   設計③（NY8:00）…… 型A・型B     追加された型Bの版は、設計③の再設計の対象（同じ版は継続、違う版・無い版は設計③の時刻に取消し、新しい版が生まれる）
  *
  * SL下限方式（slFloor）: 'reject'=現行（丸め後のSL幅 10pips 未満は不採用）／'widen'=SL=max(係数×ATR, 10pips) に広げて採用。evaluate() の opts と同じ。
+ * 障害の定義（obstacle）: 'both'=現行（TP1の障害に日次レベル7本＋H1高値群・安値群の両方）／'forward'=日次レベル7本＋進行方向側の群だけ
+ *   （売りは安値群、買いは高値群）。evaluate() の opts と同じ。
+ * 2つの軸は掛け合わせて4通りを、同じ入力で別々に計算する（ライブは SL下限 'reject'・障害 'both' のまま）。
  */
 const SLOT_LABEL = { 1: "設計①", 2: "設計②", 3: "設計③", 4: "状態更新（型B追加）" };
 const DESIGN_SLOTS = [1, 2, 3];
@@ -34,6 +37,14 @@ const SL_FLOOR_MODES = [
   { id: "reject", code: "a_reject", tag: "(a)", label: "(a) 現行：丸め後のSL幅が10pips未満は不採用" },
   { id: "widen", code: "b_widen", tag: "(b)", label: "(b) SL=max(係数×ATR, 10pips) に広げて採用" },
 ];
+const OBSTACLE_DEFS = [
+  { id: "both", code: "a_both", tag: "(a)", label: "(a) 現行：日次レベル7本＋H1高値群・安値群の両方" },
+  { id: "forward", code: "b_forward", tag: "(b)", label: "(b) 日次レベル7本＋進行方向側の群だけ（売りは安値群、買いは高値群）" },
+];
+// 比較する方式 = 障害の定義 × SL下限方式（この並びで records・集計・表に出す。先頭がライブと同じ方式）
+const modeKey = (slFloor, obstacle) => `${slFloor}|${obstacle}`;
+const BACKTEST_MODES = OBSTACLE_DEFS.flatMap((o) => SL_FLOOR_MODES.map((m) => ({ slFloor: m.id, obstacle: o.id, key: modeKey(m.id, o.id) })));
+const BASE_MODE = BACKTEST_MODES[0].key; // SL下限 'reject' × 障害 'both' = ライブ
 const WEEKDAY = ["日", "月", "火", "水", "木", "金", "土"];
 
 function lowerBound(bars, t) {
@@ -58,9 +69,10 @@ function planDates(nowMs, windowDays) {
   return out;
 }
 
-// evaluateImpl は試験用に差し替えられる（既定はライブと同じ evaluate）。呼び出しは evaluateImpl(ctx, setup, { t, slot, slFloor })
-function runBacktest({ barsByCode, rowsByCode, nowMs, windowDays = 365, thresholds, onProgress = () => {}, evaluateImpl = evaluate, slFloor = "reject" }) {
+// evaluateImpl は試験用に差し替えられる（既定はライブと同じ evaluate）。呼び出しは evaluateImpl(ctx, setup, { t, slot, slFloor, obstacle })
+function runBacktest({ barsByCode, rowsByCode, nowMs, windowDays = 365, thresholds, onProgress = () => {}, evaluateImpl = evaluate, slFloor = "reject", obstacle = "both" }) {
   if (!SL_FLOOR_MODES.some((m) => m.id === slFloor)) throw new Error(`runBacktest: slFloor は 'reject' か 'widen' です（${String(slFloor)}）`);
+  if (!OBSTACLE_DEFS.some((o) => o.id === obstacle)) throw new Error(`runBacktest: obstacle は 'both' か 'forward' です（${String(obstacle)}）`);
   const hist = createHistory({ barsByCode, rowsByCode, thresholds });
   const records = [];
   const stats = { designs: 0, adds: 0, evaluations: 0, skipped: {}, incomplete: 0, suppressed: 0, bAdded: 0, bAddDup: 0, dates: 0, first: null, last: null };
@@ -76,7 +88,7 @@ function runBacktest({ barsByCode, rowsByCode, nowMs, windowDays = 365, threshol
         const mtfSt = globalMtfStatus(r.ctx.mtfJson, r.meta.asOf);
         const ctx = { ...r.ctx, direction: symbolDirection(r.ctx.mtfJson, pair.code, mtfSt) };
         stats.evaluations++;
-        const res = evaluateImpl(ctx, setup, { t: ev.t, slot: ev.slot, slFloor });
+        const res = evaluateImpl(ctx, setup, { t: ev.t, slot: ev.slot, slFloor, obstacle });
         if (res.outcome === "candidate") cands.push({ pair, res, meta: r.meta, t: ev.t, slot: ev.slot, ctx });
       }
     }
@@ -135,7 +147,7 @@ function runBacktest({ barsByCode, rowsByCode, nowMs, windowDays = 365, threshol
       for (const s of SCHEMES) {
         const x = res.schemes[s.name];
         if (!x.pass) continue;
-        records.push(recordOf({ rec, res, pair, s, x, sim, D, expires, slFloor }));
+        records.push(recordOf({ rec, res, pair, s, x, sim, D, expires, slFloor, obstacle }));
       }
     }
     stats.dates++;
@@ -146,23 +158,23 @@ function runBacktest({ barsByCode, rowsByCode, nowMs, windowDays = 365, threshol
   return { records, stats };
 }
 
-// SL下限方式の2通りを同じ入力で実行し、記録をまとめる（先に (a) reject、次に (b) widen）。stats は方式ごと
+// 障害の定義 × SL下限方式の4通りを同じ入力で実行し、記録をまとめる（BACKTEST_MODES の並び）。stats は方式（modeKey）ごと
 function runBacktestModes(args) {
   const records = [], statsByMode = {};
-  for (const m of SL_FLOOR_MODES) {
-    const r = runBacktest({ ...args, slFloor: m.id });
+  for (const m of BACKTEST_MODES) {
+    const r = runBacktest({ ...args, slFloor: m.slFloor, obstacle: m.obstacle });
     records.push(...r.records);
-    statsByMode[m.id] = r.stats;
+    statsByMode[m.key] = r.stats;
   }
-  return { records, statsByMode, stats: statsByMode.reject };
+  return { records, statsByMode, stats: statsByMode[BASE_MODE] };
 }
 
 // 1案（A案またはB案）の記録。損益はpips（最悪Entryで約定）。コスト込み=往復で 2-2 の下限（1.2／1.6 pips）を引く [Q30]
-function recordOf({ rec, res, pair, s, x, sim, D, expires, slFloor }) {
+function recordOf({ rec, res, pair, s, x, sim, D, expires, slFloor, obstacle }) {
   const sgn = res.side === "sell" ? 1 : -1;
   const sc = sim.schemes[s.name];
   const out = {
-    sl_floor: slFloor, sl_floored: x.sl_floored === true, plan_date: D, slot: rec.slot, weekday: jstDow(jstAt(D, "12:00")), setup: res.setup, scheme: s.name, k: s.k, symbol: pair.code, side: res.side,
+    sl_floor: slFloor, sl_floored: x.sl_floored === true, obstacle, obstacle_changed: res.obstacle_changed === true, plan_date: D, slot: rec.slot, weekday: jstDow(jstAt(D, "12:00")), setup: res.setup, scheme: s.name, k: s.k, symbol: pair.code, side: res.side,
     ref: res.ref.price, vol: rec.meta.vol, plan_rr: x.rr, sl_pips: x.sl_pips, profit_pips: x.profit_pips,
     reached: sim.reached, reached_ms: sim.reached_at, cancelled_unreached: sim.reached === "未到達" && rec.cut < expires,
   };
@@ -224,14 +236,16 @@ const byOrder = (order) => (a, b) => {
   return (ia < 0 ? order.length : ia) - (ib < 0 ? order.length : ib) || String(a[0]).localeCompare(String(b[0]), "ja");
 };
 
-// 集計の単位は SL下限方式 × 型 × ATR係数。records の sl_floor（'reject'|'widen'）で分ける
+// 集計の単位は 障害の定義 × SL下限方式 × 型 × ATR係数。records の obstacle（'both'|'forward'）・sl_floor（'reject'|'widen'）で分ける
 function aggregate(records) {
-  const bad = records.find((r) => !SL_FLOOR_MODES.some((m) => m.id === r.sl_floor));
-  if (bad) throw new Error(`aggregate: 記録の sl_floor が不正です（${String(bad.sl_floor)}）`);
+  const badFloor = records.find((r) => !SL_FLOOR_MODES.some((m) => m.id === r.sl_floor));
+  if (badFloor) throw new Error(`aggregate: 記録の sl_floor が不正です（${String(badFloor.sl_floor)}）`);
+  const badObs = records.find((r) => !OBSTACLE_DEFS.some((o) => o.id === r.obstacle));
+  if (badObs) throw new Error(`aggregate: 記録の obstacle が不正です（${String(badObs.obstacle)}）`);
   const rows = [];
-  for (const mode of SL_FLOOR_MODES) for (const setup of ["A", "B"]) for (const scheme of ["A", "B"]) {
-    const grp = records.filter((r) => r.sl_floor === mode.id && r.setup === setup && r.scheme === scheme);
-    const head = { sl_floor: mode.id, setup, scheme, atr_coef: scheme === "A" ? 0.5 : 1.0 };
+  for (const mode of BACKTEST_MODES) for (const setup of ["A", "B"]) for (const scheme of ["A", "B"]) {
+    const grp = records.filter((r) => r.sl_floor === mode.slFloor && r.obstacle === mode.obstacle && r.setup === setup && r.scheme === scheme);
+    const head = { sl_floor: mode.slFloor, obstacle: mode.obstacle, setup, scheme, atr_coef: scheme === "A" ? 0.5 : 1.0 };
     for (const [axis, f, order] of AXES) {
       const by = new Map();
       for (const r of grp) { const v = f(r); if (!by.has(v)) by.set(v, []); by.get(v).push(r); }
@@ -245,17 +259,30 @@ function aggregate(records) {
   return rows;
 }
 
-// (b) の内訳: SLが10pips下限で決まった案（現行の規則なら『SL幅不足』で不採用）と、下限が効かなかった案（(a) と同じ案）を分けた集計。型×ATR係数ごと
+// SL下限方式 (b) の内訳: SLが10pips下限で決まった案（現行の規則なら『SL幅不足』で不採用）と、下限が効かなかった案（(a) と同じ案）を分けた集計。障害の定義 × 型 × ATR係数ごと
 function floorBreakdown(records) {
   const rows = [];
-  for (const setup of ["A", "B"]) for (const scheme of ["A", "B"]) {
-    const grp = records.filter((r) => r.sl_floor === "widen" && r.setup === setup && r.scheme === scheme);
+  for (const o of OBSTACLE_DEFS) for (const setup of ["A", "B"]) for (const scheme of ["A", "B"]) {
+    const grp = records.filter((r) => r.sl_floor === "widen" && r.obstacle === o.id && r.setup === setup && r.scheme === scheme);
     if (!grp.length) continue;
-    for (const [value, floored] of [["下限が効かなかった案（(a) と同じ案）", false], ["10pips下限で広げた案（(a) では不採用）", true]]) {
-      rows.push({ setup, scheme, atr_coef: scheme === "A" ? 0.5 : 1.0, value, ...metrics(grp.filter((r) => r.sl_floored === floored)) });
+    for (const [value, floored] of [["下限が効かなかった案（SL下限 (a) と同じ案）", false], ["10pips下限で広げた案（SL下限 (a) では不採用）", true]]) {
+      rows.push({ obstacle: o.id, setup, scheme, atr_coef: scheme === "A" ? 0.5 : 1.0, value, ...metrics(grp.filter((r) => r.sl_floored === floored)) });
     }
   }
   return rows;
 }
 
-module.exports = { runBacktest, runBacktestModes, aggregate, floorBreakdown, metrics, planDates, SLOT_LABEL, SL_FLOOR_MODES, WEEKDAY, AXES, ADD_SLOT };
+// 障害の定義 (b) の内訳: TP1 が変わった案（現行の定義なら手前に逆側の群などの別の障害があった、または障害が無くなる案）と、変わらなかった案（(a) と同じTP1）を分けた集計。SL下限方式 × 型 × ATR係数ごと
+function obstacleBreakdown(records) {
+  const rows = [];
+  for (const m of SL_FLOOR_MODES) for (const setup of ["A", "B"]) for (const scheme of ["A", "B"]) {
+    const grp = records.filter((r) => r.obstacle === "forward" && r.sl_floor === m.id && r.setup === setup && r.scheme === scheme);
+    if (!grp.length) continue;
+    for (const [value, changed] of [["障害が変わらなかった案（障害 (a) と同じTP1）", false], ["障害が変わった案（TP1が障害 (a) と違う）", true]]) {
+      rows.push({ sl_floor: m.id, setup, scheme, atr_coef: scheme === "A" ? 0.5 : 1.0, value, ...metrics(grp.filter((r) => r.obstacle_changed === changed)) });
+    }
+  }
+  return rows;
+}
+
+module.exports = { runBacktest, runBacktestModes, aggregate, floorBreakdown, obstacleBreakdown, metrics, planDates, SLOT_LABEL, SL_FLOOR_MODES, OBSTACLE_DEFS, BACKTEST_MODES, BASE_MODE, modeKey, WEEKDAY, AXES, ADD_SLOT };

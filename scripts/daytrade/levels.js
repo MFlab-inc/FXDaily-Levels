@@ -60,12 +60,18 @@ function referenceLevel(side, price, daily, groups) {
 
 /**
  * TP1 の障害 [Q03]: Entry（最悪Entry）から進行方向（売り=下、買い=上）に、Entry を含まず最初にある
- * {日次レベル7本・H1高値群・H1安値群}。群は Entry に近い端（売り=最大値、買い=最小値）。最も近いものを返す。
+ * {日次レベル7本・H1群}。群は Entry に近い端（売り=最大値、買い=最小値）。最も近いものを返す。
+ * mode（バックテストの『障害の定義』の軸。ライブは常に 'both'）:
+ *   'both'    = 現行。H1高値群・H1安値群の両方を障害に含める。
+ *   'forward' = 進行方向側の群だけ。売り（下へ進む）は安値群、買い（上へ進む）は高値群。日次レベル7本は同じ。
  */
-function firstObstacle(side, entry, daily, groups) {
+const OBSTACLE_MODES = ["both", "forward"];
+function firstObstacle(side, entry, daily, groups, mode = "both") {
+  if (!OBSTACLE_MODES.includes(mode)) throw new Error(`firstObstacle: mode は 'both' か 'forward' です（${String(mode)}）`);
   const cands = dailyLevelList(daily).map((l) => ({ label: l.label, price: l.price }));
-  for (const g of groups.highs) cands.push({ label: "H1高値群", price: side === "sell" ? g.max : g.min });
-  for (const g of groups.lows) cands.push({ label: "H1安値群", price: side === "sell" ? g.max : g.min });
+  const nearEnd = (g) => (side === "sell" ? g.max : g.min);
+  if (mode === "both" || side === "buy") for (const g of groups.highs) cands.push({ label: "H1高値群", price: nearEnd(g) });
+  if (mode === "both" || side === "sell") for (const g of groups.lows) cands.push({ label: "H1安値群", price: nearEnd(g) });
   if (side === "sell") {
     const below = cands.filter((c) => entry - c.price > EPS);
     return below.length ? below.reduce((a, b) => (b.price > a.price ? b : a)) : null;
@@ -74,4 +80,4 @@ function firstObstacle(side, entry, daily, groups) {
   return above.length ? above.reduce((a, b) => (b.price < a.price ? b : a)) : null;
 }
 
-module.exports = { DAILY_LEVELS, GROUP_WINDOW, GROUP_TOL_ATR, chainClusters, h1Groups, dailyLevelList, referenceLevel, firstObstacle };
+module.exports = { DAILY_LEVELS, GROUP_WINDOW, GROUP_TOL_ATR, OBSTACLE_MODES, chainClusters, h1Groups, dailyLevelList, referenceLevel, firstObstacle };

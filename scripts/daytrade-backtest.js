@@ -7,15 +7,16 @@
  *    1分あたり55回を超えないよう、1銘柄ずつ約3秒おき（毎分20回前後、直近60秒で30回まで）。環境変数 TWELVE_DATA_API_KEY。
  *    GitHub Actions 上では、他の Daily / Intraday が動いている間と、その起動分は避ける（mtf/lib/guard.js）。
  * 2) 過去の各設計時刻（設計①②③と、型Bの追加＝毎時 16:00〜21:00）に案を作り、到達・SL/TP1先着を判定して、
- *    data/daytrade/backtest-<日付>.md と .csv に出す。SL下限方式 (a) 現行（10pips未満は不採用）と (b) 10pips下限で広げて採用 の
- *    両方を同じ入力で計算して並べる（ライブの規則は (a) のまま）。
+ *    data/daytrade/backtest-<日付>.md と .csv に出す。SL下限方式 (a) 現行（10pips未満は不採用）と (b) 10pips下限で広げて採用、
+ *    障害の定義 (a) 現行（日次レベル7本＋H1高値群・安値群の両方）と (b) 日次レベル7本＋進行方向側の群だけ、
+ *    の2×2の4通りを同じ入力で計算して並べる（ライブの規則は (a)(a) のまま）。
  */
 const fs = require("fs");
 const path = require("path");
 const { parseArgs, repoRoot, dataDir: defaultDataDir } = require("./daytrade/cli");
 const { PAIRS } = require("./daytrade/pairs");
 const H = require("./daytrade/h1history");
-const { runBacktestModes, aggregate, floorBreakdown, planDates } = require("./daytrade/backtest");
+const { runBacktestModes, aggregate, floorBreakdown, obstacleBreakdown, planDates } = require("./daytrade/backtest");
 const { toCsv, toMarkdown } = require("./daytrade/report");
 const { REGIME } = require("./daytrade/histctx");
 const { fetchRiskFeed } = require("./daytrade/riskfeed");
@@ -94,14 +95,14 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
   const { records, stats, statsByMode } = runBacktestModes({ barsByCode, rowsByCode, nowMs, windowDays, thresholds });
   const rows = aggregate(records);
   const day = jstIso(nowMs).slice(0, 10);
-  const md = toMarkdown(rows, { nowMs, window: { first: stats.first, last: stats.last }, stats, statsByMode, floorRows: floorBreakdown(records), history, regimeSource, noMtf });
+  const md = toMarkdown(rows, { nowMs, window: { first: stats.first, last: stats.last }, stats, statsByMode, floorRows: floorBreakdown(records), obstacleRows: obstacleBreakdown(records), history, regimeSource, noMtf });
   if (!args["dry-run"]) {
     store.writeAll(dataDir, [
       { file: path.join("daytrade", `backtest-${day}.md`), content: md },
       { file: path.join("daytrade", `backtest-${day}.csv`), content: toCsv(rows) },
     ]);
   }
-  io.log(`[backtest] 完了${args["dry-run"] ? "（--dry-run: 何も書いていません）" : ""}: 案 ${records.length}件（SL下限方式 (a)(b) の合計。A案・B案を別に数える）、設計 ${stats.designs}回、型B追加の出来事 ${stats.adds}回、評価 ${stats.evaluations}件（1方式あたり）${args["dry-run"] ? "" : ` → data/daytrade/backtest-${day}.md / .csv`}`);
+  io.log(`[backtest] 完了${args["dry-run"] ? "（--dry-run: 何も書いていません）" : ""}: 案 ${records.length}件（SL下限方式 × 障害の定義 の4方式の合計。A案・B案を別に数える）、設計 ${stats.designs}回、型B追加の出来事 ${stats.adds}回、評価 ${stats.evaluations}件（1方式あたり）${args["dry-run"] ? "" : ` → data/daytrade/backtest-${day}.md / .csv`}`);
   return { records, rows, stats, statsByMode };
 }
 
