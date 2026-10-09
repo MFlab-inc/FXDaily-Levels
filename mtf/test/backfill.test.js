@@ -92,7 +92,7 @@ test("6-1: 1銘柄でも失敗したら何も書かない（やり直せる）�
     assert.deepEqual(fs.readdirSync(s.t.root).filter((n) => n.startsWith(".mtf-tmp-")), []);
     const r = await s.run({ pageSize: 1000 }); // 失敗は1回きりの設定
     assert.equal(r.exitCode, 0);
-    assert.equal(store.existingCsvFiles(s.t.dataDir).length, 9);
+    assert.equal(store.existingCsvFiles(s.t.dataDir).length, SYMBOLS.length);
   } finally { s.t.cleanup(); }
 });
 

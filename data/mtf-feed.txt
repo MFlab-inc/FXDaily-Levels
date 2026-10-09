@@ -1,8 +1,8 @@
 # MTF判定フィード
-generated_at: 2026-10-09T06:21:19+09:00
+generated_at: 2026-10-09T20:10:00+09:00
 data_base_date: 2026-10-08（最新の確定日足の日付。銘柄ごとに違うときは最も古い日付。この日付が前営業日でなければ古い）
 as_of: 2026-10-08（今回の更新で確定しているはずの日付）
-status: ok（9/9銘柄が基準日(2026-10-08)まで更新済み）
+status: ok（10/10銘柄が基準日(2026-10-08)まで更新済み）
 version: MTF-1.0（Block② MTF_Structure_Module.xlsx の Methodology 準拠）
 daily_boundary: ニューヨーク時間17時
 excluded: 形成途中の足（WTD／MTD）は除外（確定した足だけで判定）
@@ -224,3 +224,27 @@ HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き
   2026-10-08 / 0.83175 / 0.815856 / 0.796825 / ↑ / Above
 MISSING_DATES（平日で日足が無い日）: なし
 SHORT_BAR_DAYS（直近200営業日 2026-01-02〜2026-10-08。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=1日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日5日・それ以外59日（日付の全期間の一覧は JSON）
+
+## NZDUSD
+source: twelvedata:NZD/USD
+price_type: NY17時区切り日足の終値（Twelve Data の1時間足を UTC で取得し、NY時間に換算して作成）
+updated_at: 2026-10-09T20:10:00+09:00
+status: ok
+MONTHLY: date=2026-09-30 direction=↓ close=0.56333 12MMA=0.583398 24MMA=0.583391 6M_HIGH=0.59937 6M_LOW=0.56262 6M_RANGE_POSITION=1.93 DATA_STATUS=OK bars_used=24 (保有27)
+WEEKLY: date=2026-10-02 direction=↓ close=0.56142 Tenkan=0.578760 Kijun=0.579015 SpanA=0.578887 SpanB=0.583808 Cloud_Top=0.583808 Cloud_Bottom=0.578887 CLOSE_vs_CLOUD=Below Cloud TENKAN_vs_KIJUN=Bearish TK 20W_HIGH=0.59937 20W_LOW=0.55866 bars_used=52 (保有118)
+DAILY: date=2026-10-08 direction=↓ close=0.56036 50DMA=0.580780 200DMA=0.584328 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Below 20D_HIGH=0.58355 20D_LOW=0.55809 20D_RANGE_POSITION=8.92 bars_used=200 (保有594)
+ALIGNMENT_SCORE: 3/3 Down
+SWING_STATUS: Swing Main Candidate
+HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き / CLOSE_vs_50DMA）:
+  2026-09-25 / 0.56650 / 0.584166 / 0.585172 / ↓ / Below
+  2026-09-28 / 0.56668 / 0.583822 / 0.585107 / ↓ / Below
+  2026-09-29 / 0.56421 / 0.583452 / 0.585008 / ↓ / Below
+  2026-09-30 / 0.56333 / 0.583086 / 0.584906 / ↓ / Below
+  2026-10-01 / 0.56049 / 0.582753 / 0.584786 / ↓ / Below
+  2026-10-02 / 0.56142 / 0.582402 / 0.584678 / ↓ / Below
+  2026-10-05 / 0.56001 / 0.582053 / 0.584576 / ↓ / Below
+  2026-10-06 / 0.56238 / 0.581727 / 0.584492 / ↓ / Below
+  2026-10-07 / 0.55984 / 0.581332 / 0.584406 / ↓ / Below
+  2026-10-08 / 0.56036 / 0.580780 / 0.584328 / ↓ / Below
+MISSING_DATES（平日で日足が無い日）: なし
+SHORT_BAR_DAYS（直近200営業日 2026-01-02〜2026-10-08。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=1日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日4日・それ以外60日（日付の全期間の一覧は JSON）

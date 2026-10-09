@@ -127,11 +127,11 @@ test("3-6/4: 丸めの桁数 — 平均・一目は価格の桁数+1桁、価格
 });
 
 // ---------- 1-1/3-7: 銘柄ごとの標準本数・桁数 ----------
-test("1-1/3-7: 標準本数は FX 8銘柄が24本・XAUUSD が23本。桁数は USDJPY/EURJPY 3・XAUUSD 2・他5。取得開始日は 2024-07-01", () => {
+test("1-1/3-7: 標準本数は FX 9銘柄（NZDUSD を含む）が24本・XAUUSD が23本。桁数は USDJPY/EURJPY 3・XAUUSD 2・他5。取得開始日は 2024-07-01", () => {
   assert.deepEqual(Object.fromEntries(SYMBOLS.map((s) => [s.code, s.standardBars])),
-    { USDJPY: 24, EURUSD: 24, GBPUSD: 24, AUDUSD: 24, EURJPY: 24, EURGBP: 24, USDCAD: 24, XAUUSD: 23, USDCHF: 24 });
+    { USDJPY: 24, EURUSD: 24, GBPUSD: 24, AUDUSD: 24, EURJPY: 24, EURGBP: 24, USDCAD: 24, XAUUSD: 23, USDCHF: 24, NZDUSD: 24 });
   assert.deepEqual(Object.fromEntries(SYMBOLS.map((s) => [s.code, s.digits])),
-    { USDJPY: 3, EURUSD: 5, GBPUSD: 5, AUDUSD: 5, EURJPY: 3, EURGBP: 5, USDCAD: 5, XAUUSD: 2, USDCHF: 5 });
+    { USDJPY: 3, EURUSD: 5, GBPUSD: 5, AUDUSD: 5, EURJPY: 3, EURGBP: 5, USDCAD: 5, XAUUSD: 2, USDCHF: 5, NZDUSD: 5 });
   assert.equal(BACKFILL_START, "2024-07-01");
 });
 
