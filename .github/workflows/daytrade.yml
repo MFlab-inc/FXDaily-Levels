@@ -1,0 +1,119 @@
+name: Daytrade Plan
+
+# デイトレプラン自動生成（仕様 docs/daytrade-plan-spec.md 7節・10節）。daily.yml・intraday.yml とは別のワークフローで、
+# 失敗してもそれらには影響しない。既存のフィード（intraday.json・h1-bars.json・daily-levels.json・mtf-feed.json・
+# economic-calendar.json・daytrade-context.json）は読むだけで、書くのは次の3ファイルだけ:
+#   data/daytrade-plan.txt / data/daytrade-plan.json / data/daytrade/log.csv
+# 外部のAPIキー（secrets）は使わない（risk-feed.json は公開URLから読む）。
+# 口座の資金（円・整数）は、リポジトリの Variables DAYTRADE_EQUITY_A（デイトレ専用口座）・DAYTRADE_EQUITY_B（スイング＋デイトレ口座）から読む。
+# ファイル（accounts.json・計画・log.csv）には書かない。未設定なら『上限ロット 未設定・発注不可』になる。設定方法は data/daytrade/README.md。
+# 注意: Variables の値は Actions のログ（Generate plan の env 欄）に平文で出る。ログにも出したくなければ、同名の Secrets に設定する（Secrets が優先され、ログでは *** に伏せられる）。
+#
+# 起動: cron ではなく、intraday のワークフロー（Intraday Snapshot）が完了した直後（workflow_run）。入力が更新された直後に動くので、
+# 鮮度（20分）を満たす。GitHub の schedule が欠落・遅延する問題（daily.yml のコメント参照）の影響も受けない。
+# 実行の種類は『実行時刻（JST）』と『その計画日・その枠の設計が済んでいるか』で、scripts/daytrade/schedule.js が決める:
+#   設計①＋採点  06:00〜08:59 の最初の実行（NY冬時間は 07:00〜09:59）
+#   設計②        15:00〜16:59 の最初の実行
+#   設計③        21:00〜22:59 の最初の実行（冬時間は 22:00〜23:59）
+#   状態更新      それ以外（07:00〜翌02:59。毎時1回まで。前の実行が古い入力だったときは同じ時間内にやり直す）。JST 16:00〜21:59 の状態更新では、型B を追加で設計する（run=design-b）
+# 土日の計画日は何もしない。手動（workflow_dispatch）は run と slot を指定して使う（auto なら自動と同じ判定）。
+on:
+  workflow_run:
+    workflows: ["Intraday Snapshot"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      run:
+        description: "auto（実行時刻から自動で決める）／design（設計。slot が必要）／status（状態更新）"
+        type: choice
+        options: [auto, status, design]
+        default: auto
+      slot:
+        description: "設計の枠（run=design のとき必須）: 1=NY17:30 / 2=15:30 / 3=NY8:00"
+        type: choice
+        options: ["", "1", "2", "3"]
+        default: ""
+      force:
+        description: "済み・同じ時間内の判定を無視して必ず実行する（手動の試験用）"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# 起動が重なっても、同じ data/ へ同時に書かないようにする。待機中の run は1つしか持たれず、新しい run に置き換わるが、
+# 設計は『その枠で最初の実行』で決まる（設計が済んでいなければ次の実行が設計になる）ので、同じ窓の中に次の実行が来れば設計は抜けない。
+# 窓の中に Intraday Snapshot の完了が1回も来なければ、その枠の設計は作られない（手動の workflow_dispatch で作れる）。
+# 古い入力・日次レベル未更新で作った設計は『済み』にしない（窓の中の次の実行でやり直す）。
+concurrency:
+  group: daytrade-plan
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    # workflow_run は main の Intraday Snapshot が成功／失敗で終わったときだけ（キャンセル・スキップは除く。失敗でも入力の鮮度は出力に出る）
+    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.head_branch == github.event.repository.default_branch && (github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == 'failure')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # workflow_run では、起動した時点のコミットではなく、その後の最新の main を使う
+          ref: ${{ github.event_name == 'workflow_run' && github.event.repository.default_branch || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # 実行時刻と済みの設計から、やること（design / status / skip）と枠を決める
+      - name: Resolve action
+        id: resolve
+        env:
+          DAYTRADE_RUN: ${{ inputs.run != 'auto' && inputs.run || '' }}
+          DAYTRADE_SLOT: ${{ inputs.slot }}
+        shell: bash   # pipefail を有効にして、node が落ちたのに緑になるのを防ぐ
+        run: node scripts/daytrade-plan.js --resolve | tee -a "$GITHUB_OUTPUT"
+
+      # 前日までの案の採点（設計の前に動かす。何度動かしても同じ結果で、済んだ案は触らない）
+      - name: Score previous plans
+        if: ${{ steps.resolve.outputs.action == 'design' }}
+        continue-on-error: true   # 採点の失敗で設計を止めない（次の設計で再試行される）
+        env:
+          NOW: ${{ steps.resolve.outputs.now }}
+        run: node scripts/daytrade-score.js --now="$NOW"
+
+      - name: Generate plan
+        if: ${{ steps.resolve.outputs.action == 'design' || steps.resolve.outputs.action == 'status' }}
+        env:
+          DAYTRADE_RUN: ${{ inputs.run != 'auto' && inputs.run || '' }}
+          DAYTRADE_SLOT: ${{ inputs.slot }}
+          FORCE: ${{ inputs.force && '--force' || '' }}
+          NOW: ${{ steps.resolve.outputs.now }}
+          # 口座の資金（円）。Secrets に同名があればそちらを優先（ログで伏せられる）。無ければ Variables。どちらも無ければ空 = 未設定
+          DAYTRADE_EQUITY_A: ${{ secrets.DAYTRADE_EQUITY_A || vars.DAYTRADE_EQUITY_A }}
+          DAYTRADE_EQUITY_B: ${{ secrets.DAYTRADE_EQUITY_B || vars.DAYTRADE_EQUITY_B }}
+        # 起動の解決（Resolve action）と同じ時刻を使う（手順ごとに時刻を取り直すと、設計の窓の端で判定が変わり得る）
+        run: node scripts/daytrade-plan.js --now="$NOW" $FORCE
+
+      - name: Commit and push
+        if: ${{ steps.resolve.outputs.action == 'design' || steps.resolve.outputs.action == 'status' }}
+        env:
+          ACTION: ${{ steps.resolve.outputs.action }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/daytrade-plan.txt data/daytrade-plan.json
+          # log.csv は最初の案が出るまで存在しない（git add は存在しないパスで失敗するので、あるときだけ足す）
+          if [ -f data/daytrade/log.csv ]; then git add data/daytrade/log.csv; fi
+          git diff --cached --quiet && echo "変更なし" && exit 0
+          git commit -m "daytrade: ${ACTION} $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
+          # intraday.yml 等と同じリポジトリへ押し合うことがある（他のワークフローは別のファイルを書く）。
+          for i in 1 2 3; do
+            git push && exit 0
+            echo "push失敗（${i}回目）。rebaseして再試行"
+            git pull --rebase origin "${GITHUB_REF_NAME}" || exit 1
+          done
+          echo "::error::daytrade-plan のpushに3回失敗しました"
+          exit 1

@@ -1,0 +1,10 @@
+{
+  "_comment": "口座はラベルで表す: A=デイトレ専用口座、B=スイング＋デイトレ口座。口座番号と資金（equity）は、このリポジトリは公開されるので書かない。資金（円・整数）は GitHub Actions の Variables DAYTRADE_EQUITY_A／DAYTRADE_EQUITY_B に置く（設定方法と更新手順は data/daytrade/README.md）。risk_pct=1回の損失の許容（%）、daily_loss_pct=1日の損失の許容（%）、commission_per_lot_jpy=1ロットあたりの手数料（円）",
+  "accounts": {
+    "A": { "role": "daytrade" },
+    "B": { "role": "swing_daytrade" }
+  },
+  "commission_per_lot_jpy": 1013,
+  "risk_pct": 0.5,
+  "daily_loss_pct": 1.5
+}

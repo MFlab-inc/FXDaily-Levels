@@ -1,0 +1,58 @@
+"use strict";
+const fs = require("fs");
+const path = require("path");
+const csv = require("./csvio");
+
+/**
+ * data/daytrade/log.csv（仕様 5節・6-1）。追記のみ [Q18]。
+ *  design の行 … 設計の案ごと（設計のたびに追記。同じ版の再設計は追記しない）
+ *  design-b の行 … 状態更新（JST 16:00〜21:59）で追加した型B（Q09）。設計と同じ扱いで採点される
+ *  status の行 … 後から分かった状態（取消（再設計）、採点の結果）。毎時の状態更新そのものは書かない（型Bの追加だけ design-b として書く）
+ *  版の識別: (plan_date, setup, symbol, side, entry_low, entry_high, sl_a, sl_b) の一致
+ *  口座は A（デイトレ専用）・B（スイング＋デイトレ）のラベルで表す（口座番号・資金は公開されるファイルに置かない）。
+ *  filled_ticket_* は人が埋める。bot は書き換えず、行を足すときに同じ版の直近の行から引き継ぐだけ。
+ */
+const COLUMNS = [
+  "plan_date", "generated_at", "run", "setup", "symbol", "side", "same_direction_group", "entry_low", "entry_high",
+  "sl_a", "tp_a", "sl_b", "tp_b", "rr_a", "rr_b", "cost_cap_a",
+  "lot_cap_a_A", "lot_cap_b_A", "lot_cap_a_B", "lot_cap_b_B",
+  "expires_at", "reached", "reached_at", "first_hit_a", "first_hit_b", "filled_ticket_A", "filled_ticket_B",
+];
+
+// 価格の列は数として正規化して比べる（表計算ソフトを通して 1.10400 が 1.104 になっても、同じ版として扱う）
+const normNum = (v) => { if (v === "" || v === undefined || v === null) return ""; const n = Number(v); return Number.isFinite(n) ? String(n) : String(v); };
+const keyOf = (r) => [r.plan_date, r.setup, r.symbol, r.side, normNum(r.entry_low), normNum(r.entry_high), normNum(r.sl_a), normNum(r.sl_b)].join("|");
+
+function parseLog(text) {
+  const rows = csv.parse(text);
+  if (!rows.length) return [];
+  const head = rows[0];
+  if (head.join(",") !== COLUMNS.join(",")) throw new Error("log.csv の見出し行が想定と違います");
+  return rows.slice(1).filter((r) => r.length > 1 || r[0] !== "").map((r) => Object.fromEntries(COLUMNS.map((c, i) => [c, r[i] ?? ""])));
+}
+
+function readLog(dataDir) {
+  const p = path.join(dataDir, "daytrade", "log.csv");
+  if (!fs.existsSync(p)) return [];
+  return parseLog(fs.readFileSync(p, "utf8"));
+}
+
+const toLine = (row) => csv.line(COLUMNS.map((c) => row[c]));
+
+// 既存の本文に行を足した全文（ファイルが無ければ見出し付き）。書き込みは呼び出し側が store.writeAll で行う
+function appendedText(existingText, newRows) {
+  const base = existingText && existingText.length ? existingText.replace(/\n*$/, "\n") : `${COLUMNS.join(",")}\n`;
+  return base + newRows.map(toLine).join("\n") + (newRows.length ? "\n" : "");
+}
+
+// 版ごとの直近の行
+function latestByKey(rows) {
+  const m = new Map();
+  for (const r of rows) m.set(keyOf(r), r);
+  return m;
+}
+
+module.exports = { COLUMNS, keyOf, parseLog, readLog, toLine, appendedText, latestByKey };
+
+// plan.js 用: ログ行の配列（または未指定）をそのまま返す（文字列なら解析）
+module.exports.readLogLike = (x) => (Array.isArray(x) ? x : typeof x === "string" ? parseLog(x) : []);

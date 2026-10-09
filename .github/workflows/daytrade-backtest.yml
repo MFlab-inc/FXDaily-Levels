@@ -1,0 +1,59 @@
+name: Daytrade Backtest
+
+# デイトレプラン自動生成のバックテスト（仕様 docs/daytrade-plan-spec.md 6-2）。手動実行（workflow_dispatch）だけで、
+# 自動では動かさない。Actions タブ → 「Daytrade Backtest」 → Run workflow。
+#   ・H1履歴 data/history/h1-<銘柄>.csv が無い銘柄だけ Twelve Data から過去1年分を取得して保存する
+#     （既にあれば再取得しない）。1銘柄ずつ約3秒おき（1分あたり20回前後、直近60秒で30回まで）。時刻は日本時間
+#     （timezone=Asia/Tokyo）で、CSV の1行目にタイムゾーンを書く
+#   ・daily / intraday / MTF Backfill が動いていない時間・起動分を避けて自動で待つ（mtf/lib/guard.js）
+#   ・結果は data/daytrade/backtest-<日付>.md と .csv。ブランチ上で実行すれば、そのブランチにコミットされる
+on:
+  workflow_dispatch:
+    inputs:
+      window_days:
+        description: "過去何日分を対象にするか（既定 365）"
+        type: string
+        default: "365"
+
+permissions:
+  contents: write
+  actions: read   # 他の Daily / Intraday が実行中かを確認するため
+
+concurrency:
+  group: daytrade-backtest
+  cancel-in-progress: false
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run backtest
+        env:
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WINDOW_DAYS: ${{ inputs.window_days }}
+        run: node scripts/daytrade-backtest.js --window-days="$WINDOW_DAYS"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/history data/daytrade/backtest-*.md data/daytrade/backtest-*.csv
+          git diff --cached --quiet && echo "変更なし" && exit 0
+          git commit -m "daytrade: backtest $(TZ=Asia/Tokyo date +%Y-%m-%d)"
+          for i in 1 2 3; do
+            git push && exit 0
+            echo "push失敗（${i}回目）。rebaseして再試行"
+            git pull --rebase origin "${GITHUB_REF_NAME}" || exit 1
+          done
+          echo "::error::バックテストの結果のpushに3回失敗しました"
+          exit 1

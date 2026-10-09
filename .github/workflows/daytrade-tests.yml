@@ -1,0 +1,42 @@
+name: Daytrade Tests
+
+on:
+  pull_request:
+    paths:
+      - "scripts/daytrade*"
+      - "scripts/daytrade/**"
+      - "mtf/lib/**"
+      - "data/daytrade/**"
+      - "data/history/**"
+      - "config/daytrade-rules.json"
+      - ".github/workflows/daytrade*.yml"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/daytrade*"
+      - "scripts/daytrade/**"
+      - "mtf/lib/**"
+      - "data/daytrade/**"
+      - "data/history/**"
+      - "config/daytrade-rules.json"
+      - ".github/workflows/daytrade*.yml"
+
+permissions:
+  contents: read
+
+# デイトレプラン自動生成（scripts/daytrade/）の単体試験。模擬データだけを使い、外部へは接続しない（secrets も使わない）。
+# バックテストの試験には、コミット済みのH1履歴と日足から結果のCSVを再現できること（結果の固定）を含む。
+# 規則を意図して変えたときは、docs/daytrade-plan-impl-notes.md の手順で結果を作り直す。
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run daytrade tests
+        run: node --test scripts/daytrade/test/*.test.js
+      - name: Run MTF tests (shared library)
+        run: node --test mtf/test/*.test.js
