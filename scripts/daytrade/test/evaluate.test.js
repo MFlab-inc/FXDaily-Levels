@@ -318,3 +318,223 @@ test("H1の群が基準水準・障害になる（Pivot より近い群の上端
   // 障害 = Entry(1.1015) から下で最初の水準: H1安値群(Entry に近い端 = 最大値 1.0990)
   assert.deepEqual(r.obstacle, { label: "H1安値群", price: 1.099 });
 });
+
+// ---- SL下限方式（opts.slFloor）: 'reject'（既定・ライブ）／'widen'（バックテストの比較用）----
+const WIDEN = { slFloor: "widen" };
+const BUY_CTX = (o = {}) => evalCtx({ price: 1.1100, direction: OK_DIR("buy"), daily: { ...DAILY, pivot: 1.1060, s1: 1.1060 }, ...o });
+
+test("SL下限方式: 既定（opts なし／空／'reject'）は従来どおり。sl_floored は付かず、10pips未満は『SL幅不足』", () => {
+  const base = evaluate(evalCtx({ atr: 0.0019 }), "A");
+  for (const opts of [undefined, {}, null, { slFloor: "reject" }, { t: 1, slot: 2 }]) {
+    const r = evaluate(evalCtx({ atr: 0.0019 }), "A", opts);
+    assert.deepEqual(r, base);
+    assert.equal(r.schemes.A.reason, "sl_narrow");
+    assert.equal("sl_floored" in r.schemes.A, false);
+    assert.equal("sl_floored" in r.schemes.B, false);
+  }
+  assert.throws(() => evaluate(evalCtx(), "A", { slFloor: "wide" }), /slFloor/);
+});
+
+test("SL下限方式 widen・売り: 係数×ATR が 10pips 未満なら SL 幅 10pips に広げて採用（9.5pips → 10.0pips）。B案(19pips)はそのまま", () => {
+  const r = evaluate(evalCtx({ atr: 0.0019 }), "A", WIDEN); // A案 9.5pips、B案 19.0pips
+  const A = r.schemes.A, B = r.schemes.B;
+  assert.equal(A.pass, true);
+  assert.equal(A.reason, null);
+  near(A.sl_pips, 10);
+  assert.equal(A.sl, 1.105);
+  assert.equal(A.sl_floored, true);
+  assert.equal(B.pass, true);
+  near(B.sl_pips, 19);
+  assert.equal(B.sl, 1.1059);
+  assert.equal(B.sl_floored, false);
+  // 他の門は同じ式で、広げた後のSL幅を使う: RR = 利益幅 139.5 ÷ 10、コスト上限 = (139.5 − 1.5×10) ÷ 2.5、ロットは SL 10pips で計算（9.5pips ではない）
+  near(A.rr, 13.95);
+  near(A.cost_cap_pips, (139.5 - 15) / 2.5);
+  assert.equal(A.lots[701620], 0.2); // 610273×0.5%÷(10×1500) = 0.2034
+  assert.equal(evaluate(evalCtx({ atr: 0.0019 }), "A").schemes.A.lots[701620], 0.21); // 現行（不採用）の SL 9.5pips なら 0.2141 → 0.21（広げると小さくなる）
+  assert.equal(B.lots[701620], 0.1); // B案: min(610273×0.5%÷(19×1500)=0.107→0.10, A案の式0.2034×0.5=0.1017→0.10)
+});
+
+test("SL下限方式 widen・買い: 9.5pips → 10.0pips（下へ）。ちょうど 10.0／10.5pips は広げない", () => {
+  let r = evaluate(BUY_CTX({ atr: 0.0019 }), "A", WIDEN);
+  assert.equal(r.schemes.A.pass, true);
+  near(r.schemes.A.sl_pips, 10);
+  assert.equal(r.schemes.A.sl, 1.105); // 基準 1.1060 − 10pips
+  assert.equal(r.schemes.A.sl_floored, true);
+  assert.equal(evaluate(BUY_CTX({ atr: 0.0019 }), "A").schemes.A.reason, "sl_narrow"); // 既定は不採用
+  // 10.0pips ちょうど（ATR 20pips の A案）
+  r = evaluate(BUY_CTX({ atr: 0.0020 }), "A", WIDEN);
+  assert.equal(r.schemes.A.sl, 1.105);
+  assert.equal(r.schemes.A.sl_floored, false);
+  const { sl_floored: _f, ...same } = r.schemes.A;
+  assert.deepEqual(same, evaluate(BUY_CTX({ atr: 0.0020 }), "A").schemes.A);
+  // 10.5pips ちょうど（ATR 21pips）
+  r = evaluate(BUY_CTX({ atr: 0.0021 }), "A", WIDEN);
+  near(r.schemes.A.sl_pips, 10.5);
+  assert.equal(r.schemes.A.sl, 1.10495);
+  assert.equal(r.schemes.A.sl_floored, false);
+});
+
+test("SL下限方式 widen: 10.5pips(ATR 21) と 20.1pips(A案がATR 40.2) は従来と同じ SL（20.1 → 外側へ 20.5）。下限は効かない", () => {
+  let r = evaluate(evalCtx({ atr: 0.0021 }), "A", WIDEN);
+  near(r.schemes.A.sl_pips, 10.5);
+  assert.equal(r.schemes.A.sl, 1.10505);
+  assert.equal(r.schemes.A.sl_floored, false);
+  near(r.schemes.B.sl_pips, 21);
+  r = evaluate(evalCtx({ atr: 0.00402 }), "A", WIDEN); // A案 0.5×40.2 = 20.1pips → 20.5
+  near(r.schemes.A.sl_pips, 20.5);
+  assert.equal(r.schemes.A.sl, 1.10605);
+  assert.equal(r.schemes.A.sl_floored, false);
+  near(r.schemes.B.sl_pips, 40.5); // 40.2 → 40.5
+  assert.equal(r.schemes.B.sl_floored, false);
+  const d = evaluate(evalCtx({ atr: 0.00402 }), "A");
+  assert.equal(d.schemes.A.sl, r.schemes.A.sl);
+  assert.equal(d.schemes.B.sl, r.schemes.B.sl);
+});
+
+test("SL下限方式 widen: B案（1.0×ATR）も 10pips 未満なら広げる（ATR 8pips → A案 4pips・B案 8pips とも SL 10pips）。ロットは広げた後のSL幅で、B案は A案の式の半分が上限", () => {
+  const r = evaluate(evalCtx({ atr: 0.0008 }), "A", WIDEN);
+  for (const n of ["A", "B"]) {
+    assert.equal(r.schemes[n].sl, 1.105, n);
+    near(r.schemes[n].sl_pips, 10);
+    assert.equal(r.schemes[n].sl_floored, true, n);
+    assert.equal(r.schemes[n].pass, true, n);
+  }
+  assert.equal(r.schemes.A.lots[701620], 0.2); // 610273×0.5%÷(10×1500) = 0.2034
+  assert.equal(r.schemes.B.lots[701620], 0.1); // B案 = min(式 0.2034→0.20, A案の式×0.5 = 0.1017→0.10)
+  const d = evaluate(evalCtx({ atr: 0.0008 }), "A");
+  assert.equal(d.schemes.B.reason, "sl_narrow"); // 既定は B案(8pips)も不採用
+  assert.equal(d.outcome, "rejected");
+  assert.equal(r.outcome, "candidate");
+});
+
+test("SL下限方式 widen・円ペア: 9.5pips（ATR 19pips）→ SL 10pips = 0.10。ロットは 10pips×1000円で計算", () => {
+  const jpy = pairOf("USDJPY");
+  const ctx = evalCtx({
+    pair: jpy, price: 150.0, atr: 0.19, adr: { used_pct: 40, remaining: 0.6 },
+    daily: { pivot: 150.4, r1: 151.0, r2: 152.0, s1: 149.0, s2: 100, prev_high: 151.5, prev_low: 100 },
+  });
+  const d = evaluate(ctx, "A");
+  assert.equal(d.schemes.A.reason, "sl_narrow");
+  const r = evaluate(ctx, "A", WIDEN);
+  assert.equal(r.schemes.A.sl, 150.5); // 150.400 + 0.10
+  near(r.schemes.A.sl_pips, 10);
+  assert.equal(r.schemes.A.sl_floored, true);
+  assert.equal(r.schemes.A.pass, true);
+  assert.equal(r.schemes.A.lots[701620], 0.3); // 610273×0.5%÷(10×1000) = 0.3051
+  assert.equal(r.schemes.A.cost_threshold_pips, 1.6);
+  // 10.0pips ちょうど（ATR 0.20）／10.5pips（ATR 0.21）／20.1pips（A案が ATR 0.402）は広げない（20.1 → 外側へ 20.5）
+  const at = (atr) => evaluate({ ...ctx, atr }, "A", WIDEN).schemes.A;
+  assert.deepEqual([at(0.20).sl, at(0.20).sl_floored], [150.5, false]);
+  assert.deepEqual([at(0.21).sl, at(0.21).sl_floored], [150.505, false]);
+  assert.deepEqual([at(0.402).sl, at(0.402).sl_floored], [150.605, false]);
+  near(at(0.402).sl_pips, 20.5);
+  // 買い（円ペア）
+  const rb = evaluate(evalCtx({
+    pair: jpy, price: 151.0, atr: 0.19, adr: { used_pct: 40, remaining: 0.6 }, direction: OK_DIR("buy"),
+    daily: { pivot: 150.4, r1: 152.0, r2: 153.0, s1: 150.4, s2: 100, prev_high: 154, prev_low: 100 },
+  }), "A", WIDEN);
+  assert.equal(rb.schemes.A.sl, 150.3);
+  near(rb.schemes.A.sl_pips, 10);
+  assert.equal(rb.schemes.A.sl_floored, true);
+});
+
+test("SL下限方式 widen・XAUUSD: pip=0.1 なので 10pips = 1.0 ドル。ATR 1.9（19pips）→ A案 SL 幅 10pips", () => {
+  const xau = pairOf("XAUUSD");
+  const ctx = (atr, extra = {}) => evalCtx({
+    pair: xau, price: 4090, atr, adr: { used_pct: 40, remaining: 60 },
+    daily: { pivot: 4100, r1: 4200, r2: 4300, s1: 3900, s2: 3800, prev_high: 4250, prev_low: 3850 }, ...extra,
+  });
+  assert.equal(evaluate(ctx(1.9), "A").schemes.A.reason, "sl_narrow");
+  let r = evaluate(ctx(1.9), "A", WIDEN);
+  assert.equal(r.schemes.A.sl, 4101);
+  near(r.schemes.A.sl_pips, 10);
+  assert.equal(r.schemes.A.sl_floored, true);
+  assert.equal(r.schemes.B.sl, 4101.9);
+  near(r.schemes.B.sl_pips, 19);
+  // 10.0 ちょうど（ATR 2.0）、10.5（ATR 2.1）、20.1pips（ATR 4.02 の A案 → 2.01 → 外側へ 2.05）
+  r = evaluate(ctx(2.0), "A", WIDEN);
+  assert.equal(r.schemes.A.sl, 4101);
+  assert.equal(r.schemes.A.sl_floored, false);
+  r = evaluate(ctx(2.1), "A", WIDEN);
+  assert.equal(r.schemes.A.sl, 4101.05);
+  assert.equal(r.schemes.A.sl_floored, false);
+  r = evaluate(ctx(4.02), "A", WIDEN);
+  assert.equal(r.schemes.A.sl, 4102.05);
+  near(r.schemes.A.sl_pips, 20.5);
+  assert.equal(r.schemes.A.sl_floored, false);
+  // 買い
+  r = evaluate(ctx(1.9, { price: 4110, direction: OK_DIR("buy"), daily: { pivot: 4100, r1: 4300, r2: 4400, s1: 4100, s2: 3800, prev_high: 4350, prev_low: 3850 } }), "A", WIDEN);
+  assert.equal(r.schemes.A.sl, 4099);
+  near(r.schemes.A.sl_pips, 10);
+  assert.equal(r.schemes.A.sl_floored, true);
+});
+
+test("SL下限方式 widen: 基準水準が 0.5pip の格子に乗らないとき、丸め後に 10pips 以上になるなら広げた扱いにしない（丸め後で見る）", () => {
+  // Pivot 1.10402（格子外）、ATR 19.2pips → A案 9.6pips: 現行は 1.10402+0.00096=1.10498 → 切り上げ 1.1050 → 9.8pips で不採用
+  const daily = { ...DAILY, pivot: 1.10402, s1: 1.0900 };
+  const narrow = evalCtx({ atr: 0.00192, daily });
+  assert.equal(evaluate(narrow, "A").schemes.A.reason, "sl_narrow");
+  let r = evaluate(narrow, "A", WIDEN);
+  assert.equal(r.schemes.A.sl, 1.10505); // 1.10402 + 10pips = 1.10502 → 1.10505（10.3pips）
+  near(r.schemes.A.sl_pips, 10.3);
+  assert.equal(r.schemes.A.sl_floored, true);
+  // ATR 19.7pips → A案 9.85pips: 現行でも 1.10402+0.000985 = 1.100... → 切り上げ 1.10505（10.3pips）で通る。広げても同じSL → 広げた扱いにしない
+  const ok = evalCtx({ atr: 0.00197, daily });
+  assert.equal(evaluate(ok, "A").schemes.A.pass, true);
+  r = evaluate(ok, "A", WIDEN);
+  assert.equal(r.schemes.A.sl, 1.10505);
+  assert.equal(r.schemes.A.sl_floored, false);
+});
+
+test("SL下限方式 widen: 理由の並びから『SL幅不足』が消える（届かない → RR不足 → コスト不足 → ADR消化超過）", () => {
+  const T = { atr: 0.0019 }; // A案 9.5pips（既定なら SL幅不足）
+  // 届かない + ADR超過 → 届かない（既定と同じ）
+  let r = evaluate(evalCtx({ ...T, adr: { used_pct: 90, remaining: 0.0030 } }), "A", WIDEN);
+  assert.equal(r.schemes.A.reason, "unreachable");
+  // ADR超過だけ（既定は SL幅不足が先に当たる）
+  r = evaluate(evalCtx({ ...T, adr: { used_pct: 90, remaining: 0.0060 } }), "A", WIDEN);
+  assert.equal(r.schemes.A.reason, "adr_over");
+  assert.equal(evaluate(evalCtx({ ...T, adr: { used_pct: 90, remaining: 0.0060 } }), "A").schemes.A.reason, "sl_narrow");
+  // 広げた後の SL 10pips で RR 判定: 利益幅 9.5 < 10 → RR不足（広げる前の SL 9.5 なら RR 1.0 で通る）
+  r = evaluate(evalCtx({ ...T, daily: withProfit(9.5) }), "A", WIDEN);
+  assert.equal(r.schemes.A.reason, "rr_low");
+  near(r.schemes.A.rr, 0.95);
+  // 利益幅 17: 広げた SL 10 → コスト上限 (17−15)/2.5 = 0.8 < 1.2 → コスト不足
+  r = evaluate(evalCtx({ ...T, daily: withProfit(17) }), "A", WIDEN);
+  assert.equal(r.schemes.A.reason, "cost_low");
+  // 利益幅 18: ちょうど通る（(18−15)/2.5 = 1.2）
+  r = evaluate(evalCtx({ ...T, daily: withProfit(18) }), "A", WIDEN);
+  assert.equal(r.schemes.A.pass, true);
+  // 障害なし
+  r = evaluate(evalCtx({ ...T, daily: { ...DAILY, s1: 1.2, s2: 1.2, prev_low: 1.2 } }), "A", WIDEN);
+  assert.equal(r.schemes.A.reason, "no_obstacle");
+  assert.equal(r.schemes.A.sl_floored, true);
+  // 方向根拠なし・基準水準なしは SL 下限方式に関係なく同じ
+  const watch = { ok: false, kind: "watch", reason: "監視のみ（1/3 Up）", alignment: "1/3 Up", dirs: ["↑", "→", "↓"] };
+  assert.deepEqual(evaluate(evalCtx({ ...T, direction: watch }), "A", WIDEN), evaluate(evalCtx({ ...T, direction: watch }), "A"));
+  assert.deepEqual(evaluate(evalCtx({ ...T, price: 1.3 }), "A", WIDEN), evaluate(evalCtx({ ...T, price: 1.3 }), "A"));
+});
+
+test("SL下限方式 widen: 下限が効かない案は既定と同じ結果。効く案は SL 幅 ≥ 10pips で、既定なら『SL幅不足』になる案と一致（ATR・売買を掃引）", () => {
+  for (const mk of [(atr) => evalCtx({ atr }), (atr) => BUY_CTX({ atr })]) {
+    for (let a = 30; a <= 450; a++) { // ATR 3.0〜45.0pips（0.1pips刻み。B案が広がる ATR 10pips 未満も含む）
+      const ctx = mk(Number((a / 10 / 10000).toFixed(6)));
+      const d = evaluate(ctx, "A"), w = evaluate(ctx, "A", WIDEN);
+      for (const name of ["A", "B"]) {
+        const ds = d.schemes[name], ws = w.schemes[name];
+        assert.ok(ws.sl_pips >= 10 - 1e-9, `atr=${ctx.atr} ${name} sl_pips=${ws.sl_pips}`);
+        assert.notEqual(ws.reason, "sl_narrow");
+        if (ds.reason === "sl_narrow") assert.equal(ws.sl_floored, true, `atr=${ctx.atr} ${name}`);
+        else {
+          assert.equal(ws.sl_floored, false, `atr=${ctx.atr} ${name}`);
+          const { sl_floored: _f, lots: wl, ...rest } = ws;
+          const { lots: dl, ...dRest } = ds;
+          assert.deepEqual(rest, dRest, `atr=${ctx.atr} ${name}`);
+          // ロットは B案が『A案の式の半分』を使うので、A案のSLが広げられていれば B案も変わりうる（A案が広がっていなければ同じ）
+          if (!w.schemes.A.sl_floored) assert.deepEqual(wl, dl, `atr=${ctx.atr} ${name}`);
+        }
+      }
+    }
+  }
+});

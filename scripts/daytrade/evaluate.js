@@ -16,6 +16,12 @@ const { pipValueJpy, costThresholdPips, tpMarginPips, lotRaw, lotCap } = require
  * 不採用の理由（1案につき最初に当たったもの1つ）の評価順は 4節の列挙順 [Q12]:
  *   方向根拠なし → 届かない → SL幅不足 → RR不足 → コスト不足 → ADR消化超過
  * 6分類に載らない理由（基準水準なし・障害なし・入力欠落）は別枠。
+ *
+ * opts.slFloor（SL下限方式。バックテストの比較用。ライブは既定の 'reject' のまま使う）:
+ *   'reject'（既定）= 丸めた後のSL幅が 10pips 未満なら『SL幅不足』で不採用（現行の規則）。
+ *   'widen'         = SL幅を max(係数×ATR, 10pips) にしてから外側へ 0.5pip 単位に丸め、SL幅では落とさない。
+ *                     RR・コスト・ADR・届く・ロット（広げた後のSL幅で計算、B案の半分の規則も同じ）は変えない。
+ *                     SLが下限で決まった（= 現行の規則なら『SL幅不足』になる）案には sl_floored: true を付ける。
  */
 const SCHEMES = [{ name: "A", k: 0.5 }, { name: "B", k: 1.0 }];
 const SL_MIN_PIPS = 10;
@@ -33,8 +39,12 @@ const REASONS = {
 const COUNTED = ["no_direction", "unreachable", "sl_narrow", "rr_low", "cost_low", "adr_over"];
 
 const px = (ticks, pair) => N.fromTicks(ticks, pair);
+const SL_FLOOR_OPTIONS = ["reject", "widen"];
 
-function evaluate(ctx, setup) {
+function evaluate(ctx, setup, opts = {}) {
+  const slFloor = (opts && opts.slFloor) || "reject";
+  if (!SL_FLOOR_OPTIONS.includes(slFloor)) throw new Error(`evaluate: slFloor は 'reject' か 'widen' です（${String(slFloor)}）`);
+  const widen = slFloor === "widen";
   const { pair } = ctx;
   const base = { setup, symbol: pair.code, side: null, schemes: {} };
   const rejectAll = (reason, detail, extra = {}) => ({
@@ -107,10 +117,14 @@ function evaluate(ctx, setup) {
   const threshold = costThresholdPips(pair);
   const rawA = {};
   const schemes = {};
+  const slFloorT = SL_MIN_PIPS * tpPip; // 10pips をティックで
+  const roundSl = (distT) => (side === "sell" ? N.ceilTo(Lt + distT) : N.floorTo(Lt - distT)); // 外側（損切りが遠い側）へ 0.5pip 単位
   for (const s of SCHEMES) {
-    const slT = side === "sell" ? N.ceilTo(Lt + s.k * atrT) : N.floorTo(Lt - s.k * atrT);
+    const slT0 = roundSl(s.k * atrT); // 下限なしのSL（現行の規則）
+    const slT = widen ? roundSl(Math.max(s.k * atrT, slFloorT)) : slT0;
     const slPips = Math.abs(slT - Lt) / tpPip;
     const res = { name: s.name, k: s.k, sl: px(slT, pair), sl_pips: slPips, pass: false, reason: null };
+    if (widen) res.sl_floored = slT !== slT0;
     if (tpT !== null) {
       res.tp = px(tpT, pair);
       res.profit_pips = profitPips;
@@ -120,7 +134,7 @@ function evaluate(ctx, setup) {
     }
     // 理由（4節の列挙順）
     if (unreachable) res.reason = "unreachable";
-    else if (N.lt(slPips, SL_MIN_PIPS)) res.reason = "sl_narrow";
+    else if (!widen && N.lt(slPips, SL_MIN_PIPS)) res.reason = "sl_narrow";
     else if (tpT === null) res.reason = "no_obstacle";
     else if (N.lt(profitPips, RR_MIN * slPips)) res.reason = "rr_low";
     else if (N.lt(res.cost_cap_pips, threshold)) res.reason = "cost_low";
@@ -150,4 +164,4 @@ function evaluate(ctx, setup) {
   };
 }
 
-module.exports = { evaluate, SCHEMES, REASONS, COUNTED, SL_MIN_PIPS, ADR_MAX_PCT, BAND_ATR };
+module.exports = { evaluate, SCHEMES, REASONS, COUNTED, SL_MIN_PIPS, ADR_MAX_PCT, BAND_ATR, SL_FLOOR_OPTIONS };
