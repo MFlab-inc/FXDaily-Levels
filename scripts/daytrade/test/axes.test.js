@@ -25,7 +25,7 @@ test("ライブの生成器（設計①②③・状態更新・型B追加）は 
   const s17 = makeScenario({ nowIso: "2026-10-08T17:00:00+09:00", spec: down });
   try {
     const { buildDesign, buildStatus } = require("../plan"); // evaluate の差し替え後に読み込む
-    const inputsOf = (sc) => loadInputs({ dataDir: sc.dataDir, repoRoot: sc.repoRoot, nowMs: sc.nowMs });
+    const inputsOf = (sc) => loadInputs({ dataDir: sc.dataDir, repoRoot: sc.repoRoot, nowMs: sc.nowMs, env: sc.env });
     const d2 = buildDesign({ inputs: inputsOf(d), riskFeed: noFeed, nowMs: d.nowMs, slot: 2, prevPlan: null, logRows: [] });
     const d3 = buildDesign({ inputs: inputsOf(d), riskFeed: noFeed, nowMs: d.nowMs, slot: 3, prevPlan: null, logRows: [] }); // 型A・型B
     const st = buildStatus({ inputs: inputsOf(s17), riskFeed: noFeed, nowMs: s17.nowMs, prevPlan: d2.plan, logRows: d2.logAppend }); // 型B追加

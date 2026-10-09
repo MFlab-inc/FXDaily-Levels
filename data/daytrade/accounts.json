@@ -1,8 +1,8 @@
 {
-  "_comment": "equity_jpy（口座の資金・円）は本人が手で更新する。生成器（scripts/daytrade-plan.js）は読むだけで書き換えない。risk_pct=1回の損失の許容（%）、daily_loss_pct=1日の損失の許容（%）、commission_per_lot_jpy=1ロットあたりの手数料（円）。詳細は data/daytrade/README.md",
+  "_comment": "口座はラベルで表す: A=デイトレ専用口座、B=スイング＋デイトレ口座。口座番号と資金（equity）は、このリポジトリは公開されるので書かない。資金（円・整数）は GitHub Actions の Variables DAYTRADE_EQUITY_A／DAYTRADE_EQUITY_B に置く（設定方法と更新手順は data/daytrade/README.md）。risk_pct=1回の損失の許容（%）、daily_loss_pct=1日の損失の許容（%）、commission_per_lot_jpy=1ロットあたりの手数料（円）",
   "accounts": {
-    "701620": { "equity_jpy": 610273, "role": "daytrade" },
-    "702449": { "equity_jpy": 4682566, "role": "swing_daytrade" }
+    "A": { "role": "daytrade" },
+    "B": { "role": "swing_daytrade" }
   },
   "commission_per_lot_jpy": 1013,
   "risk_pct": 0.5,

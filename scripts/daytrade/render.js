@@ -17,6 +17,9 @@ const yen = (v) => (Number.isFinite(v) ? `${Math.round(v).toLocaleString("en-US"
 function lotText(s, accts) {
   return Object.keys(accts).map((a) => {
     const v = s.lots?.[a];
+    // 資金が未設定（GitHub Actions の Variables が無い）／不正な口座は、上限ロットを計算せず『未設定』と出す
+    if (accts[a]?.equity_status === "unset") return `${a}=未設定`;
+    if (accts[a]?.equity_status === "invalid") return `${a}=未設定（資金の設定が不正）`;
     if (v === null || v === undefined) return `${a}=—（上限ロットを計算できません）`;
     const c = s.commission_jpy?.[a];
     return `${a}=${v.toFixed(2)}${v === 0 ? "（資金に対してSL幅が大きい）" : ""}${Number.isFinite(c) ? `（往復手数料 ${yen(c)}）` : ""}`;
@@ -97,7 +100,12 @@ function render(plan, accountsParam = {}) {
   const ids = Object.keys(accts);
   if (!ids.length) L.push("  口座: 設定がありません（data/daytrade/accounts.json）。上限ロットは出せません");
   if (ids.length) {
-    L.push(`  口座: ${ids.map((a) => `${a}（${accts[a].role ?? "—"}） equity ${yen(accts[a].equity_jpy)} ／ 本日の損失上限 ${accts[a].daily_loss_limit_jpy === null || accts[a].daily_loss_limit_jpy === undefined ? "—" : yen(accts[a].daily_loss_limit_jpy)}${plan.settings?.daily_loss_pct !== null && plan.settings?.daily_loss_pct !== undefined ? `（${plan.settings.daily_loss_pct}%）` : ""}`).join(" ／ ")}`);
+    // 資金そのものは出さない（公開されるため）。未設定の口座は『資金 未設定』と出す
+    const loss = (a) => (accts[a].daily_loss_limit_jpy === null || accts[a].daily_loss_limit_jpy === undefined ? "—" : yen(accts[a].daily_loss_limit_jpy));
+    const pct = plan.settings?.daily_loss_pct;
+    const pctText = (a) => (accts[a].daily_loss_limit_jpy !== null && accts[a].daily_loss_limit_jpy !== undefined && pct !== null && pct !== undefined ? `（${pct}%）` : "");
+    const equityNote = (a) => (accts[a].equity_status === "unset" ? " 資金 未設定（Variables） ／" : accts[a].equity_status === "invalid" ? " 資金 未設定（設定が不正） ／" : "");
+    L.push(`  口座: ${ids.map((a) => `${a}（${accts[a].role ?? "—"}）${equityNote(a)} 本日の損失上限 ${loss(a)}${pctText(a)}`).join(" ／ ")}`);
   }
 
   // 2. 候補

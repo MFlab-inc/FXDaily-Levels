@@ -82,16 +82,20 @@ function makeScenario(o = {}) {
   const files = { "intraday.json": intraday, "daily-levels.json": daily, "h1-bars.json": h1, "daytrade-context.json": ctx, "mtf-feed.json": mtf, "economic-calendar.json": calendar };
   if (o.tweak) o.tweak(files);
   for (const [f, v] of Object.entries(files)) if (v !== null) write(f, v);
+  // 口座はラベル（A／B）だけで、資金は環境変数 DAYTRADE_EQUITY_A／B で渡す（試験用の架空の額）
   write("daytrade/accounts.json", {
-    accounts: { 701620: { equity_jpy: 610273, role: "daytrade" }, 702449: { equity_jpy: 4682566, role: "swing_daytrade" } },
+    accounts: { A: { role: "daytrade" }, B: { role: "swing_daytrade" } },
     commission_per_lot_jpy: 1013, risk_pct: 0.5, daily_loss_pct: 1.5,
   });
   fs.mkdirSync(path.join(repoRoot, "config"), { recursive: true });
   fs.writeFileSync(path.join(repoRoot, "config", "daytrade-rules.json"), JSON.stringify({ pair_currencies: PAIR_CURRENCIES }));
-  return { dataDir, repoRoot, nowMs, nowIso, barsByCode, files };
+  return { dataDir, repoRoot, nowMs, nowIso, barsByCode, files, env: { ...EQUITY_ENV, ...(o.env || {}) } };
 }
+
+// 試験用の架空の資金（円）。実際の資金は GitHub Actions の Variables にあり、リポジトリには置かない
+const EQUITY_ENV = { DAYTRADE_EQUITY_A: "500000", DAYTRADE_EQUITY_B: "3000000" };
 
 const sha = (p) => require("crypto").createHash("sha256").update(fs.readFileSync(p)).digest("hex");
 const snapshot = (dir, names) => Object.fromEntries(names.map((n) => [n, sha(path.join(dir, n))]));
 
-module.exports = { makeScenario, SPEC, PAIR_CURRENCIES, levelsFor, barsFor, snapshot };
+module.exports = { makeScenario, SPEC, PAIR_CURRENCIES, levelsFor, barsFor, snapshot, EQUITY_ENV };

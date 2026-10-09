@@ -22,7 +22,7 @@ const N = require("./num");
  *   buildStatus … Entry・SL・TP は変えず、距離・ADR消化・鮮度・到達／失効・停止中の印だけ更新する
  * 候補数に上限は設けない。判定文は出さない（数字と状態だけ）。
  */
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3; // 3: accounts のキーを口座ラベル（A／B）にし、equity_jpy を出力から外した
 
 const fmt = (v, pair) => (Number.isFinite(v) ? v.toFixed(pair.digits) : "");
 const dt16 = (iso) => String(iso ?? "").slice(0, 16).replace("T", " ");
@@ -234,12 +234,14 @@ function referenceBlock(inputs, riskFeed) {
   };
 }
 
-// 口座ごとの表示（出力の1項目目）: 本日の損失上限＝equity×daily_loss_pct [Q36]。手数料は commission_per_lot_jpy
+// 口座ごとの表示（出力の1項目目）: 本日の損失上限＝equity×daily_loss_pct [Q36]。手数料は commission_per_lot_jpy。
+// 資金そのもの（equity_jpy）は出力に書かない（公開されるため。Variables から読んだ値はこの関数の中だけで使う）。equity_status は ok／unset／invalid
 function accountsBlock(inputs) {
   const pct = inputs.dailyLossPct;
   const accounts = {};
   for (const [id, a] of Object.entries(inputs.accounts)) {
-    accounts[id] = { equity_jpy: a.equity_jpy, role: a.role, daily_loss_limit_jpy: Number.isFinite(pct) ? Math.floor((a.equity_jpy * pct) / 100 + 1e-9) : null };
+    const ok = a.equity_status === "ok" && Number.isFinite(a.equity_jpy);
+    accounts[id] = { role: a.role, equity_status: a.equity_status, daily_loss_limit_jpy: ok && Number.isFinite(pct) ? Math.floor((a.equity_jpy * pct) / 100 + 1e-9) : null };
   }
   return { accounts, settings: { risk_pct: inputs.riskPct, daily_loss_pct: pct, commission_per_lot_jpy: inputs.commissionPerLotJpy } };
 }
@@ -324,8 +326,8 @@ function candRow(c, run, generatedIso) {
     entry_low: fmt(c.band.low, pair), entry_high: fmt(c.band.high, pair),
     sl_a: a ? fmt(a.sl, pair) : "", tp_a: a ? fmt(a.tp1, pair) : "", sl_b: b ? fmt(b.sl, pair) : "", tp_b: b ? fmt(b.tp1, pair) : "",
     rr_a: a ? String(a.rr) : "", rr_b: b ? String(b.rr) : "", cost_cap_a: a ? String(a.cost_cap_pips) : "",
-    lot_cap_a_701620: lot(a, "701620"), lot_cap_b_701620: lot(b, "701620"), lot_cap_a_702449: lot(a, "702449"), lot_cap_b_702449: lot(b, "702449"),
-    expires_at: c.expires_at, reached: "", reached_at: "", first_hit_a: "", first_hit_b: "", filled_ticket_701620: "", filled_ticket_702449: "",
+    lot_cap_a_A: lot(a, "A"), lot_cap_b_A: lot(b, "A"), lot_cap_a_B: lot(a, "B"), lot_cap_b_B: lot(b, "B"),
+    expires_at: c.expires_at, reached: "", reached_at: "", first_hit_a: "", first_hit_b: "", filled_ticket_A: "", filled_ticket_B: "",
   };
 }
 
@@ -338,7 +340,7 @@ function designLogRows(plan, prevPlan, rows, nowMs) {
     const key = L.keyOf(row);
     newKeys.add(key);
     const last = latest.get(key);
-    if (last) { row.filled_ticket_701620 = last.filled_ticket_701620; row.filled_ticket_702449 = last.filled_ticket_702449; } // 人が埋めた約定の突き合わせは引き継ぐ
+    if (last) { row.filled_ticket_A = last.filled_ticket_A; row.filled_ticket_B = last.filled_ticket_B; } // 人が埋めた約定の突き合わせは引き継ぐ
     // 版がまだ無い、または直近の行が status（取消済み）なら、新しい design の行として追記する（取消後に同じ案が再び出たとき、ログ・採点から漏れない）
     if (!last || last.run === "status") out.push(row);
   }

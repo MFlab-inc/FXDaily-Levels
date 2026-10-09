@@ -103,8 +103,8 @@ test("fill: coversExpiry は最後の足の終了が有効期限以降のとき�
 const row = (o = {}) => ({
   plan_date: D, generated_at: "2026-10-08T15:30:00+09:00", run: "design", setup: "A", symbol: "EURUSD", side: "sell",
   same_direction_group: "", entry_low: "1.10400", entry_high: "1.10420", sl_a: "1.10500", tp_a: "1.09900", sl_b: "1.10600", tp_b: "1.09900",
-  rr_a: "5.0", rr_b: "2.5", cost_cap_a: "9.2", lot_cap_a_701620: "0.20", lot_cap_b_701620: "0.10", lot_cap_a_702449: "1.56", lot_cap_b_702449: "0.78",
-  expires_at: "2026-10-09T03:00:00+09:00", reached: "", reached_at: "", first_hit_a: "", first_hit_b: "", filled_ticket_701620: "", filled_ticket_702449: "",
+  rr_a: "5.0", rr_b: "2.5", cost_cap_a: "9.2", lot_cap_a_A: "0.20", lot_cap_b_A: "0.10", lot_cap_a_B: "1.56", lot_cap_b_B: "0.78",
+  expires_at: "2026-10-09T03:00:00+09:00", reached: "", reached_at: "", first_hit_a: "", first_hit_b: "", filled_ticket_A: "", filled_ticket_B: "",
   ...o,
 });
 test("log: 列は仕様どおり27列。往復できる。引用符・カンマを含む値も壊れない", () => {
@@ -117,11 +117,11 @@ test("log: 列は仕様どおり27列。往復できる。引用符・カンマ�
   assert.deepEqual(csvio.parse('a,"b,c","d""e"\n'), [["a", "b,c", 'd"e']]);
 });
 test("log: 追記のみ。既存の本文は一字も変えず、末尾に足す（人が埋めた filled_ticket も保持）", () => {
-  const first = L.appendedText("", [row({ filled_ticket_701620: "T123" })]);
+  const first = L.appendedText("", [row({ filled_ticket_A: "T123" })]);
   const second = L.appendedText(first, [row({ run: "status", reached: "到達" })]);
   assert.ok(second.startsWith(first));
   assert.equal(L.parseLog(second).length, 2);
-  assert.equal(L.parseLog(second)[0].filled_ticket_701620, "T123");
+  assert.equal(L.parseLog(second)[0].filled_ticket_A, "T123");
   assert.equal(L.appendedText(first, []), first);
 });
 test("log: 版の識別は (計画日・型・銘柄・向き・帯・SL) の一致。最新の行が版の現在の状態", () => {

@@ -122,8 +122,8 @@ test("sizing: コスト閾値(米ドル決済1.2／その他1.6)・TP手前幅(�
   assert.equal(costThresholdPips(pairOf("USDCAD")), 1.6);
   assert.equal(tpMarginPips(pairOf("EURJPY")), 0.7);
   assert.equal(tpMarginPips(pairOf("EURUSD")), 0.5);
-  assert.equal(lotCap(lotRaw(610273, 0.5, 10, 1500)), 0.2);
-  assert.equal(lotRaw(610273, 0.5, 0, 1500), null);
+  assert.equal(lotCap(lotRaw(500000, 0.5, 10, 1500)), 0.16);
+  assert.equal(lotRaw(500000, 0.5, 0, 1500), null);
   assert.equal(lotRaw(NaN, 0.5, 10, 1500), null);
   assert.equal(lotCap(null), null);
 });

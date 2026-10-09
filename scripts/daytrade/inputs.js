@@ -13,6 +13,17 @@ const { PAIRS, pairOf } = require("./pairs");
  */
 const FRESH_LIMIT_MIN = 20;
 const RISK_PCT_MAX = 5; // これを超える risk_pct は入力ミスとみなす（仕様の値は 0.5）
+// 口座のラベル（口座番号は公開されるリポジトリに置かない）。資金（円）は GitHub Actions の Variables（DAYTRADE_EQUITY_<ラベル>）から環境変数で受け取り、
+// ファイル（accounts.json・plan.json・plan.txt・log.csv）には書かない。
+const ACCOUNT_LABELS = ["A", "B"];
+const equityEnvName = (label) => `DAYTRADE_EQUITY_${label}`;
+// 'ok'（正の整数の円）／'unset'（未設定・空）／'invalid'（それ以外）。不正な値そのものは返さない・メッセージにも出さない
+function readEquity(env, label) {
+  const v = env ? env[equityEnvName(label)] : undefined;
+  if (v === undefined || v === null || String(v).trim() === "") return { status: "unset", equity: null };
+  const s = String(v).trim();
+  return /^[1-9][0-9]{0,14}$/.test(s) ? { status: "ok", equity: Number(s) } : { status: "invalid", equity: null };
+}
 const FILES = {
   intraday: "intraday.json", daily: "daily-levels.json", h1: "h1-bars.json", ctx: "daytrade-context.json",
   mtf: "mtf-feed.json", calendar: "economic-calendar.json",
@@ -40,7 +51,7 @@ function parseH1(h1json) {
   return out;
 }
 
-function loadInputs({ dataDir, repoRoot, nowMs }) {
+function loadInputs({ dataDir, repoRoot, nowMs, env = process.env }) {
   const problems = [];
   const raw = {};
   for (const [k, f] of Object.entries(FILES)) {
@@ -53,15 +64,23 @@ function loadInputs({ dataDir, repoRoot, nowMs }) {
   const acc = readJson(path.join(dataDir, "daytrade", "accounts.json"));
   if (acc.problem) problems.push(acc.problem);
 
-  // 口座設定（人が手で書くファイル）。上限ロットの元になるので、読めない・範囲外のときは『発注不可』（accountProblems）にする。
+  // 口座設定（人が手で書くファイル。ラベルと役割だけで、口座番号と資金は置かない）。資金は環境変数 DAYTRADE_EQUITY_A／B（Variables）から読む。
+  // 上限ロットの元になるので、読めない・未設定・範囲外のときは『発注不可』（accountProblems）にする。
   // daily_loss_pct・commission_per_lot_jpy は表示だけなので、おかしくても発注不可にはせず問題として出す
   const accounts = {};
   const accountProblems = [];
   if (acc.problem) accountProblems.push(acc.problem);
+  let legacyEquity = false, badLabel = false;
   for (const [id, a] of Object.entries(acc.value?.accounts || {})) {
-    if (Number.isFinite(a?.equity_jpy) && a.equity_jpy > 0) accounts[id] = { equity_jpy: a.equity_jpy, role: a.role || null };
-    else accountProblems.push(`accounts.json: 口座 ${id} の equity_jpy が正の数ではありません`);
+    if (!ACCOUNT_LABELS.includes(id)) { badLabel = true; continue; } // 口座番号などが残っていても、出力には出さない
+    if (a && Object.prototype.hasOwnProperty.call(a, "equity_jpy")) legacyEquity = true;
+    const e = readEquity(env, id);
+    accounts[id] = { role: a?.role || null, equity_jpy: e.equity, equity_status: e.status };
+    if (e.status === "unset") accountProblems.push(`口座 ${id} の資金が未設定です（GitHub Actions の Variables ${equityEnvName(id)} を設定してください。上限ロットは出せません）`);
+    else if (e.status === "invalid") accountProblems.push(`口座 ${id} の資金（${equityEnvName(id)}）が正の整数（円）ではありません。上限ロットは出せません`);
   }
+  if (badLabel) accountProblems.push(`accounts.json: 口座のラベルは ${ACCOUNT_LABELS.join("・")} だけです（それ以外の口座は読みません）`);
+  if (legacyEquity) problems.push("accounts.json に equity_jpy があります（読みません。公開されるので削除してください。資金は Variables から読みます）");
   if (!acc.problem && !Object.keys(accounts).length) accountProblems.push("accounts.json: 有効な口座がありません");
   const riskPctRaw = acc.value?.risk_pct;
   const riskPctOk = Number.isFinite(riskPctRaw) && riskPctRaw > 0 && riskPctRaw <= RISK_PCT_MAX;
@@ -113,4 +132,4 @@ function loadInputs({ dataDir, repoRoot, nowMs }) {
   };
 }
 
-module.exports = { FRESH_LIMIT_MIN, loadInputs, parseH1, readJson };
+module.exports = { FRESH_LIMIT_MIN, ACCOUNT_LABELS, equityEnvName, loadInputs, parseH1, readJson };

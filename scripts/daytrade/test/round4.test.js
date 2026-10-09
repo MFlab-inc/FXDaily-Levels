@@ -18,7 +18,7 @@ const J = require("../jst");
  * 独立レビュー（第4回）で見つかった不具合の回帰試験と、変異試験で生き残った箇所の試験。
  */
 const noFeed = { status: "未取得", reason: "試験", pairs: {} };
-const inputsOf = (sc) => loadInputs({ dataDir: sc.dataDir, repoRoot: sc.repoRoot, nowMs: sc.nowMs });
+const inputsOf = (sc) => loadInputs({ dataDir: sc.dataDir, repoRoot: sc.repoRoot, nowMs: sc.nowMs, env: sc.env });
 const design = (sc, { slot = 2, prevPlan = null, logRows = [] } = {}) => ({ inputs: inputsOf(sc), ...buildDesign({ inputs: inputsOf(sc), riskFeed: noFeed, nowMs: sc.nowMs, slot, prevPlan, logRows }) });
 const status = (sc, { prevPlan = null, logRows = [], nowMs = sc.nowMs } = {}) => buildStatus({ inputs: inputsOf(sc), riskFeed: noFeed, nowMs, prevPlan, logRows });
 const cleanup = (...scs) => { for (const sc of scs) rm(path.dirname(sc.dataDir)); };
@@ -101,7 +101,7 @@ test("型B追加の案の性質: 停止中の印・往復手数料・calendar_ok
     assert.equal(b.entry_state.ok, false); // 16:55〜17:40 は停止中
     assert.match(b.entry_state.reasons.join(), /ECB/);
     assert.equal(b.stops.length, 1);
-    assert.ok(Number.isFinite(b.schemes.A.commission_jpy[701620]) || b.schemes.A.pass === false);
+    assert.ok(Number.isFinite(b.schemes.A.commission_jpy.A) || b.schemes.A.pass === false);
     assert.match(b.confirm, /M15がレンジ安値（[\d.]+）より下で陰線確定/);
     const aud = plan.candidates.find((c) => c.symbol === "AUDUSD" && c.setup === "B");
     assert.equal(aud.entry_state.ok, true);
@@ -151,13 +151,16 @@ test("設計が一つ済んだあとの状態更新: 『設計なし』になら
 
 // ---- 設定の問題 ----
 test("口座設定・停止対象通貨表の問題は、黙らずバナーに出して『発注不可』にする。表示だけの設定のおかしさは問題として出すだけ", () => {
-  const mk = () => makeScenario();
+  const mk = (o) => makeScenario(o);
+  const accJson = (obj) => ({ accounts: { A: { role: "daytrade" }, B: { role: "swing_daytrade" } }, commission_per_lot_jpy: 1013, risk_pct: 0.5, daily_loss_pct: 1.5, ...obj });
   const cases = [];
   const noAcc = mk(); fs.rmSync(path.join(noAcc.dataDir, "daytrade", "accounts.json")); cases.push([noAcc, /口座設定の問題: .*accounts\.json がありません/, true]);
-  const badRisk = mk(); writeJson(badRisk, "daytrade/accounts.json", { accounts: { 701620: { equity_jpy: 610273, role: "daytrade" } }, commission_per_lot_jpy: 1013, risk_pct: 50, daily_loss_pct: 1.5 }); cases.push([badRisk, /risk_pct が 0 超 5 以下の数ではありません（50）/, true]);
-  const negEq = mk(); writeJson(negEq, "daytrade/accounts.json", { accounts: { 701620: { equity_jpy: -610273, role: "daytrade" }, 702449: { equity_jpy: 4682566, role: "x" } }, commission_per_lot_jpy: 1013, risk_pct: 0.5, daily_loss_pct: 1.5 }); cases.push([negEq, /口座 701620 の equity_jpy が正の数ではありません/, true]);
+  const badRisk = mk(); writeJson(badRisk, "daytrade/accounts.json", accJson({ risk_pct: 50 })); cases.push([badRisk, /risk_pct が 0 超 5 以下の数ではありません（50）/, true]); // 上限 5 は残す
+  const edge5 = mk(); writeJson(edge5, "daytrade/accounts.json", accJson({ risk_pct: 5 })); cases.push([edge5, null, false]); // 5 ちょうどは有効
+  const unsetA = mk({ env: { DAYTRADE_EQUITY_A: "" } }); cases.push([unsetA, /口座 A の資金が未設定です（GitHub Actions の Variables DAYTRADE_EQUITY_A を設定してください/, true]);
+  const badEq = mk({ env: { DAYTRADE_EQUITY_B: "-3000000" } }); cases.push([badEq, /口座 B の資金（DAYTRADE_EQUITY_B）が正の整数（円）ではありません/, true]);
   const noRules = mk(); fs.writeFileSync(path.join(noRules.repoRoot, "config", "daytrade-rules.json"), JSON.stringify({ pair_currencies: { EURUSD: ["EUR", "USD"] } })); cases.push([noRules, /pair_currencies）が読めません/, true]);
-  const softBad = mk(); writeJson(softBad, "daytrade/accounts.json", { accounts: { 701620: { equity_jpy: 610273, role: "daytrade" } }, risk_pct: 0.5 }); cases.push([softBad, null, false]);
+  const softBad = mk(); writeJson(softBad, "daytrade/accounts.json", { accounts: { A: { role: "daytrade" } }, risk_pct: 0.5 }); cases.push([softBad, null, false]);
   try {
     for (const [sc, re, blocks] of cases) {
       const { plan, inputs } = design(sc);
@@ -180,14 +183,13 @@ test("口座設定・停止対象通貨表の問題は、黙らずバナーに�
 });
 
 test("本日の損失上限は切り捨て（equity×1.5%）。往復手数料は円未満を四捨五入", () => {
-  const sc = makeScenario();
+  const sc = makeScenario({ env: { DAYTRADE_EQUITY_A: "123457" } });
   try {
-    writeJson(sc, "daytrade/accounts.json", { accounts: { 701620: { equity_jpy: 123457, role: "daytrade" } }, commission_per_lot_jpy: 1013, risk_pct: 0.5, daily_loss_pct: 1.5 });
     const { plan } = design(sc);
-    assert.equal(plan.accounts[701620].daily_loss_limit_jpy, 1851); // 1851.855 を切り捨て
+    assert.equal(plan.accounts.A.daily_loss_limit_jpy, 1851); // 1851.855 を切り捨て
     const c = plan.candidates.find((x) => x.symbol === "EURUSD");
-    const lots = c.schemes.A.lots[701620];
-    assert.equal(c.schemes.A.commission_jpy[701620], Math.round(lots * 1013));
+    const lots = c.schemes.A.lots.A;
+    assert.equal(c.schemes.A.commission_jpy.A, Math.round(lots * 1013));
   } finally { cleanup(sc); }
 });
 
@@ -279,13 +281,13 @@ test("CLI: log.csv が壊れていても計画は出す（ログは追記せず�
     fs.mkdirSync(path.join(sc.dataDir, "daytrade"), { recursive: true });
     fs.writeFileSync(path.join(sc.dataDir, "daytrade", "log.csv"), "broken,header\n1,2\n");
     const out = [];
-    const r = await main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", `--now=${sc.nowIso}`, "--run=design", "--slot=2"], {}, { log: (m) => out.push(m) });
+    const r = await main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", `--now=${sc.nowIso}`, "--run=design", "--slot=2"], sc.env, { log: (m) => out.push(m) });
     assert.equal(r.plan.candidates.length, 4);
     assert.equal(read(sc, "daytrade/log.csv"), "broken,header\n1,2\n");
     assert.match(read(sc, "daytrade-plan.txt"), /log\.csv を読めないため、ログの追記を行っていません/);
     assert.match(out.join("\n"), /log追記 0行/);
     const q = [];
-    await main(["--resolve", `--data-dir=${sc.dataDir}`, `--now=${sc.nowIso}`], {}, { log: (m) => q.push(m) });
+    await main(["--resolve", `--data-dir=${sc.dataDir}`, `--now=${sc.nowIso}`], sc.env, { log: (m) => q.push(m) });
     assert.ok(q.some((l) => /^now=2026-10-08T15:30:00\+09:00$/.test(l)), q.join("|"));
   } finally { cleanup(sc); }
 });
@@ -296,9 +298,9 @@ test("CLI: plan.json が無くても、log.csv の design 行があればその�
     const first = design(sc);
     fs.mkdirSync(path.join(sc.dataDir, "daytrade"), { recursive: true });
     fs.writeFileSync(path.join(sc.dataDir, "daytrade", "log.csv"), L.appendedText("", first.logAppend));
-    const r = await main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", `--now=2026-10-08T15:40:00+09:00`, "--run=design", "--slot=2"], {}, { log: () => {} });
+    const r = await main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", `--now=2026-10-08T15:40:00+09:00`, "--run=design", "--slot=2"], sc.env, { log: () => {} });
     assert.equal(r.skipped, "done");
-    const auto = await main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", `--now=2026-10-08T15:40:00+09:00`], {}, { log: () => {} });
+    const auto = await main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", `--now=2026-10-08T15:40:00+09:00`], sc.env, { log: () => {} });
     assert.ok(auto.plan.run === "status"); // 自動でも設計②は済み
   } finally { cleanup(sc); }
 });

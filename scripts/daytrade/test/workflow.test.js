@@ -41,7 +41,8 @@ test("workflow: 書き込むのは計画の3ファイルだけ（git add data/ �
   const code = PLAN.split("\n").filter((l) => !l.trim().startsWith("#")).join("\n"); // コメント行は除く
   const added = [...code.matchAll(/git add ([^;\n]+)/g)].flatMap((m) => m[1].trim().split(/\s+/));
   assert.deepEqual(added.sort(), ["data/daytrade-plan.json", "data/daytrade-plan.txt", "data/daytrade/log.csv"]);
-  assert.ok(!/secrets\./.test(PLAN), "daytrade.yml は secrets を使わない");
+  // secrets は APIキーなどには使わない。使うのは口座の資金（DAYTRADE_EQUITY_A／B。Variables と同名で、ログで伏せるための任意の上書き）だけ
+  assert.deepEqual([...new Set([...PLAN.matchAll(/secrets\.([A-Z0-9_]+)/g)].map((m) => m[1]))].sort(), ["DAYTRADE_EQUITY_A", "DAYTRADE_EQUITY_B"]);
   assert.match(PLAN, /group: daytrade-plan/);
   assert.match(PLAN, /cancel-in-progress: false/);
   assert.match(PLAN, /contents: write/);
@@ -116,4 +117,22 @@ test("workflow: 既存のワークフロー・スクリプトを変更してい�
   // 差分は git の管理下でしか確認できないので、ここでは『読み取り専用の既存ファイルが存在し、daytrade.yml が参照しない』ことだけ確かめる
   for (const f of ["fetch.js", "build-feed.js", "daytrade.js", ".github/workflows/daily.yml", "config/daytrade-rules.json"]) assert.ok(fs.existsSync(path.join(ROOT, f)), f);
   assert.ok(!/daily\.yml|fetch\.js|build-feed\.js/.test(PLAN.replace(/^#.*$/gm, "")));
+});
+
+test("workflow: 口座の資金は Variables（同名の Secrets があればそちらを優先）から Generate plan の環境変数だけに渡す。ファイルには書かず、ほかの手順・if 条件には渡さない", () => {
+  const lines = PLAN.split("\n");
+  const idx = (re) => lines.map((l, i) => (re.test(l) ? i : -1)).filter((i) => i >= 0);
+  const stepStart = (name) => lines.findIndex((l) => l.trim() === `- name: ${name}`);
+  const gen = stepStart("Generate plan"), commit = stepStart("Commit and push");
+  assert.ok(gen > 0 && commit > gen);
+  // 資金の参照は Generate plan の env にだけある（Resolve／Score／Commit には渡さない）
+  const refs = idx(/DAYTRADE_EQUITY_[AB]:\s*\$\{\{/);
+  assert.equal(refs.length, 2);
+  for (const i of refs) assert.ok(i > gen && i < commit, `資金の参照が Generate plan の外にある（${i + 1}行目）`);
+  assert.match(PLAN, /DAYTRADE_EQUITY_A: \$\{\{ secrets\.DAYTRADE_EQUITY_A \|\| vars\.DAYTRADE_EQUITY_A \}\}/);
+  assert.match(PLAN, /DAYTRADE_EQUITY_B: \$\{\{ secrets\.DAYTRADE_EQUITY_B \|\| vars\.DAYTRADE_EQUITY_B \}\}/);
+  // run の本文（スクリプト）に資金を展開しない。ファイルへ書き出す記述（GITHUB_ENV・GITHUB_OUTPUT・tee）も資金に触れない
+  const code = lines.filter((l) => !l.trim().startsWith("#")).join("\n");
+  assert.ok(!/run:.*DAYTRADE_EQUITY|EQUITY.*(GITHUB_ENV|GITHUB_OUTPUT|tee)/.test(code));
+  for (const m of code.matchAll(/^\s*(?:-\s*)?if:\s*(.+)$/gm)) assert.ok(!/EQUITY|vars\./.test(m[1]), `if に資金: ${m[1]}`);
 });

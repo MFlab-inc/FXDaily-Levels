@@ -77,7 +77,7 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
   }
 
   // 3) 入力
-  const inputs = loadInputs({ dataDir, repoRoot, nowMs });
+  const inputs = loadInputs({ dataDir, repoRoot, nowMs, env });
   const riskFeed = args["no-risk-feed"] ? { status: "未取得", reason: "取得しない指定", pairs: {} } : await fetchRiskFeed({ nowMs });
 
   // 4) 組み立て

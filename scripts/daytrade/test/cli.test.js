@@ -12,7 +12,7 @@ const J = require("../jst");
 
 const INPUTS = ["intraday.json", "daily-levels.json", "h1-bars.json", "daytrade-context.json", "mtf-feed.json", "economic-calendar.json"];
 const quiet = () => { const out = []; return { out, io: { log: (m) => out.push(String(m)) } }; };
-const run = (sc, extra, env = {}) => { const q = quiet(); return main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", `--now=${sc.nowIso}`, ...extra], env, q.io).then((r) => ({ r, out: q.out })); };
+const run = (sc, extra, env = {}) => { const q = quiet(); return main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", `--now=${sc.nowIso}`, ...extra], { ...sc.env, ...env }, q.io).then((r) => ({ r, out: q.out })); };
 const cleanup = (sc) => rm(path.dirname(sc.dataDir));
 const read = (sc, rel) => fs.readFileSync(path.join(sc.dataDir, rel), "utf8");
 
@@ -66,7 +66,7 @@ test("design（手動）: 時刻にかかわらず枠を指定して作れる。
 test("自動（run 指定なし）: 実行時刻の窓と済みの設計で種類を決める。設計②→同じ時間内は何もしない→次の時間は状態更新→窓の外・土日は何もしない", async () => {
   const sc = makeScenario(); // 15:30（設計②の窓）
   try {
-    const auto = (iso, extra = []) => main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", `--now=${iso}`, ...extra], {}, quiet().io);
+    const auto = (iso, extra = []) => main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", `--now=${iso}`, ...extra], sc.env, quiet().io);
     const d = await auto("2026-10-08T15:30:00+09:00");
     assert.equal(d.plan.run, "design");
     assert.equal(d.plan.design_slot, 2);
@@ -80,7 +80,7 @@ test("自動（run 指定なし）: 実行時刻の窓と済みの設計で種�
     const none = Object.fromEntries(["USDJPY", "EURUSD", "GBPUSD", "AUDUSD", "XAUUSD", "EURJPY", "USDCAD", "EURGBP"].map((c) => [c, { score: "Mixed", dirs: ["↑", "↓", "→"] }]));
     const empty = makeScenario({ nowIso: "2026-10-08T15:20:00+09:00", spec: none });
     try {
-      const a2 = (iso) => main([`--data-dir=${empty.dataDir}`, "--no-risk-feed", `--now=${iso}`], {}, quiet().io);
+      const a2 = (iso) => main([`--data-dir=${empty.dataDir}`, "--no-risk-feed", `--now=${iso}`], empty.env, quiet().io);
       const e1 = await a2("2026-10-08T15:20:00+09:00");
       assert.equal(e1.plan.candidates.length, 0);
       assert.equal(e1.plan.designs[0].inputs_ok, true);
@@ -90,7 +90,7 @@ test("自動（run 指定なし）: 実行時刻の窓と済みの設計で種�
     // 発注できる状態でない入力（MTFが使えない）で作った設計は『済み』にしない: 窓の中の次の実行で設計をやり直し、入力が整えば済みになる
     const bad = makeScenario({ mtfStatus: "partial", nowIso: "2026-10-08T15:20:00+09:00" });
     try {
-      const a3 = (iso) => main([`--data-dir=${bad.dataDir}`, "--no-risk-feed", `--now=${iso}`], {}, quiet().io);
+      const a3 = (iso) => main([`--data-dir=${bad.dataDir}`, "--no-risk-feed", `--now=${iso}`], bad.env, quiet().io);
       const b1 = await a3("2026-10-08T15:20:00+09:00");
       assert.equal(b1.plan.designs[0].inputs_ok, false);
       assert.equal(b1.plan.inputs_ok, false);
@@ -117,10 +117,10 @@ test("status: 同じ時間内の二重実行は何もしない。Entry・SL・TP
     const logBefore = read(sc, "daytrade/log.csv");
     const q = quiet();
     // 設計と同じ時間内（15:55）の状態更新は、設計が兼ねているので何もしない
-    const same = await main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", "--now=2026-10-08T15:55:00+09:00", "--run=status"], {}, q.io);
+    const same = await main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", "--now=2026-10-08T15:55:00+09:00", "--run=status"], sc.env, q.io);
     assert.equal(same.skipped, "done");
     // 次の時間（入力は 15:30 のままなので鮮度超過＝発注不可で出る）
-    const r = await main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", "--now=2026-10-08T16:05:00+09:00", "--run=status"], {}, q.io);
+    const r = await main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", "--now=2026-10-08T16:05:00+09:00", "--run=status"], sc.env, q.io);
     assert.equal(r.plan.run, "status");
     assert.equal(r.plan.design_slot, 2);
     assert.equal(r.plan.order_ok, false);
@@ -129,13 +129,13 @@ test("status: 同じ時間内の二重実行は何もしない。Entry・SL・TP
     assert.equal(read(sc, "daytrade/log.csv"), logBefore); // 毎時の状態更新はログに書かない
     // 前の状態更新が古い入力（発注不可）だったので、同じ時間内でも新しい入力でやり直す
     assert.equal(r.plan.inputs_ok, false);
-    const again = await main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", "--now=2026-10-08T16:20:00+09:00", "--run=status"], {}, q.io);
+    const again = await main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", "--now=2026-10-08T16:20:00+09:00", "--run=status"], sc.env, q.io);
     assert.equal(again.plan.run, "status");
   } finally { cleanup(sc); }
   // 入力が新しい状態更新は、同じ時間内の2回目を何もしない
   const fresh = makeScenario({ nowIso: "2026-10-08T16:05:00+09:00" });
   try {
-    const f = (iso) => main([`--data-dir=${fresh.dataDir}`, "--no-risk-feed", `--now=${iso}`, "--run=status"], {}, quiet().io);
+    const f = (iso) => main([`--data-dir=${fresh.dataDir}`, "--no-risk-feed", `--now=${iso}`, "--run=status"], fresh.env, quiet().io);
     const s1 = await f("2026-10-08T16:05:00+09:00");
     assert.equal(s1.plan.inputs_ok, true);
     assert.equal((await f("2026-10-08T16:12:00+09:00")).skipped, "done");
@@ -235,7 +235,7 @@ test("score: 有効期限を過ぎた案を h1-bars.json で採点し log.csv �
     const next = makeScenario({ nowIso: "2026-10-09T15:30:00+09:00" });
     fs.writeFileSync(path.join(next.dataDir, "daytrade", "log.csv"), read(sc, "daytrade/log.csv"));
     const q2 = quiet();
-    const out = await main([`--data-dir=${next.dataDir}`, "--no-risk-feed", `--now=${next.nowIso}`, "--run=design", "--slot=2"], {}, q2.io);
+    const out = await main([`--data-dir=${next.dataDir}`, "--no-risk-feed", `--now=${next.nowIso}`, "--run=design", "--slot=2"], next.env, q2.io);
     assert.equal(out.plan.previous_day.plan_date, "2026-10-08");
     assert.equal(out.plan.previous_day.reached, 1);
     assert.equal(out.plan.previous_day.a.tp1, 1);
@@ -262,13 +262,13 @@ test("自動: 17:05 の状態更新で型Bが追加され、log.csv に run=desi
   const s17 = makeScenario({ nowIso: "2026-10-08T17:05:00+09:00", spec: { EURUSD: { bars: { dir: "down" } } } });
   try {
     const q = quiet();
-    await main([`--data-dir=${d.dataDir}`, "--no-risk-feed", `--now=${d.nowIso}`], {}, q.io); // 自動 → 設計②
+    await main([`--data-dir=${d.dataDir}`, "--no-risk-feed", `--now=${d.nowIso}`], d.env, q.io); // 自動 → 設計②
     fs.copyFileSync(path.join(d.dataDir, "daytrade-plan.json"), path.join(s17.dataDir, "daytrade-plan.json"));
     fs.mkdirSync(path.join(s17.dataDir, "daytrade"), { recursive: true });
     fs.copyFileSync(path.join(d.dataDir, "daytrade", "log.csv"), path.join(s17.dataDir, "daytrade", "log.csv"));
     const before = L.parseLog(read(s17, "daytrade/log.csv"));
     assert.equal(before.length, 4);
-    const r = await main([`--data-dir=${s17.dataDir}`, "--no-risk-feed", `--now=${s17.nowIso}`], {}, q.io);
+    const r = await main([`--data-dir=${s17.dataDir}`, "--no-risk-feed", `--now=${s17.nowIso}`], s17.env, q.io);
     assert.equal(r.plan.run, "status");
     assert.equal(r.logAppend.length, 3);
     const rows = L.parseLog(read(s17, "daytrade/log.csv"));
@@ -276,9 +276,9 @@ test("自動: 17:05 の状態更新で型Bが追加され、log.csv に run=desi
     assert.deepEqual(rows.slice(0, 4), before); // 旧行は変えない
     assert.deepEqual(rows.slice(4).map((x) => [x.run, x.setup]).sort(), [["design-b", "B"], ["design-b", "B"], ["design-b", "B"]]);
     assert.match(read(s17, "daytrade-plan.txt"), /型Bの追加（状態更新 17:05）/);
-    assert.equal((await main([`--data-dir=${s17.dataDir}`, "--no-risk-feed", "--now=2026-10-08T17:40:00+09:00"], {}, q.io)).skipped, "done");
+    assert.equal((await main([`--data-dir=${s17.dataDir}`, "--no-risk-feed", "--now=2026-10-08T17:40:00+09:00"], s17.env, q.io)).skipped, "done");
     // 強制で動かしても二重に追加しない
-    const again = await main([`--data-dir=${s17.dataDir}`, "--no-risk-feed", "--now=2026-10-08T17:40:00+09:00", "--force"], {}, q.io);
+    const again = await main([`--data-dir=${s17.dataDir}`, "--no-risk-feed", "--now=2026-10-08T17:40:00+09:00", "--force"], s17.env, q.io);
     assert.equal(again.logAppend.length, 0);
     assert.equal(L.parseLog(read(s17, "daytrade/log.csv")).length, 7);
   } finally { cleanup(d); cleanup(s17); }

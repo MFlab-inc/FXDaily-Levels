@@ -28,7 +28,7 @@ function evalCtx(overrides = {}) {
     pair, price: 1.1000, atr: 0.0020, adr: { used_pct: 50, remaining: 0.0060 },
     daily: { ...DAILY }, groups: NO_GROUPS, direction: OK_DIR("sell"), tokyo: null,
     rates: { USDJPY: 150, USDCAD: 1.35, USDCHF: 0.9, GBPUSD: 1.25 },
-    accounts: { 701620: { equity_jpy: 610273 }, 702449: { equity_jpy: 4682566 } }, riskPct: 0.5,
+    accounts: { A: { equity_jpy: 500000 }, B: { equity_jpy: 3000000 } }, riskPct: 0.5,
     ...overrides,
   };
 }

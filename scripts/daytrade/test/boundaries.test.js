@@ -77,8 +77,8 @@ test("score: 有効期限ちょうどの時刻に採点できる", () => {
   const row = {
     plan_date: D, generated_at: "2026-10-08T15:30:00+09:00", run: "design", setup: "A", symbol: "EURUSD", side: "sell", same_direction_group: "",
     entry_low: "1.10400", entry_high: "1.10420", sl_a: "1.10500", tp_a: "1.09900", sl_b: "", tp_b: "", rr_a: "", rr_b: "", cost_cap_a: "",
-    lot_cap_a_701620: "", lot_cap_b_701620: "", lot_cap_a_702449: "", lot_cap_b_702449: "", expires_at: "2026-10-09T03:00:00+09:00",
-    reached: "", reached_at: "", first_hit_a: "", first_hit_b: "", filled_ticket_701620: "", filled_ticket_702449: "",
+    lot_cap_a_A: "", lot_cap_b_A: "", lot_cap_a_B: "", lot_cap_b_B: "", expires_at: "2026-10-09T03:00:00+09:00",
+    reached: "", reached_at: "", first_hit_a: "", first_hit_b: "", filled_ticket_A: "", filled_ticket_B: "",
   };
   const bars = [bar("16:00", 1.1030, 1.1020), bar("02:00", 1.1030, 1.1020, undefined, undefined, "2026-10-09")];
   assert.equal(scoreRows({ rows: [row], barsByCode: { EURUSD: bars }, nowMs: J.parseIso("2026-10-09T03:00:00+09:00") }).newRows.length, 1);

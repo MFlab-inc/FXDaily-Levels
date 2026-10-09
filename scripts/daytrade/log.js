@@ -9,13 +9,14 @@ const csv = require("./csvio");
  *  design-b の行 … 状態更新（JST 16:00〜21:59）で追加した型B（Q09）。設計と同じ扱いで採点される
  *  status の行 … 後から分かった状態（取消（再設計）、採点の結果）。毎時の状態更新そのものは書かない（型Bの追加だけ design-b として書く）
  *  版の識別: (plan_date, setup, symbol, side, entry_low, entry_high, sl_a, sl_b) の一致
+ *  口座は A（デイトレ専用）・B（スイング＋デイトレ）のラベルで表す（口座番号・資金は公開されるファイルに置かない）。
  *  filled_ticket_* は人が埋める。bot は書き換えず、行を足すときに同じ版の直近の行から引き継ぐだけ。
  */
 const COLUMNS = [
   "plan_date", "generated_at", "run", "setup", "symbol", "side", "same_direction_group", "entry_low", "entry_high",
   "sl_a", "tp_a", "sl_b", "tp_b", "rr_a", "rr_b", "cost_cap_a",
-  "lot_cap_a_701620", "lot_cap_b_701620", "lot_cap_a_702449", "lot_cap_b_702449",
-  "expires_at", "reached", "reached_at", "first_hit_a", "first_hit_b", "filled_ticket_701620", "filled_ticket_702449",
+  "lot_cap_a_A", "lot_cap_b_A", "lot_cap_a_B", "lot_cap_b_B",
+  "expires_at", "reached", "reached_at", "first_hit_a", "first_hit_b", "filled_ticket_A", "filled_ticket_B",
 ];
 
 // 価格の列は数として正規化して比べる（表計算ソフトを通して 1.10400 が 1.104 になっても、同じ版として扱う）

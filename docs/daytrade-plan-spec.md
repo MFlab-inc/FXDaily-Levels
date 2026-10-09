@@ -101,7 +101,7 @@ risk-feed.json はイベント源として**使わない**（12ペア固定で G
 ## 5. 出力
 - `data/daytrade-plan.txt`：テンプレv1.2の7項目の順。候補は条件を満たすものすべて（型A／B、A案・B案併記、同方向の印、口座別の上限ロット、距離、有効期限）＋参考情報（候補数・不採用の内訳・ボラの状態）。
 - `data/daytrade-plan.json`：同じ内容を構造化。
-- `data/daytrade/log.csv`（追記）：`plan_date, generated_at, run (design|status), setup (A|B), symbol, side, same_direction_group, entry_low, entry_high, sl_a, tp_a, sl_b, tp_b, rr_a, rr_b, cost_cap_a, lot_cap_a_701620, lot_cap_b_701620, lot_cap_a_702449, lot_cap_b_702449, expires_at, reached, reached_at, first_hit_a, first_hit_b, filled_ticket_701620, filled_ticket_702449`。
+- `data/daytrade/log.csv`（追記）：`plan_date, generated_at, run (design|status), setup (A|B), symbol, side, same_direction_group, entry_low, entry_high, sl_a, tp_a, sl_b, tp_b, rr_a, rr_b, cost_cap_a, lot_cap_a_A, lot_cap_b_A, lot_cap_a_B, lot_cap_b_B, expires_at, reached, reached_at, first_hit_a, first_hit_b, filled_ticket_A, filled_ticket_B`。
 - 公開URL：`https://mflab-inc.github.io/FXDaily-Levels/data/daytrade-plan.txt`。
 
 ## 6. 検証（v1.0の範囲に含める）
@@ -187,6 +187,16 @@ PR #15 の実装で「仕様が沈黙・矛盾している」として挙げた 
 - Q25〜Q35：暫定どおり
 - 追加：集計の軸に「**SL下限方式**」を足す。(a) 現行＝丸め後の SL 幅10pips未満は不採用、(b) SL＝max(k×ATR, 10pips) に置き換えて採用。(a)(b) の両方で、型A・型B × ATR係数 0.5／1.0 を出す。型Bは Q09 の新しい規則（16:00〜21:00 の毎時でブレイク確定時に追加）で再計算する。**ライブの規則は (a) のまま**にし、変更は結果を見てから決める
 - 追加（PR #15 のあとの依頼）：集計の軸に「**障害の定義**」も足す（TP1 を置くときの「最初の障害」に何を数えるか）。(a) 現行＝日次レベル7本＋H1高値群・安値群の**両方**、(b) 日次レベル7本＋**進行方向側の群だけ**（売りは安値群、買いは高値群）。**ライブは (a) のまま**。SL下限方式の軸とは独立に、掛け合わせた4通り（SL下限 (a)(b) × 障害 (a)(b)）で、型A・型B × ATR係数 0.5／1.0 を出す。基準水準（Entry の元）の選び方は変えない（解釈は impl-notes の Q64〜Q66）
+
+### 10-5. 公開対策（PR #15 のマージ前の追加依頼）と Q58・Q59 の確定
+- Q58・Q59：暫定どおりで確定。`risk_pct` の上限5も残す
+- このリポジトリは公開（Pages 含む）なので、**口座番号と資金（equity）を公開ファイルに置かない**：
+  - `data/daytrade/accounts.json` から口座番号と `equity_jpy` を外す。口座はラベル **"A"（デイトレ専用）・"B"（スイング＋デイトレ）**
+  - `equity_jpy` は GitHub Actions の **Variables**（`DAYTRADE_EQUITY_A`・`DAYTRADE_EQUITY_B`、円の整数）から読む。ファイルにもログにも書き込まない
+  - 未設定なら上限ロットを「未設定」と表示して**発注不可**にする（Q59 と同じ扱い）
+  - 出力と `log.csv` の列名の口座番号をラベルに置き換える（`lot_cap_a_<口座番号>` → `lot_cap_a_A`、`filled_ticket_<口座番号>` → `filled_ticket_A` のように）（5節の列の一覧の口座番号も同様に置き換え済み）
+  - `data/daytrade/README.md` に「Variables の設定方法と、資金を更新する手順」を書く
+  - 細部の解釈は impl-notes の Q67〜Q69
 
 ### 10-4. 進め方
 - 迷った点が新しく出たときは、`docs/daytrade-plan-impl-notes.md` に番号（Q45〜）を足して本人に返す

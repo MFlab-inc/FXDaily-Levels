@@ -14,7 +14,7 @@ const J = require("../jst");
 
 const noFeed = { status: "未取得", reason: "試験", pairs: {} };
 const build = (sc, { slot = 2, prevPlan = null, logRows = [], riskFeed = noFeed } = {}) => {
-  const inputs = loadInputs({ dataDir: sc.dataDir, repoRoot: sc.repoRoot, nowMs: sc.nowMs });
+  const inputs = loadInputs({ dataDir: sc.dataDir, repoRoot: sc.repoRoot, nowMs: sc.nowMs, env: sc.env });
   return { inputs, ...buildDesign({ inputs, riskFeed, nowMs: sc.nowMs, slot, prevPlan, logRows }) };
 };
 const symbols = (plan) => plan.candidates.map((c) => `${c.symbol}${c.setup}`);
@@ -52,7 +52,7 @@ test("設計②: 方向のある4銘柄が型Aの候補。型Bは設計②では
     assert.equal(eu.schemes.A.sl, 1.105);
     assert.equal(eu.schemes.B.sl, 1.106);
     assert.equal(eu.schemes.A.tp1, 1.09005);
-    assert.equal(eu.schemes.A.lots[701620], 0.2);
+    assert.equal(eu.schemes.A.lots.A, 0.16);
     assert.match(eu.confirm, /M15/);
     const xau = plan.candidates.find((c) => c.symbol === "XAUUSD");
     assert.equal(xau.side, "buy");
@@ -306,10 +306,10 @@ test("log: 設計のたびに版ごとに追記。同じ版は追記せず、消
     assert.equal(eu.entry_low, "1.10400");
     assert.equal(eu.sl_a, "1.10500");
     assert.equal(eu.tp_a, "1.09005");
-    assert.equal(eu.lot_cap_a_701620, "0.20");
-    assert.equal(eu.lot_cap_b_701620, "0.10");
+    assert.equal(eu.lot_cap_a_A, "0.16");
+    assert.equal(eu.lot_cap_b_A, "0.08");
     assert.equal(eu.same_direction_group, "USD買い");
-    assert.equal(eu.filled_ticket_701620, "");
+    assert.equal(eu.filled_ticket_A, "");
     const rows1 = first.logAppend;
     // 同じ入力でもう一度 → 追記なし
     const second = build(sc, { prevPlan: first.plan, logRows: rows1 });
@@ -349,9 +349,10 @@ test("出力: テンプレ v1.2 の7項目の見出しが順に並ぶ。判定�
     assert.match(t2, /ボラの状態（risk-feed 未取得/);
     assert.match(t2, /EURUSD: 未取得/);
     // 1項目目: 口座別の本日の損失上限（equity×1.5%）。2項目目: 口座別の上限ロットと往復手数料（1,013円×ロット）
-    assert.match(txt, /701620（daytrade） equity 610,273円 ／ 本日の損失上限 9,154円（1\.5%）/);
-    assert.match(txt, /702449（swing_daytrade） equity 4,682,566円 ／ 本日の損失上限 70,238円（1\.5%）/);
-    assert.match(txt, /701620=0\.20（往復手数料 203円） \/ 702449=1\.56（往復手数料 1,580円）/);
+    assert.match(txt, /A（daytrade） 本日の損失上限 7,500円（1\.5%） ／ B（swing_daytrade） 本日の損失上限 45,000円（1\.5%）/);
+    assert.match(txt, /A=0\.16（往復手数料 162円） \/ B=1\.00（往復手数料 1,013円）/);
+    // 資金そのもの（equity）は出力に書かない（公開されるため）
+    assert.ok(!/equity|500,000|3,000,000|500000|3000000/.test(txt));
     // 1項目目: Feed生成時刻・Daily/Intraday/H1/M15 の最終確定足・鮮度基準内か
     for (const k of ["Intraday :", "H1       :", "M15      :", "Daily    :", "＝基準内"]) assert.ok(txt.includes(k), k);
   } finally { cleanup(sc); }
@@ -411,25 +412,25 @@ test("出力 JSON: 暫定判断の番号を持ち、候補に上限を設けな�
   try {
     const { plan } = build(sc);
     assert.ok(Array.isArray(plan.provisional.open_questions));
-    assert.equal(plan.schema_version, 2);
+    assert.equal(plan.schema_version, 3);
     assert.deepEqual(plan.designs.map((d) => d.slot), [2]);
-    assert.equal(plan.accounts[701620].daily_loss_limit_jpy, 9154);
+    assert.equal(plan.accounts.A.daily_loss_limit_jpy, 7500);
+    assert.equal(plan.accounts.B.daily_loss_limit_jpy, 45000);
+    assert.deepEqual(plan.accounts.A, { role: "daytrade", equity_status: "ok", daily_loss_limit_jpy: 7500 }); // equity_jpy は出力に書かない
+    assert.ok(!/equity_jpy|500000|3000000/.test(JSON.stringify(plan)));
     assert.equal(plan.settings.commission_per_lot_jpy, 1013);
-    assert.equal(plan.candidates[0].schemes.A.commission_jpy[701620], 203);
+    assert.equal(plan.candidates[0].schemes.A.commission_jpy.A, 162);
     assert.equal(typeof plan.reference.existing_gate.states.EURUSD, "string");
     assert.equal(plan.reference.existing_gate.note.includes("参考：既存ゲート"), true);
   } finally { cleanup(sc); }
 });
 
 test("ロット: 資金が小さく 0.00 になる案も残し、『0.00』と表示する", () => {
-  const sc = makeScenario();
+  const sc = makeScenario({ env: { DAYTRADE_EQUITY_A: "1000" } });
   try {
-    fs.writeFileSync(path.join(sc.dataDir, "daytrade", "accounts.json"), JSON.stringify({
-      accounts: { 701620: { equity_jpy: 1000, role: "daytrade" } }, commission_per_lot_jpy: 1013, risk_pct: 0.5, daily_loss_pct: 1.5,
-    }));
     const { plan, inputs } = build(sc);
-    assert.equal(plan.candidates[0].schemes.A.lots[701620], 0);
-    assert.match(render(plan, inputs.accounts), /701620=0\.00（資金に対してSL幅が大きい）/);
+    assert.equal(plan.candidates[0].schemes.A.lots.A, 0);
+    assert.match(render(plan, inputs.accounts), /A=0\.00（資金に対してSL幅が大きい）/);
   } finally { cleanup(sc); }
 });
 
@@ -437,7 +438,7 @@ test("ロット: 資金が小さく 0.00 になる案も残し、『0.00』と�
 test("鮮度: 『20分を超えて』は秒・ミリ秒まで見る（20分ちょうどは許容、20分29秒は超過）。カレンダーも同じ", () => {
   const sc = makeScenario({ intradayLagMin: 20, h1LagMin: 20, ctxLagMin: 20, calLagMin: 20 });
   try {
-    const at = (extraMs) => loadInputs({ dataDir: sc.dataDir, repoRoot: sc.repoRoot, nowMs: sc.nowMs + extraMs });
+    const at = (extraMs) => loadInputs({ dataDir: sc.dataDir, repoRoot: sc.repoRoot, nowMs: sc.nowMs + extraMs, env: sc.env });
     assert.equal(at(0).freshness.stale, false);
     assert.equal(at(29000).freshness.stale, true); // 表示の分は四捨五入で20分だが、20分を超えている
     assert.equal(at(29000).freshness.feeds[0].age_min, 20);
@@ -463,7 +464,7 @@ test("出力: 鮮度超過は見出しより前の1行目に出す", () => {
 test("状態更新: 設計が無いまま次の状態更新が来ても『設計なし』のまま（候補なしの設計と取り違えない）", () => {
   const sc = makeScenario({ nowIso: "2026-10-08T07:00:00+09:00" });
   try {
-    const inputs = loadInputs({ dataDir: sc.dataDir, repoRoot: sc.repoRoot, nowMs: sc.nowMs });
+    const inputs = loadInputs({ dataDir: sc.dataDir, repoRoot: sc.repoRoot, nowMs: sc.nowMs, env: sc.env });
     const first = buildStatus({ inputs, riskFeed: noFeed, nowMs: sc.nowMs, prevPlan: null, logRows: [] }).plan;
     assert.equal(first.design_missing, true);
     const second = buildStatus({ inputs, riskFeed: noFeed, nowMs: sc.nowMs + J.HR, prevPlan: first, logRows: [] }).plan;
@@ -491,9 +492,9 @@ test("log: 取消(再設計)の後に同じ版が再び出たら、新しい des
     const latest = [...L.latestByKey([...rows, ...third.logAppend]).values()];
     assert.equal(latest.filter((r) => r.run === "design").length, 4); // 採点の対象（直近の行が design）に戻る
     // 人が埋めた filled_ticket は引き継ぐ
-    const ticketed = first.logAppend.map((r) => (r.symbol === "EURUSD" ? { ...r, filled_ticket_701620: "T777" } : r));
-    const again = build(sc, { prevPlan: second.plan, logRows: [...ticketed, ...second.logAppend.map((r) => (r.symbol === "EURUSD" ? { ...r, filled_ticket_701620: "T777" } : r))] });
-    assert.equal(again.logAppend.find((r) => r.symbol === "EURUSD").filled_ticket_701620, "T777");
+    const ticketed = first.logAppend.map((r) => (r.symbol === "EURUSD" ? { ...r, filled_ticket_A: "T777" } : r));
+    const again = build(sc, { prevPlan: second.plan, logRows: [...ticketed, ...second.logAppend.map((r) => (r.symbol === "EURUSD" ? { ...r, filled_ticket_A: "T777" } : r))] });
+    assert.equal(again.logAppend.find((r) => r.symbol === "EURUSD").filled_ticket_A, "T777");
     // 同じ版が続くだけなら追記しない
     assert.equal(build(sc, { prevPlan: third.plan, logRows: [...rows, ...third.logAppend] }).logAppend.length, 0);
   } finally { cleanup(sc); cleanup(gone); }
@@ -527,7 +528,7 @@ test("状態更新: 買いの案の距離は最悪Entry（帯の上端）から�
     const { plan } = buildStatus({ inputs: st, riskFeed: noFeed, nowMs: sc.nowMs + 10 * J.MIN, prevPlan: design, logRows: [] });
     assert.equal(plan.candidates.find((c) => c.symbol === "AUDUSD").distance_pips, 30); // 0.6560 → 0.6590
     // 状態更新の時点で MTF が使えなければ、案は残すが発注不可
-    const bad = buildStatus({ inputs: loadInputs({ dataDir: badMtf.dataDir, repoRoot: badMtf.repoRoot, nowMs: sc.nowMs }), riskFeed: noFeed, nowMs: sc.nowMs, prevPlan: design, logRows: [] }).plan;
+    const bad = buildStatus({ inputs: loadInputs({ dataDir: badMtf.dataDir, repoRoot: badMtf.repoRoot, nowMs: sc.nowMs, env: badMtf.env }), riskFeed: noFeed, nowMs: sc.nowMs, prevPlan: design, logRows: [] }).plan;
     assert.equal(bad.order_ok, false);
     assert.match(bad.banners.join("\n"), /方向根拠なし/);
     assert.equal(bad.candidates.length, 4);
@@ -562,7 +563,7 @@ test("型B（Q09）: 16:00〜21:59 の状態更新で、東京レンジを下に
   try {
     const design = build(d);
     assert.ok(design.plan.candidates.every((c) => c.setup === "A"));
-    const inputs = loadInputs({ dataDir: s17.dataDir, repoRoot: s17.repoRoot, nowMs: s17.nowMs });
+    const inputs = loadInputs({ dataDir: s17.dataDir, repoRoot: s17.repoRoot, nowMs: s17.nowMs, env: s17.env });
     const { plan, logAppend } = buildStatus({ inputs, riskFeed: noFeed, nowMs: s17.nowMs, prevPlan: design.plan, logRows: design.logAppend });
     // 追加: EURUSD 売り（下抜け）、AUDUSD 買い・XAUUSD 買い（上抜け）。GBPUSD は売りのMTFなのに上抜けなので追加しない
     const adds = plan.candidates.filter((c) => c.run === "design-b");
@@ -599,14 +600,14 @@ test("型B（Q09）: 16:00 の状態更新ではまだブレイクが確定し�
   const s22 = makeScenario({ nowIso: "2026-10-08T22:00:00+09:00", spec: downEU });
   try {
     for (const [sc, expected] of [[s16, 0], [s22, 0]]) {
-      const inputs = loadInputs({ dataDir: sc.dataDir, repoRoot: sc.repoRoot, nowMs: sc.nowMs });
+      const inputs = loadInputs({ dataDir: sc.dataDir, repoRoot: sc.repoRoot, nowMs: sc.nowMs, env: sc.env });
       const r = buildStatus({ inputs, riskFeed: noFeed, nowMs: sc.nowMs, prevPlan: null, logRows: [] });
       assert.equal(r.logAppend.length, expected);
     }
     // 21:00 の状態更新（冬時間の21時台など）はまだ追加できる
     const s21 = makeScenario({ nowIso: "2026-10-08T21:30:00+09:00", spec: downEU });
     try {
-      const inputs = loadInputs({ dataDir: s21.dataDir, repoRoot: s21.repoRoot, nowMs: s21.nowMs });
+      const inputs = loadInputs({ dataDir: s21.dataDir, repoRoot: s21.repoRoot, nowMs: s21.nowMs, env: s21.env });
       const r = buildStatus({ inputs, riskFeed: noFeed, nowMs: s21.nowMs, prevPlan: null, logRows: [] });
       assert.ok(r.logAppend.length >= 1);
     } finally { cleanup(s21); }
@@ -616,7 +617,7 @@ test("型B（Q09）: 16:00 の状態更新ではまだブレイクが確定し�
 test("型B（Q09）: 設計が無くても追加できる（候補は型Bだけ。『設計なし』の印は残る）。追加した案は次の状態更新にも引き継がれる", () => {
   const s17 = makeScenario({ nowIso: "2026-10-08T17:00:00+09:00", spec: downEU });
   try {
-    const inputs = loadInputs({ dataDir: s17.dataDir, repoRoot: s17.repoRoot, nowMs: s17.nowMs });
+    const inputs = loadInputs({ dataDir: s17.dataDir, repoRoot: s17.repoRoot, nowMs: s17.nowMs, env: s17.env });
     const r = buildStatus({ inputs, riskFeed: noFeed, nowMs: s17.nowMs, prevPlan: null, logRows: [] });
     assert.equal(r.plan.design_missing, true);
     assert.equal(r.plan.order_ok, false);
@@ -633,7 +634,7 @@ test("型B（Q09）: 設計③は型Aと型Bの両方を再設計する。追加
   const s17 = makeScenario({ nowIso: "2026-10-08T17:00:00+09:00", spec: downEU });
   const s21 = makeScenario({ nowIso: "2026-10-08T21:00:00+09:00", spec: downEU });
   try {
-    const in21 = loadInputs({ dataDir: s21.dataDir, repoRoot: s21.repoRoot, nowMs: s21.nowMs });
+    const in21 = loadInputs({ dataDir: s21.dataDir, repoRoot: s21.repoRoot, nowMs: s21.nowMs, env: s21.env });
     // (1) 同じ入力で、状態更新（21:00）で型Bを追加 → 5分後の設計③。同じ版なので続き
     const st = buildStatus({ inputs: in21, riskFeed: noFeed, nowMs: s21.nowMs, prevPlan: null, logRows: [] });
     const same = buildDesign({ inputs: in21, riskFeed: noFeed, nowMs: s21.nowMs + 5 * J.MIN, slot: 3, prevPlan: st.plan, logRows: st.logAppend });
@@ -641,7 +642,7 @@ test("型B（Q09）: 設計③は型Aと型Bの両方を再設計する。追加
     assert.deepEqual(same.plan.designs.map((x) => x.slot), [3]);
     assert.ok(!same.logAppend.some((r) => r.setup === "B"), JSON.stringify(same.logAppend.map((r) => [r.run, r.setup, r.symbol])));
     // (2) 17:00 に追加した型B（別の入力）と、設計③の型Bで版が違う → 17:00 の版は取消、設計③の版が新しい design の行
-    const in17 = loadInputs({ dataDir: s17.dataDir, repoRoot: s17.repoRoot, nowMs: s17.nowMs });
+    const in17 = loadInputs({ dataDir: s17.dataDir, repoRoot: s17.repoRoot, nowMs: s17.nowMs, env: s17.env });
     const st17 = buildStatus({ inputs: in17, riskFeed: noFeed, nowMs: s17.nowMs, prevPlan: null, logRows: [] });
     const d3 = buildDesign({ inputs: in21, riskFeed: noFeed, nowMs: s21.nowMs, slot: 3, prevPlan: st17.plan, logRows: st17.logAppend });
     const bRows = d3.logAppend.filter((r) => r.setup === "B");
@@ -655,8 +656,8 @@ test("採点: 状態更新で追加した型B（run=design-b）も、有効期�
   const row = {
     plan_date: "2026-10-08", generated_at: "2026-10-08T17:00:00+09:00", run: "design-b", setup: "B", symbol: "EURUSD", side: "sell", same_direction_group: "",
     entry_low: "1.10400", entry_high: "1.10420", sl_a: "1.10500", tp_a: "1.09900", sl_b: "", tp_b: "", rr_a: "", rr_b: "", cost_cap_a: "",
-    lot_cap_a_701620: "", lot_cap_b_701620: "", lot_cap_a_702449: "", lot_cap_b_702449: "", expires_at: "2026-10-09T03:00:00+09:00",
-    reached: "", reached_at: "", first_hit_a: "", first_hit_b: "", filled_ticket_701620: "", filled_ticket_702449: "",
+    lot_cap_a_A: "", lot_cap_b_A: "", lot_cap_a_B: "", lot_cap_b_B: "", expires_at: "2026-10-09T03:00:00+09:00",
+    reached: "", reached_at: "", first_hit_a: "", first_hit_b: "", filled_ticket_A: "", filled_ticket_B: "",
   };
   const bar = (hm, h, l, date = "2026-10-08") => ({ t: J.jstAt(date, hm), o: (h + l) / 2, h, l, c: (h + l) / 2 });
   const bars = [bar("18:00", 1.1045, 1.1035), bar("20:00", 1.1030, 1.0985), bar("02:00", 1.1020, 1.1010, "2026-10-09")];
