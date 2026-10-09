@@ -1,0 +1,84 @@
+# デイトレプラン（自動生成）
+plan_date: 2026-10-09 / run: design（直近の設計: 設計2） / 設計: 2026-10-09 15:27 / 状態更新: 2026-10-09 15:27 / 有効期限: 2026-10-10 03:00
+暫定: 仕様が沈黙している点を暫定の読みで処理しています（23件: Q45、Q46、Q47、Q48、Q49、Q50、Q51、Q52、Q53、Q54、Q55、Q56、Q57、Q60、Q61、Q62、Q63、Q64、Q65、Q66、Q67、Q68、Q69。docs/daytrade-plan-impl-notes.md）。
+発注可否: 発注可（鮮度は20分以内）
+
+== 1. データ鮮度 ==
+  Feed生成時刻と鮮度（基準: 生成から20分以内）
+    Intraday : intraday.json as_of 2026-10-09 15:27（1分前） ＝基準内
+    H1       : h1-bars.json as_of 2026-10-09 15:27（0分前） ＝基準内 ／ 最終確定足（開始）最古 2026-10-09 14:00・最新 2026-10-09 14:00
+    M15      : daytrade-context.json as_of 2026-10-09 15:27（0分前） ＝基準内 ／ 確定M15の最終足 最古 2026-10-09 15:00・最新 2026-10-09 15:00（M15の最終足は発注可否には使わない）
+    Daily    : daily-levels.json as_of 2026-10-09 06:20 ／ 最終確定の営業日 session_date 2026-10-08（直近に確定した営業日 2026-10-08） ＝基準内
+  口座: A（daytrade） 本日の損失上限 9,154円（1.5%） ／ B（swing_daytrade） 本日の損失上限 70,238円（1.5%）
+
+== 2. 候補（1件。順位は 方向の強さ → 銘柄の優先 → RR）==
+[1] 売り EURJPY 型A  MTF 3/3 Down（月・週・日 ↓↓↓）
+    Entry帯 177.886〜177.907（最悪Entry 177.886） ／ 現在値 177.612 距離 27.4pips（H1 ATR14 20.7pips、ADR消化 59.1%・残り 54.6pips） ／ 有効期限 2026-10-10 03:00
+    A案(0.5×ATR): SL 177.990 TP1 177.520 ／ 損切り幅 10.4pips 利益幅 36.6pips RR 3.52 追加コスト上限 8.4pips（閾値 1.6） ／ 上限ロット A=0.29（往復手数料 294円） / B=2.25（往復手数料 2,279円）
+    B案(1.0×ATR): SL 178.095 TP1 177.520 ／ 損切り幅 20.9pips 利益幅 36.6pips RR 1.75 追加コスト上限 2.1pips（閾値 1.6） ／ 上限ロット A=0.14（往復手数料 142円） / B=1.12（往復手数料 1,135円）
+    状態: 未到達 ／ 新規可
+    確認条件（執行時に本人が見る）: 帯に到達したあと、M15が基準価格（177.886）より下で陰線確定
+
+== 3. 不採用の理由（1案1行。単位=型×銘柄×A/B案）==
+  USDJPY 型A A案: 方向根拠なし: 監視のみ（0/3）
+  USDJPY 型A B案: 方向根拠なし: 監視のみ（0/3）
+  EURUSD 型A A案: SL幅不足
+  EURUSD 型A B案: RR不足
+  GBPUSD 型A A案: SL幅不足
+  GBPUSD 型A B案: RR不足
+  AUDUSD 型A A案: 方向根拠なし: 監視のみ（1/3 Down）
+  AUDUSD 型A B案: 方向根拠なし: 監視のみ（1/3 Down）
+  NZDUSD 型A A案: 方向根拠なし: MTF未収録
+  NZDUSD 型A B案: 方向根拠なし: MTF未収録
+  USDCAD 型A A案: SL幅不足
+  USDCAD 型A B案: RR不足
+  USDCHF 型A A案: SL幅不足
+  USDCHF 型A B案: SL幅不足
+  EURGBP 型A A案: SL幅不足
+  EURGBP 型A B案: SL幅不足
+  XAUUSD 型A A案: 基準水準なし（6分類外）
+  XAUUSD 型A B案: 基準水準なし（6分類外）
+  ── 参考情報 ──
+  候補数: 1件（A案を通った案 1、B案を通った案 1）
+  不採用の内訳（件数）: 方向根拠なし 6 ／ 届かない 0 ／ SL幅不足 7 ／ RR不足 3 ／ コスト不足 0 ／ ADR消化超過 0
+    6分類に数えない理由: 基準水準なし 2 ／ 障害なし 0 ／ 入力欠落 0
+  型B（未成立。不採用に数えない）: なし（型Bは設計③と、16:00〜21:59の状態更新で追加される。追加時に門で不採用だった型Bは一覧しない）
+  ボラの状態（risk-feed ok、生成 2026-10-09 15:26・1分前）:
+    USDJPY: 当日レンジ 0.442 ／ ADR比 0.378 ／ 急変フラグ false ／ 更新 15:26
+    EURUSD: 当日レンジ 0.00338 ／ ADR比 0.542 ／ 急変フラグ false ／ 更新 15:26
+    GBPUSD: 未収録
+    AUDUSD: 当日レンジ 0.00335 ／ ADR比 0.744 ／ 急変フラグ false ／ 更新 15:26
+    NZDUSD: 未収録
+    USDCAD: 当日レンジ 0.00241 ／ ADR比 0.441 ／ 急変フラグ false ／ 更新 15:26
+    USDCHF: 未収録
+    EURJPY: 未収録
+    EURGBP: 当日レンジ 0.00122 ／ ADR比 0.422 ／ 急変フラグ false ／ 更新 15:26
+    XAUUSD: 当日レンジ 76.12 ／ ADR比 0.9 ／ 急変フラグ false ／ 更新 15:26
+  参考：既存ゲート（gate.state。2026-10-09 15:27 時点のスナップショット。停止判定には使わない）: USDJPY TRADE_OK ／ EURUSD TRADE_OK ／ GBPUSD TRADE_OK ／ AUDUSD TRADE_OK ／ NZDUSD TRADE_OK ／ USDCAD TRADE_OK ／ USDCHF TRADE_OK ／ EURJPY TRADE_OK ／ EURGBP TRADE_OK ／ XAUUSD TRADE_OK
+
+== 4. 価格根拠（Entry・SL・TP1 の元になった実在の水準）==
+  [1] EURJPY 売り 型A
+    Entry: 基準水準 177.886（R2）→ 帯 177.886〜177.907（水準から0.1×ATR）
+    SL(A案): 177.990 = 基準水準 ＋ 0.5×H1 ATR14（20.7pips）を0.5pip単位で外側へ丸め（10.4pips）
+    SL(B案): 178.095 = 基準水準 ＋ 1.0×H1 ATR14（20.7pips）を0.5pip単位で外側へ丸め（20.9pips）
+    TP1: 177.520 = 最初の障害 H1高値群 177.509 の手前 1.1pips（利益幅 36.6pips）
+    日次レベル: Pivot 177.017 ／ R1 177.461 ／ R2 177.886 ／ S1 176.591 ／ S2 176.148 ／ 前日高値 177.442 ／ 前日安値 176.573
+    H1高値群（直近24本）: 176.972〜177.118（9本）、177.165〜177.236（6本）、177.284〜177.303（2本）、177.376〜177.378（2本）、177.491〜177.509（2本） ／ H1安値群: 176.825〜177.022（15本）、177.121〜177.131（2本）、177.183〜177.213（2本）、177.372〜177.412（2本）
+
+== 5. イベント（日本時間。economic-calendar.json の当日分。停止時間: 前15分〜後30分、新規のみ禁止）==
+  21:30 [CAD/High] Employment Change → 停止 21:15〜22:00（対象: USDCAD）
+  21:30 [CAD/High] Unemployment Rate → 停止 21:15〜22:00（対象: USDCAD）
+  23:00 [USD/Medium] Prelim UoM Consumer Sentiment → 停止 22:45〜23:30（対象: USDJPY、EURUSD、GBPUSD、AUDUSD、NZDUSD、USDCAD、USDCHF、XAUUSD）
+  23:00 [USD/Medium] Prelim UoM Inflation Expectations → 停止 22:45〜23:30（対象: USDJPY、EURUSD、GBPUSD、AUDUSD、NZDUSD、USDCAD、USDCHF、XAUUSD）
+  新規不可: 9時台（JST）／翌1:00以降／土曜0:00以降。有効期限: 翌日3:00（JST）。カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う
+
+== 6. 前営業日の結果記録（採点。1案1行）==
+  採点済みの案はありません。
+
+== 7. 出典 ==
+  MTF: mtf-feed.json 生成 2026-10-09 06:21 ／ data_base_date 2026-10-08 ／ status ok
+  Feed: intraday.json 2026-10-09 15:27 ／ h1-bars.json 2026-10-09 15:27 ／ daytrade-context.json 2026-10-09 15:27 ／ daily-levels.json 2026-10-09 06:20（session_date 2026-10-08）
+  H1: h1-bars.json の最終確定足（開始）最新 2026-10-09 14:00 ／ M15: daytrade-context.json の確定M15の最終足 最新 2026-10-09 15:00
+  カレンダー: economic-calendar.json as_of 2026-10-09 15:27 ／ date 2026-10-09 ／ Forex Factory calendar feed
+  risk-feed: https://mflab-inc.github.io/EA-Risk-Monitor/data/risk-feed.json generated_intraday 2026-10-09 15:26
+  設計の履歴: 設計2 2026-10-09 15:27

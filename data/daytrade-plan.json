@@ -1,0 +1,922 @@
+{
+  "schema_version": 3,
+  "provisional": {
+    "open_questions": [
+      "Q45",
+      "Q46",
+      "Q47",
+      "Q48",
+      "Q49",
+      "Q50",
+      "Q51",
+      "Q52",
+      "Q53",
+      "Q54",
+      "Q55",
+      "Q56",
+      "Q57",
+      "Q60",
+      "Q61",
+      "Q62",
+      "Q63",
+      "Q64",
+      "Q65",
+      "Q66",
+      "Q67",
+      "Q68",
+      "Q69"
+    ],
+    "note": "仕様 v1.1 と確定した解釈（docs/daytrade-plan-spec.md 10節）が沈黙している点を、暫定の読みで処理しています（docs/daytrade-plan-impl-notes.md）"
+  },
+  "plan_date": "2026-10-09",
+  "run": "design",
+  "status_updated_at": "2026-10-09T15:27:58+09:00",
+  "expires_at": "2026-10-10T03:00:00+09:00",
+  "freshness": {
+    "limit_min": 20,
+    "feeds": [
+      {
+        "name": "intraday.json",
+        "as_of": "2026-10-09T15:27:25+09:00",
+        "age_min": 1,
+        "stale": false
+      },
+      {
+        "name": "daytrade-context.json",
+        "as_of": "2026-10-09T15:27:30+09:00",
+        "age_min": 0,
+        "stale": false
+      },
+      {
+        "name": "h1-bars.json",
+        "as_of": "2026-10-09T15:27:30+09:00",
+        "age_min": 0,
+        "stale": false
+      }
+    ],
+    "ctx_m15": {
+      "oldest_last_closed": "2026-10-09 15:00",
+      "newest_last_closed": "2026-10-09 15:00",
+      "not_ok": []
+    },
+    "h1_last_closed": {
+      "oldest": "2026-10-09 14:00",
+      "newest": "2026-10-09 14:00"
+    },
+    "stale": false,
+    "daily": {
+      "ok": true,
+      "reason": null,
+      "session_date": "2026-10-08",
+      "as_of": "2026-10-09T06:20:56+09:00"
+    }
+  },
+  "accounts": {
+    "A": {
+      "role": "daytrade",
+      "equity_status": "ok",
+      "daily_loss_limit_jpy": 9154
+    },
+    "B": {
+      "role": "swing_daytrade",
+      "equity_status": "ok",
+      "daily_loss_limit_jpy": 70238
+    }
+  },
+  "settings": {
+    "risk_pct": 0.5,
+    "daily_loss_pct": 1.5,
+    "commission_per_lot_jpy": 1013
+  },
+  "events": {
+    "status": "ok",
+    "reason": null,
+    "as_of": "2026-10-09T15:27:25+09:00",
+    "date": "2026-10-09",
+    "source": "Forex Factory calendar feed",
+    "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
+  },
+  "events_today": [
+    {
+      "time_jst": "21:30",
+      "datetime_jst": "2026-10-09T21:30:00+09:00",
+      "currency": "CAD",
+      "impact": "High",
+      "event": "Employment Change",
+      "start": "2026-10-09T21:15:00+09:00",
+      "end": "2026-10-09T22:00:00+09:00",
+      "symbols": [
+        "USDCAD"
+      ]
+    },
+    {
+      "time_jst": "21:30",
+      "datetime_jst": "2026-10-09T21:30:00+09:00",
+      "currency": "CAD",
+      "impact": "High",
+      "event": "Unemployment Rate",
+      "start": "2026-10-09T21:15:00+09:00",
+      "end": "2026-10-09T22:00:00+09:00",
+      "symbols": [
+        "USDCAD"
+      ]
+    },
+    {
+      "time_jst": "23:00",
+      "datetime_jst": "2026-10-09T23:00:00+09:00",
+      "currency": "USD",
+      "impact": "Medium",
+      "event": "Prelim UoM Consumer Sentiment",
+      "start": "2026-10-09T22:45:00+09:00",
+      "end": "2026-10-09T23:30:00+09:00",
+      "symbols": [
+        "USDJPY",
+        "EURUSD",
+        "GBPUSD",
+        "AUDUSD",
+        "NZDUSD",
+        "USDCAD",
+        "USDCHF",
+        "XAUUSD"
+      ]
+    },
+    {
+      "time_jst": "23:00",
+      "datetime_jst": "2026-10-09T23:00:00+09:00",
+      "currency": "USD",
+      "impact": "Medium",
+      "event": "Prelim UoM Inflation Expectations",
+      "start": "2026-10-09T22:45:00+09:00",
+      "end": "2026-10-09T23:30:00+09:00",
+      "symbols": [
+        "USDJPY",
+        "EURUSD",
+        "GBPUSD",
+        "AUDUSD",
+        "NZDUSD",
+        "USDCAD",
+        "USDCHF",
+        "XAUUSD"
+      ]
+    }
+  ],
+  "mtf": {
+    "ok": true,
+    "reason": null,
+    "status": "ok",
+    "data_base_date": "2026-10-08",
+    "generated_at": "2026-10-09T06:21:19+09:00",
+    "expected_session": "2026-10-08"
+  },
+  "directions": {
+    "USDJPY": {
+      "kind": "watch",
+      "reason": "監視のみ（0/3）",
+      "alignment": "0/3",
+      "dirs": [
+        "→",
+        "→",
+        "→"
+      ]
+    },
+    "EURUSD": {
+      "kind": "ok",
+      "side": "sell",
+      "strength": 3,
+      "alignment": "3/3 Down",
+      "dirs": [
+        "↓",
+        "↓",
+        "↓"
+      ]
+    },
+    "GBPUSD": {
+      "kind": "ok",
+      "side": "sell",
+      "strength": 2,
+      "alignment": "2/3 Down",
+      "dirs": [
+        "↓",
+        "→",
+        "↓"
+      ]
+    },
+    "AUDUSD": {
+      "kind": "watch",
+      "reason": "監視のみ（1/3 Down）",
+      "alignment": "1/3 Down",
+      "dirs": [
+        "→",
+        "→",
+        "↓"
+      ]
+    },
+    "NZDUSD": {
+      "kind": "no_basis",
+      "reason": "MTF未収録",
+      "alignment": null,
+      "dirs": null
+    },
+    "USDCAD": {
+      "kind": "ok",
+      "side": "buy",
+      "strength": 3,
+      "alignment": "3/3 Up",
+      "dirs": [
+        "↑",
+        "↑",
+        "↑"
+      ]
+    },
+    "USDCHF": {
+      "kind": "ok",
+      "side": "buy",
+      "strength": 3,
+      "alignment": "3/3 Up",
+      "dirs": [
+        "↑",
+        "↑",
+        "↑"
+      ]
+    },
+    "EURJPY": {
+      "kind": "ok",
+      "side": "sell",
+      "strength": 3,
+      "alignment": "3/3 Down",
+      "dirs": [
+        "↓",
+        "↓",
+        "↓"
+      ]
+    },
+    "EURGBP": {
+      "kind": "ok",
+      "side": "sell",
+      "strength": 3,
+      "alignment": "3/3 Down",
+      "dirs": [
+        "↓",
+        "↓",
+        "↓"
+      ]
+    },
+    "XAUUSD": {
+      "kind": "ok",
+      "side": "sell",
+      "strength": 3,
+      "alignment": "3/3 Down",
+      "dirs": [
+        "↓",
+        "↓",
+        "↓"
+      ]
+    }
+  },
+  "stop_windows": {
+    "USDJPY": [
+      {
+        "time_jst": "23:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim UoM Consumer Sentiment",
+        "start": "2026-10-09T22:45:00+09:00",
+        "end": "2026-10-09T23:30:00+09:00"
+      },
+      {
+        "time_jst": "23:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim UoM Inflation Expectations",
+        "start": "2026-10-09T22:45:00+09:00",
+        "end": "2026-10-09T23:30:00+09:00"
+      }
+    ],
+    "EURUSD": [
+      {
+        "time_jst": "23:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim UoM Consumer Sentiment",
+        "start": "2026-10-09T22:45:00+09:00",
+        "end": "2026-10-09T23:30:00+09:00"
+      },
+      {
+        "time_jst": "23:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim UoM Inflation Expectations",
+        "start": "2026-10-09T22:45:00+09:00",
+        "end": "2026-10-09T23:30:00+09:00"
+      }
+    ],
+    "GBPUSD": [
+      {
+        "time_jst": "23:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim UoM Consumer Sentiment",
+        "start": "2026-10-09T22:45:00+09:00",
+        "end": "2026-10-09T23:30:00+09:00"
+      },
+      {
+        "time_jst": "23:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim UoM Inflation Expectations",
+        "start": "2026-10-09T22:45:00+09:00",
+        "end": "2026-10-09T23:30:00+09:00"
+      }
+    ],
+    "AUDUSD": [
+      {
+        "time_jst": "23:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim UoM Consumer Sentiment",
+        "start": "2026-10-09T22:45:00+09:00",
+        "end": "2026-10-09T23:30:00+09:00"
+      },
+      {
+        "time_jst": "23:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim UoM Inflation Expectations",
+        "start": "2026-10-09T22:45:00+09:00",
+        "end": "2026-10-09T23:30:00+09:00"
+      }
+    ],
+    "NZDUSD": [
+      {
+        "time_jst": "23:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim UoM Consumer Sentiment",
+        "start": "2026-10-09T22:45:00+09:00",
+        "end": "2026-10-09T23:30:00+09:00"
+      },
+      {
+        "time_jst": "23:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim UoM Inflation Expectations",
+        "start": "2026-10-09T22:45:00+09:00",
+        "end": "2026-10-09T23:30:00+09:00"
+      }
+    ],
+    "USDCAD": [
+      {
+        "time_jst": "21:30",
+        "currency": "CAD",
+        "impact": "High",
+        "event": "Employment Change",
+        "start": "2026-10-09T21:15:00+09:00",
+        "end": "2026-10-09T22:00:00+09:00"
+      },
+      {
+        "time_jst": "21:30",
+        "currency": "CAD",
+        "impact": "High",
+        "event": "Unemployment Rate",
+        "start": "2026-10-09T21:15:00+09:00",
+        "end": "2026-10-09T22:00:00+09:00"
+      },
+      {
+        "time_jst": "23:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim UoM Consumer Sentiment",
+        "start": "2026-10-09T22:45:00+09:00",
+        "end": "2026-10-09T23:30:00+09:00"
+      },
+      {
+        "time_jst": "23:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim UoM Inflation Expectations",
+        "start": "2026-10-09T22:45:00+09:00",
+        "end": "2026-10-09T23:30:00+09:00"
+      }
+    ],
+    "USDCHF": [
+      {
+        "time_jst": "23:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim UoM Consumer Sentiment",
+        "start": "2026-10-09T22:45:00+09:00",
+        "end": "2026-10-09T23:30:00+09:00"
+      },
+      {
+        "time_jst": "23:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim UoM Inflation Expectations",
+        "start": "2026-10-09T22:45:00+09:00",
+        "end": "2026-10-09T23:30:00+09:00"
+      }
+    ],
+    "EURJPY": [],
+    "EURGBP": [],
+    "XAUUSD": [
+      {
+        "time_jst": "23:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim UoM Consumer Sentiment",
+        "start": "2026-10-09T22:45:00+09:00",
+        "end": "2026-10-09T23:30:00+09:00"
+      },
+      {
+        "time_jst": "23:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim UoM Inflation Expectations",
+        "start": "2026-10-09T22:45:00+09:00",
+        "end": "2026-10-09T23:30:00+09:00"
+      }
+    ]
+  },
+  "reference": {
+    "existing_gate": {
+      "as_of": "2026-10-09T15:27:30+09:00",
+      "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
+      "states": {
+        "USDJPY": "TRADE_OK",
+        "EURUSD": "TRADE_OK",
+        "GBPUSD": "TRADE_OK",
+        "AUDUSD": "TRADE_OK",
+        "NZDUSD": "TRADE_OK",
+        "USDCAD": "TRADE_OK",
+        "USDCHF": "TRADE_OK",
+        "EURJPY": "TRADE_OK",
+        "EURGBP": "TRADE_OK",
+        "XAUUSD": "TRADE_OK"
+      }
+    },
+    "volatility": {
+      "risk_feed": {
+        "status": "ok",
+        "reason": null,
+        "generated_intraday": "2026-10-09T15:26:39+09:00",
+        "age_min": 1
+      },
+      "pairs": {
+        "USDJPY": {
+          "state": "ok",
+          "items": {
+            "range_today": 0.442,
+            "range_vs_adr": 0.378,
+            "spike_flag": false,
+            "updated_at": "2026-10-09T15:26:39+09:00"
+          }
+        },
+        "EURUSD": {
+          "state": "ok",
+          "items": {
+            "range_today": 0.00338,
+            "range_vs_adr": 0.542,
+            "spike_flag": false,
+            "updated_at": "2026-10-09T15:26:39+09:00"
+          }
+        },
+        "GBPUSD": {
+          "state": "未収録"
+        },
+        "AUDUSD": {
+          "state": "ok",
+          "items": {
+            "range_today": 0.00335,
+            "range_vs_adr": 0.744,
+            "spike_flag": false,
+            "updated_at": "2026-10-09T15:26:39+09:00"
+          }
+        },
+        "NZDUSD": {
+          "state": "未収録"
+        },
+        "USDCAD": {
+          "state": "ok",
+          "items": {
+            "range_today": 0.00241,
+            "range_vs_adr": 0.441,
+            "spike_flag": false,
+            "updated_at": "2026-10-09T15:26:39+09:00"
+          }
+        },
+        "USDCHF": {
+          "state": "未収録"
+        },
+        "EURJPY": {
+          "state": "未収録"
+        },
+        "EURGBP": {
+          "state": "ok",
+          "items": {
+            "range_today": 0.00122,
+            "range_vs_adr": 0.422,
+            "spike_flag": false,
+            "updated_at": "2026-10-09T15:26:39+09:00"
+          }
+        },
+        "XAUUSD": {
+          "state": "ok",
+          "items": {
+            "range_today": 76.12,
+            "range_vs_adr": 0.9,
+            "spike_flag": false,
+            "updated_at": "2026-10-09T15:26:39+09:00"
+          }
+        }
+      }
+    }
+  },
+  "previous_day": null,
+  "inputs_problems": [],
+  "design_slot": 2,
+  "generated_at": "2026-10-09T15:27:58+09:00",
+  "designs": [
+    {
+      "slot": 2,
+      "generated_at": "2026-10-09T15:27:58+09:00",
+      "inputs_ok": true
+    }
+  ],
+  "inputs_ok": true,
+  "order_ok": true,
+  "banners": [],
+  "design_missing": false,
+  "candidates": [
+    {
+      "id": "2026-10-09:A:EURJPY:sell",
+      "plan_date": "2026-10-09",
+      "setup": "A",
+      "symbol": "EURJPY",
+      "side": "sell",
+      "strength": 3,
+      "alignment": "3/3 Down",
+      "dirs": [
+        "↓",
+        "↓",
+        "↓"
+      ],
+      "note": null,
+      "ref": {
+        "label": "R2",
+        "price": 177.886
+      },
+      "band": {
+        "low": 177.886,
+        "high": 177.907
+      },
+      "worst_entry": 177.886,
+      "price": 177.612,
+      "distance_pips": 27.4,
+      "atr_pips": 20.7,
+      "adr_used_pct": 59.1,
+      "adr_remaining_pips": 54.6,
+      "obstacle": {
+        "label": "H1高値群",
+        "price": 177.509
+      },
+      "pip_value_jpy": 1000,
+      "schemes": {
+        "A": {
+          "pass": true,
+          "reason": null,
+          "reason_text": null,
+          "k": 0.5,
+          "sl": 177.99,
+          "sl_pips": 10.4,
+          "tp1": 177.52,
+          "profit_pips": 36.6,
+          "rr": 3.52,
+          "cost_cap_pips": 8.4,
+          "cost_threshold_pips": 1.6,
+          "lots": {
+            "A": 0.29,
+            "B": 2.25
+          },
+          "commission_jpy": {
+            "A": 294,
+            "B": 2279
+          }
+        },
+        "B": {
+          "pass": true,
+          "reason": null,
+          "reason_text": null,
+          "k": 1,
+          "sl": 178.095,
+          "sl_pips": 20.9,
+          "tp1": 177.52,
+          "profit_pips": 36.6,
+          "rr": 1.75,
+          "cost_cap_pips": 2.1,
+          "cost_threshold_pips": 1.6,
+          "lots": {
+            "A": 0.14,
+            "B": 1.12
+          },
+          "commission_jpy": {
+            "A": 142,
+            "B": 1135
+          }
+        }
+      },
+      "levels": {
+        "daily": {
+          "Pivot": 177.017,
+          "R1": 177.461,
+          "R2": 177.886,
+          "S1": 176.591,
+          "S2": 176.148,
+          "前日高値": 177.442,
+          "前日安値": 176.573
+        },
+        "h1_high_groups": [
+          {
+            "min": 176.972,
+            "max": 177.118,
+            "count": 9
+          },
+          {
+            "min": 177.165,
+            "max": 177.236,
+            "count": 6
+          },
+          {
+            "min": 177.284,
+            "max": 177.303,
+            "count": 2
+          },
+          {
+            "min": 177.376,
+            "max": 177.378,
+            "count": 2
+          },
+          {
+            "min": 177.491,
+            "max": 177.509,
+            "count": 2
+          }
+        ],
+        "h1_low_groups": [
+          {
+            "min": 176.825,
+            "max": 177.022,
+            "count": 15
+          },
+          {
+            "min": 177.121,
+            "max": 177.131,
+            "count": 2
+          },
+          {
+            "min": 177.183,
+            "max": 177.213,
+            "count": 2
+          },
+          {
+            "min": 177.372,
+            "max": 177.412,
+            "count": 2
+          }
+        ],
+        "h1_window": 24,
+        "atr_pips": 20.7,
+        "tokyo": null
+      },
+      "confirm": "帯に到達したあと、M15が基準価格（177.886）より下で陰線確定",
+      "run": "design",
+      "added_by": null,
+      "generated_at": "2026-10-09T15:27:58+09:00",
+      "design_slot": 2,
+      "expires_at": "2026-10-10T03:00:00+09:00",
+      "entry_state": {
+        "ok": true,
+        "reasons": []
+      },
+      "stops": [],
+      "calendar_ok": true,
+      "state": {
+        "reached": "未到達",
+        "reached_at": null,
+        "expired": false,
+        "price_in_band": false
+      },
+      "same_direction_group": "",
+      "rank": 1
+    }
+  ],
+  "summary": {
+    "candidate_rows": 1,
+    "scheme_pass": {
+      "A": 1,
+      "B": 1
+    },
+    "rejections": {
+      "no_direction": 6,
+      "unreachable": 0,
+      "sl_narrow": 7,
+      "rr_low": 3,
+      "cost_low": 0,
+      "adr_over": 0
+    },
+    "rejections_text": {
+      "方向根拠なし": 6,
+      "届かない": 0,
+      "SL幅不足": 7,
+      "RR不足": 3,
+      "コスト不足": 0,
+      "ADR消化超過": 0
+    },
+    "extra": {
+      "基準水準なし": 2,
+      "障害なし": 0,
+      "入力欠落": 0
+    },
+    "unit": "案（型×銘柄×A/B案）。1案につき最初に当たった理由1つ",
+    "rejected_cases": [
+      {
+        "symbol": "USDJPY",
+        "setup": "A",
+        "scheme": "A",
+        "reason": "no_direction",
+        "reason_text": "方向根拠なし",
+        "counted": true,
+        "detail": "監視のみ（0/3）"
+      },
+      {
+        "symbol": "USDJPY",
+        "setup": "A",
+        "scheme": "B",
+        "reason": "no_direction",
+        "reason_text": "方向根拠なし",
+        "counted": true,
+        "detail": "監視のみ（0/3）"
+      },
+      {
+        "symbol": "EURUSD",
+        "setup": "A",
+        "scheme": "A",
+        "reason": "sl_narrow",
+        "reason_text": "SL幅不足",
+        "counted": true,
+        "detail": null
+      },
+      {
+        "symbol": "EURUSD",
+        "setup": "A",
+        "scheme": "B",
+        "reason": "rr_low",
+        "reason_text": "RR不足",
+        "counted": true,
+        "detail": null
+      },
+      {
+        "symbol": "GBPUSD",
+        "setup": "A",
+        "scheme": "A",
+        "reason": "sl_narrow",
+        "reason_text": "SL幅不足",
+        "counted": true,
+        "detail": null
+      },
+      {
+        "symbol": "GBPUSD",
+        "setup": "A",
+        "scheme": "B",
+        "reason": "rr_low",
+        "reason_text": "RR不足",
+        "counted": true,
+        "detail": null
+      },
+      {
+        "symbol": "AUDUSD",
+        "setup": "A",
+        "scheme": "A",
+        "reason": "no_direction",
+        "reason_text": "方向根拠なし",
+        "counted": true,
+        "detail": "監視のみ（1/3 Down）"
+      },
+      {
+        "symbol": "AUDUSD",
+        "setup": "A",
+        "scheme": "B",
+        "reason": "no_direction",
+        "reason_text": "方向根拠なし",
+        "counted": true,
+        "detail": "監視のみ（1/3 Down）"
+      },
+      {
+        "symbol": "NZDUSD",
+        "setup": "A",
+        "scheme": "A",
+        "reason": "no_direction",
+        "reason_text": "方向根拠なし",
+        "counted": true,
+        "detail": "MTF未収録"
+      },
+      {
+        "symbol": "NZDUSD",
+        "setup": "A",
+        "scheme": "B",
+        "reason": "no_direction",
+        "reason_text": "方向根拠なし",
+        "counted": true,
+        "detail": "MTF未収録"
+      },
+      {
+        "symbol": "USDCAD",
+        "setup": "A",
+        "scheme": "A",
+        "reason": "sl_narrow",
+        "reason_text": "SL幅不足",
+        "counted": true,
+        "detail": null
+      },
+      {
+        "symbol": "USDCAD",
+        "setup": "A",
+        "scheme": "B",
+        "reason": "rr_low",
+        "reason_text": "RR不足",
+        "counted": true,
+        "detail": null
+      },
+      {
+        "symbol": "USDCHF",
+        "setup": "A",
+        "scheme": "A",
+        "reason": "sl_narrow",
+        "reason_text": "SL幅不足",
+        "counted": true,
+        "detail": null
+      },
+      {
+        "symbol": "USDCHF",
+        "setup": "A",
+        "scheme": "B",
+        "reason": "sl_narrow",
+        "reason_text": "SL幅不足",
+        "counted": true,
+        "detail": null
+      },
+      {
+        "symbol": "EURGBP",
+        "setup": "A",
+        "scheme": "A",
+        "reason": "sl_narrow",
+        "reason_text": "SL幅不足",
+        "counted": true,
+        "detail": null
+      },
+      {
+        "symbol": "EURGBP",
+        "setup": "A",
+        "scheme": "B",
+        "reason": "sl_narrow",
+        "reason_text": "SL幅不足",
+        "counted": true,
+        "detail": null
+      },
+      {
+        "symbol": "XAUUSD",
+        "setup": "A",
+        "scheme": "A",
+        "reason": "no_reference",
+        "reason_text": "基準水準なし",
+        "counted": false,
+        "detail": null
+      },
+      {
+        "symbol": "XAUUSD",
+        "setup": "A",
+        "scheme": "B",
+        "reason": "no_reference",
+        "reason_text": "基準水準なし",
+        "counted": false,
+        "detail": null
+      }
+    ],
+    "watch_only": [
+      {
+        "symbol": "USDJPY",
+        "detail": "監視のみ（0/3）"
+      },
+      {
+        "symbol": "AUDUSD",
+        "detail": "監視のみ（1/3 Down）"
+      }
+    ],
+    "no_basis": [
+      {
+        "symbol": "NZDUSD",
+        "detail": "MTF未収録"
+      }
+    ],
+    "not_formed": []
+  }
+}
