@@ -272,13 +272,13 @@ function floorBreakdown(records) {
   return rows;
 }
 
-// 障害の定義 (b) の内訳: TP1 が変わった案（現行の定義なら手前に逆側の群などの別の障害があった、または障害が無くなる案）と、変わらなかった案（(a) と同じTP1）を分けた集計。SL下限方式 × 型 × ATR係数ごと
+// 障害の定義 (b) の内訳: TP1 が変わった案（障害の定義 (a) で置く TP1 と違う案。(a) なら手前に逆側の群などの別の障害があった案）と、変わらなかった案（(a) と同じTP1。障害の価格が違っても丸めた TP1 が同じ案を含む）を分けた集計。SL下限方式 × 型 × ATR係数ごと
 function obstacleBreakdown(records) {
   const rows = [];
   for (const m of SL_FLOOR_MODES) for (const setup of ["A", "B"]) for (const scheme of ["A", "B"]) {
     const grp = records.filter((r) => r.obstacle === "forward" && r.sl_floor === m.id && r.setup === setup && r.scheme === scheme);
     if (!grp.length) continue;
-    for (const [value, changed] of [["障害が変わらなかった案（障害 (a) と同じTP1）", false], ["障害が変わった案（TP1が障害 (a) と違う）", true]]) {
+    for (const [value, changed] of [["TP1 が変わらなかった案（障害 (a) と同じTP1）", false], ["TP1 が変わった案（障害 (a) とTP1が違う）", true]]) {
       rows.push({ sl_floor: m.id, setup, scheme, atr_coef: scheme === "A" ? 0.5 : 1.0, value, ...metrics(grp.filter((r) => r.obstacle_changed === changed)) });
     }
   }

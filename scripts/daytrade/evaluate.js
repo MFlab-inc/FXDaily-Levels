@@ -20,12 +20,14 @@ const { pipValueJpy, costThresholdPips, tpMarginPips, lotRaw, lotCap } = require
  * opts.slFloor（SL下限方式。バックテストの比較用。ライブは既定の 'reject' のまま使う）:
  *   'reject'（既定）= 丸めた後のSL幅が 10pips 未満なら『SL幅不足』で不採用（現行の規則）。
  *   'widen'         = SL幅を max(係数×ATR, 10pips) にしてから外側へ 0.5pip 単位に丸め、SL幅では落とさない。
- *                     RR・コスト・ADR・届く・ロット（広げた後のSL幅で計算、B案の半分の規則も同じ）は変えない。
+ *                     RR・コスト上限・ロット（広げた後のSL幅で計算、B案の半分の規則も同じ）は広げた後のSL幅で求める。届く・ADR消化はSL幅に依らないので変わらない。
  *                     SLが下限で決まった（= 現行の規則なら『SL幅不足』になる）案には sl_floored: true を付ける。
  * opts.obstacle（障害の定義。バックテストの比較用。ライブは既定の 'both' のまま使う）:
  *   'both'（既定）  = TP1 の障害に日次レベル7本＋H1高値群・安値群の両方を使う（現行の規則）。
  *   'forward'       = 日次レベル7本＋進行方向側の群だけ（売りは安値群、買いは高値群）。基準水準の選び方は変えない。
- *                     結果に obstacle_changed を付ける（'both' で選んだ障害と価格が違う、または障害が無くなるとき true）。
+ *                     結果に obstacle_changed を付ける（'both' の定義で置く TP1 と違うとき true。障害が無くなって TP1 が置けなくなるときも true。
+ *                     障害の価格が違っても、TP1 を 0.5pip 単位に丸めると同じになるときは false）。
+ * opts は省略できる（undefined／null）。オブジェクト以外や、定義に無い値（空文字・0・null なども）は例外にする（ライブの定義に黙って落とさない）。
  */
 const SCHEMES = [{ name: "A", k: 0.5 }, { name: "B", k: 1.0 }];
 const SL_MIN_PIPS = 10;
@@ -45,11 +47,18 @@ const COUNTED = ["no_direction", "unreachable", "sl_narrow", "rr_low", "cost_low
 const px = (ticks, pair) => N.fromTicks(ticks, pair);
 const SL_FLOOR_OPTIONS = ["reject", "widen"];
 
+// opts の1項目を読む。省略（undefined）なら既定。opts がオブジェクトでない、値が定義に無いときは呼び出し側で例外にする
+function optionOf(opts, key, def) {
+  if (opts === undefined || opts === null) return def;
+  if (typeof opts !== "object") throw new Error(`evaluate: opts はオブジェクトです（${String(opts)}）`);
+  return opts[key] === undefined ? def : opts[key];
+}
+
 function evaluate(ctx, setup, opts = {}) {
-  const slFloor = (opts && opts.slFloor) || "reject";
+  const slFloor = optionOf(opts, "slFloor", "reject");
   if (!SL_FLOOR_OPTIONS.includes(slFloor)) throw new Error(`evaluate: slFloor は 'reject' か 'widen' です（${String(slFloor)}）`);
   const widen = slFloor === "widen";
-  const obstacleMode = (opts && opts.obstacle) || "both";
+  const obstacleMode = optionOf(opts, "obstacle", "both");
   if (!OBSTACLE_MODES.includes(obstacleMode)) throw new Error(`evaluate: obstacle は 'both' か 'forward' です（${String(obstacleMode)}）`);
   const { pair } = ctx;
   const base = { setup, symbol: pair.code, side: null, schemes: {} };
@@ -109,15 +118,16 @@ function evaluate(ctx, setup, opts = {}) {
 
   // 3) TP1（最初の障害の手前）
   const obstacle = firstObstacle(side, ref.price, ctx.daily, ctx.groups, obstacleMode);
-  // 'forward' のとき、現行の定義（'both'）が選ぶ障害と価格が違うか（違えば TP1 が変わる）
-  const obstacleChanged = obstacleMode === "forward" ? (firstObstacle(side, ref.price, ctx.daily, ctx.groups, "both")?.price ?? null) !== (obstacle?.price ?? null) : undefined;
-  let tpT = null;
-  if (obstacle) {
-    const marginT = tpMarginPips(pair) * tpPip;
-    const o = N.toTicks(obstacle.price, pair);
-    // 『手前』= Entry 側。売りは障害の上、買いは障害の下。Entry 側へ0.5pip単位で丸める [Q11]
-    tpT = side === "sell" ? N.ceilTo(o + marginT) : N.floorTo(o - marginT);
-  }
+  const marginT = tpMarginPips(pair) * tpPip;
+  // 『手前』= Entry 側。売りは障害の上、買いは障害の下。Entry 側へ0.5pip単位で丸める [Q11]
+  const tpOf = (ob) => {
+    if (!ob) return null;
+    const o = N.toTicks(ob.price, pair);
+    return side === "sell" ? N.ceilTo(o + marginT) : N.floorTo(o - marginT);
+  };
+  const tpT = tpOf(obstacle);
+  // 'forward' のとき、現行の定義（'both'）で置く TP1 と違うか（障害の価格が違っても、丸めた TP1 が同じなら false）
+  const obstacleChanged = obstacleMode === "forward" ? tpOf(firstObstacle(side, ref.price, ctx.daily, ctx.groups, "both")) !== tpT : undefined;
   const profitPips = tpT === null ? null : (sgn * (tpT - Lt)) / tpPip;
 
   // 4) 案ごと

@@ -651,7 +651,7 @@ test("障害の定義: evaluateImpl に obstacle が渡り、記録に obstacle 
   assert.ok(toCsv(rows).trim().split("\n").slice(1).every((l) => /^(a_reject|b_widen),b_forward,B,/.test(l)));
   // 障害 (b) の内訳: TP1 が変わった案 / 変わらなかった案（SL下限方式ごと）
   const ob = obstacleBreakdown(r.records);
-  assert.deepEqual(ob.map((x) => [x.sl_floor, x.setup, x.scheme, x.value.startsWith("障害が変わった案") ? "changed" : "same", x.n]),
+  assert.deepEqual(ob.map((x) => [x.sl_floor, x.setup, x.scheme, x.value.startsWith("TP1 が変わった案") ? "changed" : "same", x.n]),
     [["reject", "B", "A", "same", 0], ["reject", "B", "A", "changed", 1], ["widen", "B", "A", "same", 0], ["widen", "B", "A", "changed", 1]]);
   // 障害 (a) の記録には obstacle_changed が付かない（false）。obstacleBreakdown は障害 (b) の記録だけを分ける
   const bothOnly = runB({ D: DS, rule: ({ hour, slot, obstacle }) => (obstacle === "both" && slot === 4 && hour === 17 ? sellCand() : null), modes: true });
@@ -660,8 +660,12 @@ test("障害の定義: evaluateImpl に obstacle が渡り、記録に obstacle 
 });
 
 test("runBacktest／aggregate／toCsv: 不正な slFloor・obstacle は受け付けない", () => {
-  assert.throws(() => runBacktest({ ...allSynth(), nowMs: NOW, windowDays: 1, slFloor: "wide" }), /slFloor/);
-  assert.throws(() => runBacktest({ ...allSynth(), nowMs: NOW, windowDays: 1, obstacle: "forwards" }), /obstacle/);
+  // evaluateImpl を差し替えて、evaluate() 自身の検証ではなく runBacktest の検証で止まることを確かめる
+  const stub = () => ({ outcome: "rejected", schemes: { A: { pass: false }, B: { pass: false } } });
+  assert.throws(() => runBacktest({ ...allSynth(), nowMs: NOW, windowDays: 1, slFloor: "wide", evaluateImpl: stub }), /runBacktest: slFloor/);
+  assert.throws(() => runBacktest({ ...allSynth(), nowMs: NOW, windowDays: 1, obstacle: "forwards", evaluateImpl: stub }), /runBacktest: obstacle/);
+  assert.throws(() => runBacktest({ ...allSynth(), nowMs: NOW, windowDays: 1, obstacle: "", evaluateImpl: stub }), /runBacktest: obstacle/);
+  assert.throws(() => runBacktest({ ...allSynth(), nowMs: NOW, windowDays: 1, obstacle: null, evaluateImpl: stub }), /runBacktest: obstacle/);
   assert.throws(() => aggregate([{ sl_floor: "wide", obstacle: "both", setup: "A", scheme: "A" }]), /sl_floor/);
   assert.throws(() => aggregate([{ sl_floor: "reject", obstacle: "fwd", setup: "A", scheme: "A" }]), /obstacle/);
   assert.throws(() => aggregate([{ sl_floor: "reject", setup: "A", scheme: "A" }]), /obstacle/);

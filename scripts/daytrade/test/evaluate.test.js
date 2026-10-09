@@ -642,3 +642,38 @@ test("障害の定義と SL下限方式は独立: 2つを同時に指定でき�
   assert.equal("obstacle_changed" in r10, false);
   assert.equal(r11.obstacle_changed, true);
 });
+
+test("obstacle_changed は TP1（0.5pip 単位に丸めたあと）で比べる。障害の価格が違っても TP1 が同じなら false、価格が同じでラベルだけ違っても false", () => {
+  // 売り（Pivot 1.1040 が基準）。安値群の近い端 1.09006 と高値群の近い端 1.09008（'both' の障害は後者、'forward' は前者: 売りは安値群だけ）
+  // どちらも手前 0.5pip を足して売りは上へ切り上げる → 1.09056→1.0906 / 1.09058→1.0906 で TP1 は同じ
+  const tie = evalCtx({ groups: { highs: [{ min: 1.0907, max: 1.09008, count: 2 }], lows: [{ min: 1.0890, max: 1.09006, count: 2 }], window: 24 } });
+  const b = evaluate(tie, "A"), f = evaluate(tie, "A", FWD);
+  assert.deepEqual(b.obstacle, { label: "H1高値群", price: 1.09008 });
+  assert.deepEqual(f.obstacle, { label: "H1安値群", price: 1.09006 });
+  assert.equal(b.schemes.A.tp, f.schemes.A.tp); // 丸めた TP1 が同じ
+  assert.equal(f.obstacle_changed, false);      // 障害の価格は違うが TP1 は変わらない
+  // 価格が同じでラベルだけ違う（高値群の近い端 = 安値群の近い端）: 'both' は高値群（候補の並びが先）、'forward' は安値群。TP1 は同じ → false
+  const same = evalCtx({ groups: { highs: [{ min: 1.0950, max: 1.0970, count: 2 }], lows: [{ min: 1.0960, max: 1.0970, count: 2 }], window: 24 } });
+  const fs = evaluate(same, "A", FWD), bs = evaluate(same, "A");
+  assert.equal(bs.obstacle.label, "H1高値群");
+  assert.equal(fs.obstacle.label, "H1安値群");
+  assert.equal(fs.obstacle.price, bs.obstacle.price);
+  assert.equal(fs.obstacle_changed, false);
+  // TP1 が実際に違えば true（価格が 1pip 以上違う）
+  const far = evalCtx({ groups: { highs: [{ min: 1.0950, max: 1.0970, count: 2 }], lows: [], window: 24 } });
+  assert.equal(evaluate(far, "A", FWD).obstacle_changed, true);
+  assert.notEqual(evaluate(far, "A", FWD).schemes.A.tp, evaluate(far, "A").schemes.A.tp);
+});
+
+test("opts の検証: 定義に無い値は、空文字・0・false・NaN・null でも例外にする（黙って現行の定義にしない）。文字列を opts に渡すのも例外", () => {
+  const ctx = evalCtx();
+  for (const bad of ["", 0, false, NaN, null, "Forward", " forward", ["forward"], 1]) {
+    assert.throws(() => evaluate(ctx, "A", { obstacle: bad }), /obstacle/, String(bad));
+    assert.throws(() => evaluate(ctx, "A", { slFloor: bad }), /slFloor/, String(bad));
+  }
+  assert.throws(() => evaluate(ctx, "A", "forward"), /opts/);
+  assert.throws(() => evaluate(ctx, "A", 5), /opts/);
+  // 省略は既定（現行）: undefined／null／{}／項目が undefined
+  const base = evaluate(ctx, "A");
+  for (const ok of [undefined, null, {}, { obstacle: undefined }, { slFloor: undefined }, { obstacle: "both", slFloor: "reject" }]) assert.deepEqual(evaluate(ctx, "A", ok), base);
+});
