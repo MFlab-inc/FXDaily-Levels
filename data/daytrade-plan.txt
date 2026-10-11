@@ -1,13 +1,13 @@
 # デイトレプラン（自動生成）
-plan_date: 2026-10-09 / run: design（直近の設計: 設計3） / 設計: 2026-10-09 22:35 / 状態更新: 2026-10-09 22:35 / 有効期限: 2026-10-10 03:00
+plan_date: 2026-10-12 / run: design（直近の設計: 設計1） / 設計: 2026-10-12 06:05 / 状態更新: 2026-10-12 06:05 / 有効期限: 2026-10-13 03:00
 発注可否: 発注可（鮮度は20分以内）
 
 == 1. データ鮮度 ==
   Feed生成時刻と鮮度（基準: 生成から20分以内）
-    Intraday : intraday.json as_of 2026-10-09 22:35（0分前） ＝基準内
-    H1       : h1-bars.json as_of 2026-10-09 22:35（0分前） ＝基準内 ／ 最終確定足（開始）最古 2026-10-09 21:00・最新 2026-10-09 21:00
-    M15      : daytrade-context.json as_of 2026-10-09 22:35（0分前） ＝基準内 ／ 確定M15の最終足 最古 2026-10-09 22:15・最新 2026-10-09 22:15（M15の最終足は発注可否には使わない）
-    Daily    : daily-levels.json as_of 2026-10-09 06:20 ／ 最終確定の営業日 session_date 2026-10-08（直近に確定した営業日 2026-10-08） ＝基準内
+    Intraday : intraday.json as_of 2026-10-12 06:05（1分前） ＝基準内
+    H1       : h1-bars.json as_of 2026-10-12 06:05（0分前） ＝基準内 ／ 最終確定足（開始）最古 2026-10-10 05:00・最新 2026-10-10 05:00
+    M15      : daytrade-context.json as_of 2026-10-12 06:05（0分前） ＝基準内 ／ 確定M15の最終足 最古 2026-10-10 05:45・最新 2026-10-10 05:45 ／ data_status が OK でない銘柄: USDJPY:DEGRADED、EURUSD:DEGRADED、GBPUSD:DEGRADED、EURJPY:DEGRADED、AUDUSD:DEGRADED、EURGBP:DEGRADED、USDCAD:DEGRADED、USDCHF:DEGRADED、NZDUSD:DEGRADED、XAUUSD:DEGRADED（M15の最終足は発注可否には使わない）
+    Daily    : daily-levels.json as_of 2026-10-10 06:20 ／ 最終確定の営業日 session_date 2026-10-09（直近に確定した営業日 2026-10-09） ＝基準内
   口座: A（daytrade） 本日の損失上限 9,154円（1.5%） ／ B（swing_daytrade） 本日の損失上限 70,238円（1.5%）
 
 == 2. 候補（0件。順位は 方向の強さ → 銘柄の優先 → RR）==
@@ -18,67 +18,56 @@ plan_date: 2026-10-09 / run: design（直近の設計: 設計3） / 設計: 2026
   USDJPY 型A B案: 方向根拠なし: 監視のみ（0/3）
   EURUSD 型A A案: SL幅不足
   EURUSD 型A B案: RR不足
-  EURUSD 型B A案: 届かない
-  EURUSD 型B B案: 届かない
   GBPUSD 型A A案: SL幅不足
   GBPUSD 型A B案: RR不足
-  GBPUSD 型B A案: SL幅不足
-  GBPUSD 型B B案: RR不足
   AUDUSD 型A A案: 方向根拠なし: 監視のみ（1/3 Down）
   AUDUSD 型A B案: 方向根拠なし: 監視のみ（1/3 Down）
   NZDUSD 型A A案: SL幅不足
   NZDUSD 型A B案: SL幅不足
-  USDCAD 型A A案: 届かない
-  USDCAD 型A B案: 届かない
-  USDCAD 型B A案: 届かない
-  USDCAD 型B B案: 届かない
+  USDCAD 型A A案: SL幅不足
+  USDCAD 型A B案: RR不足
   USDCHF 型A A案: SL幅不足
   USDCHF 型A B案: SL幅不足
-  USDCHF 型B A案: SL幅不足
-  USDCHF 型B B案: SL幅不足
-  EURJPY 型A A案: RR不足
-  EURJPY 型A B案: RR不足
+  EURJPY 型A A案: SL幅不足
+  EURJPY 型A B案: コスト不足
   EURGBP 型A A案: SL幅不足
   EURGBP 型A B案: SL幅不足
-  EURGBP 型B A案: SL幅不足
-  EURGBP 型B B案: SL幅不足
   XAUUSD 型A A案: コスト不足
   XAUUSD 型A B案: RR不足
   ── 参考情報 ──
   候補数: 0件（A案を通った案 0、B案を通った案 0）
-  不採用の内訳（件数）: 方向根拠なし 4 ／ 届かない 6 ／ SL幅不足 13 ／ RR不足 6 ／ コスト不足 1 ／ ADR消化超過 0
+  不採用の内訳（件数）: 方向根拠なし 4 ／ 届かない 0 ／ SL幅不足 10 ／ RR不足 4 ／ コスト不足 2 ／ ADR消化超過 0
     6分類に数えない理由: 基準水準なし 0 ／ 障害なし 0 ／ 入力欠落 0
-  型B（未成立。不採用に数えない）: USDJPY（MTFの向きなし（監視のみ（0/3））） ／ AUDUSD（MTFの向きなし（監視のみ（1/3 Down））） ／ NZDUSD（ブレイク未成立（15:00開始以降のH1が終値でレンジ外に確定していない）） ／ EURJPY（ブレイク方向（上）がMTFの向きと不一致） ／ XAUUSD（ブレイク未成立（15:00開始以降のH1が終値でレンジ外に確定していない））
-  ボラの状態（risk-feed ok、生成 2026-10-09 22:32・3分前）:
-    USDJPY: 当日レンジ 0.645 ／ ADR比 0.55 ／ 急変フラグ false ／ 更新 22:32
-    EURUSD: 当日レンジ 0.00502 ／ ADR比 0.804 ／ 急変フラグ false ／ 更新 22:32
+  型B（未成立。不採用に数えない）: なし（型Bは設計③と、16:00〜21:59の状態更新で追加される。追加時に門で不採用だった型Bは一覧しない）
+  ボラの状態（risk-feed ok、生成 2026-10-12 06:03・2分前）:
+    USDJPY: 当日レンジ 0.256 ／ ADR比 0.226 ／ 急変フラグ false ／ 更新 06:03
+    EURUSD: 当日レンジ 0.0021 ／ ADR比 0.334 ／ 急変フラグ false ／ 更新 06:03
     GBPUSD: 未収録
-    AUDUSD: 当日レンジ 0.00335 ／ ADR比 0.744 ／ 急変フラグ false ／ 更新 22:32
+    AUDUSD: 当日レンジ 0.00167 ／ ADR比 0.373 ／ 急変フラグ false ／ 更新 06:03
     NZDUSD: 未収録
-    USDCAD: 当日レンジ 0.00943 ／ ADR比 1.724 ／ 急変フラグ true ／ 更新 22:32
+    USDCAD: 当日レンジ 0.00207 ／ ADR比 0.366 ／ 急変フラグ false ／ 更新 06:03
     USDCHF: 未収録
     EURJPY: 未収録
-    EURGBP: 当日レンジ 0.00167 ／ ADR比 0.578 ／ 急変フラグ false ／ 更新 22:32
-    XAUUSD: 当日レンジ 76.12 ／ ADR比 0.9 ／ 急変フラグ false ／ 更新 22:32
-  参考：既存ゲート（gate.state。2026-10-09 22:35 時点のスナップショット。停止判定には使わない）: USDJPY TRADE_OK ／ EURUSD TRADE_OK ／ GBPUSD TRADE_OK ／ AUDUSD TRADE_OK ／ NZDUSD TRADE_OK ／ USDCAD TRADE_OK ／ USDCHF TRADE_OK ／ EURJPY TRADE_OK ／ EURGBP TRADE_OK ／ XAUUSD TRADE_OK
+    EURGBP: 当日レンジ 0.0016 ／ ADR比 0.561 ／ 急変フラグ false ／ 更新 06:03
+    XAUUSD: 当日レンジ 0.6 ／ ADR比 0.007 ／ 急変フラグ false ／ 更新 06:03
+  参考：既存ゲート（gate.state。2026-10-12 06:05 時点のスナップショット。停止判定には使わない）: USDJPY TRADE_OK ／ EURUSD TRADE_OK ／ GBPUSD TRADE_OK ／ AUDUSD TRADE_OK ／ NZDUSD TRADE_OK ／ USDCAD TRADE_OK ／ USDCHF TRADE_OK ／ EURJPY TRADE_OK ／ EURGBP TRADE_OK ／ XAUUSD TRADE_OK
 
 == 4. 価格根拠（Entry・SL・TP1 の元になった実在の水準）==
   候補がないので、なし
 
 == 5. イベント（日本時間。economic-calendar.json の当日分。停止時間: 前15分〜後30分、新規のみ禁止）==
-  21:30 [CAD/High] Employment Change → 停止 21:15〜22:00（対象: USDCAD）
-  21:30 [CAD/High] Unemployment Rate → 停止 21:15〜22:00（対象: USDCAD）
-  23:00 [USD/Medium] Prelim UoM Consumer Sentiment → 停止 22:45〜23:30（対象: USDJPY、EURUSD、GBPUSD、AUDUSD、NZDUSD、USDCAD、USDCHF、XAUUSD）
-  23:00 [USD/Medium] Prelim UoM Inflation Expectations → 停止 22:45〜23:30（対象: USDJPY、EURUSD、GBPUSD、AUDUSD、NZDUSD、USDCAD、USDCHF、XAUUSD）
+  当日分の High・Medium のイベントはありません。
   新規不可: 9時台（JST）／翌1:00以降／土曜0:00以降。有効期限: 翌日3:00（JST）。カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う
 
 == 6. 前営業日の結果記録（採点。1案1行）==
-  採点済みの案はありません。
+  計画日 2026-10-09: 案 1件 ／ 到達 0・未到達 0・失効後到達 0・取消 1
+  先着（到達した案）: A案 TP1 0・SL 0・未決 0 ／ B案 TP1 0・SL 0・未決 0
+    EURJPY 売り 型A: 取消(再設計)
 
 == 7. 出典 ==
-  MTF: mtf-feed.json 生成 2026-10-09 20:10 ／ data_base_date 2026-10-08 ／ status ok
-  Feed: intraday.json 2026-10-09 22:35 ／ h1-bars.json 2026-10-09 22:35 ／ daytrade-context.json 2026-10-09 22:35 ／ daily-levels.json 2026-10-09 06:20（session_date 2026-10-08）
-  H1: h1-bars.json の最終確定足（開始）最新 2026-10-09 21:00 ／ M15: daytrade-context.json の確定M15の最終足 最新 2026-10-09 22:15
-  カレンダー: economic-calendar.json as_of 2026-10-09 22:35 ／ date 2026-10-09 ／ Forex Factory calendar feed
-  risk-feed: https://mflab-inc.github.io/EA-Risk-Monitor/data/risk-feed.json generated_intraday 2026-10-09 22:32
-  設計の履歴: 設計2 2026-10-09 15:27 ／ 設計3 2026-10-09 22:35
+  MTF: mtf-feed.json 生成 2026-10-10 06:20 ／ data_base_date 2026-10-09 ／ status ok
+  Feed: intraday.json 2026-10-12 06:05 ／ h1-bars.json 2026-10-12 06:05 ／ daytrade-context.json 2026-10-12 06:05 ／ daily-levels.json 2026-10-10 06:20（session_date 2026-10-09）
+  H1: h1-bars.json の最終確定足（開始）最新 2026-10-10 05:00 ／ M15: daytrade-context.json の確定M15の最終足 最新 2026-10-10 05:45
+  カレンダー: economic-calendar.json as_of 2026-10-12 06:05 ／ date 2026-10-12 ／ Forex Factory calendar feed
+  risk-feed: https://mflab-inc.github.io/EA-Risk-Monitor/data/risk-feed.json generated_intraday 2026-10-12 06:03
+  設計の履歴: 設計1 2026-10-12 06:05
