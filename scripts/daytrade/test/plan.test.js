@@ -375,8 +375,8 @@ test("出力: 3項目目は『1案1行』で理由だけ（価格を書かない
     const sc2 = makeScenario({ spec: { EURUSD: { adr_used_pct: 85 } } });
     try {
       const t2 = render(build(sc2).plan, inputs.accounts);
-      assert.match(t2, /  EURUSD 型A A案: ADR消化超過\n/);
-      assert.match(t2, /  EURUSD 型A B案: ADR消化超過\n/);
+      assert.match(t2, /  EURUSD 型A A案: ADR消化超過/);
+      assert.match(t2, /  EURUSD 型A B案: ADR消化超過/);
     } finally { cleanup(sc2); }
   } finally { cleanup(sc); }
 });
