@@ -148,6 +148,28 @@ function rankCandidates(cands) {
   cands.forEach((c, i) => { c.rank = i + 1; });
 }
 
+// 不採用の検算用スナップショット。評価済みの値のみを公開し、判定・ロット計算には関与しない。
+function rejectedDetail(r, sc) {
+  const finite = (v, digits) => Number.isFinite(v) ? (digits === undefined ? v : Number(v.toFixed(digits))) : null;
+  const level = (v) => v && Number.isFinite(v.price) ? { price: v.price, type: v.label ?? null } : null;
+  return {
+    side: r.side ?? null,
+    reference: level(r.ref),
+    entry_band: r.band && Number.isFinite(r.band.low) && Number.isFinite(r.band.high) ? { low: r.band.low, high: r.band.high } : null,
+    h1_atr14_pips: finite(r.atr_pips, 1),
+    sl: Number.isFinite(sc.sl) ? { price: sc.sl, width_pips: finite(sc.sl_pips, 1) } : null,
+    first_obstacle: level(r.obstacle),
+    tp1: finite(sc.tp),
+    profit_pips: finite(sc.profit_pips, 1),
+    rr: finite(sc.rr, 2),
+    cost_cap_pips: finite(sc.cost_cap_pips, 2),
+    cost_threshold_pips: finite(sc.cost_threshold_pips),
+    adr_remaining_pips: finite(r.adr_remaining_pips, 1),
+    distance_to_reference_pips: finite(r.distance_pips, 1),
+    adr_used_pct: finite(r.adr_used_pct),
+  };
+}
+
 function summarize(results) {
   const rejections = Object.fromEntries(COUNTED.map((k) => [k, 0]));
   const extra = { no_reference: 0, no_obstacle: 0, no_data: 0 };
@@ -163,7 +185,7 @@ function summarize(results) {
       if (sc.pass) { pass[s.name] += 1; continue; }
       if (rejections[sc.reason] !== undefined) rejections[sc.reason] += 1;
       else if (extra[sc.reason] !== undefined) extra[sc.reason] += 1;
-      rejected.push({ symbol: r.symbol, setup: r.setup, scheme: s.name, reason: sc.reason, reason_text: REASONS[sc.reason] ?? sc.reason, counted: rejections[sc.reason] !== undefined, detail: sc.reason === "no_direction" ? (r.detail ?? null) : null });
+      rejected.push({ symbol: r.symbol, setup: r.setup, scheme: s.name, reason: sc.reason, reason_text: REASONS[sc.reason] ?? sc.reason, counted: rejections[sc.reason] !== undefined, detail: sc.reason === "no_direction" ? (r.detail ?? null) : rejectedDetail(r, sc) });
     }
     if (r.setup === "A" && r.symbolReason === "no_direction") {
       (r.outcome === "watch" ? watch : noBasis).set(r.symbol, r.detail);
