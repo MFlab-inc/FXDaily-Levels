@@ -53,20 +53,28 @@ test("ライブの生成器のソースに、障害の定義・SL下限方式の
   }
 });
 
-test("判断の台帳（decisions.js）: すべて確定済み。出力の『暫定』の行は出さず、JSON は『未確定の判断なし』と書く", () => {
+test("判断の台帳（decisions.js）: Q01〜Q69 は確定済み。Q70〜 は回答待ちなら『暫定』として出力に番号を出し、無ければ『未確定の判断なし』", () => {
   const { QUESTIONS, provisionalIds } = require("../decisions");
-  assert.equal(QUESTIONS.length, 69);
-  assert.deepEqual(provisionalIds(), []);
-  for (const q of QUESTIONS) assert.equal(q.status, "confirmed", q.id);
-  for (const q of QUESTIONS) assert.ok(typeof q.answer === "string" && q.answer.length > 0, `${q.id} に回答の記録がある`);
+  const confirmed = QUESTIONS.filter((q) => Number(q.id.slice(1)) <= 69);
+  assert.equal(confirmed.length, 69);
+  for (const q of confirmed) assert.equal(q.status, "confirmed", q.id);
+  for (const q of QUESTIONS.filter((x) => x.status === "confirmed")) assert.ok(typeof q.answer === "string" && q.answer.length > 0, `${q.id} に回答の記録がある`);
+  for (const q of QUESTIONS) assert.ok(typeof q.provisional === "string" && q.provisional.length > 0, `${q.id} に暫定の読みがある`);
+  assert.deepEqual(provisionalIds(), QUESTIONS.filter((q) => q.status !== "confirmed").map((q) => q.id));
+  assert.equal(new Set(QUESTIONS.map((q) => q.id)).size, QUESTIONS.length);
   const { render } = require("../render");
   const sc = makeScenario();
   try {
     const inputs = loadInputs({ dataDir: sc.dataDir, repoRoot: sc.repoRoot, nowMs: sc.nowMs, env: sc.env });
     const { buildDesign } = require("../plan");
     const { plan } = buildDesign({ inputs, riskFeed: noFeed, nowMs: sc.nowMs, slot: 2, prevPlan: null, logRows: [] });
-    assert.deepEqual(plan.provisional.open_questions, []);
-    assert.match(plan.provisional.note, /未確定の判断はありません/);
-    assert.ok(!/暫定:/.test(render(plan, inputs.accounts)));
+    assert.deepEqual(plan.provisional.open_questions, provisionalIds());
+    if (provisionalIds().length) {
+      assert.match(plan.provisional.note, /暫定の読みで処理しています/);
+      assert.match(render(plan, inputs.accounts), new RegExp(`暫定: 仕様が沈黙している点を暫定の読みで処理しています（${provisionalIds().length}件`));
+    } else {
+      assert.match(plan.provisional.note, /未確定の判断はありません/);
+      assert.ok(!/暫定:/.test(render(plan, inputs.accounts)));
+    }
   } finally { rm(path.dirname(sc.dataDir)); }
 });

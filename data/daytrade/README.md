@@ -35,3 +35,21 @@
 **注意**: 出力に出る『本日の損失上限』は資金×`daily_loss_pct`、上限ロットも資金から計算した値なので、公開される出力から資金は逆算できる（回答どおり出している。Q68）。
 
 関連: `data/daytrade-plan.txt`・`data/daytrade-plan.json`（生成物、公開）、`data/history/h1-<銘柄>.csv`（バックテスト用のH1履歴。1回だけ取得）。
+
+## 通知（GitHub Issue）
+
+毎日ファイルを開かなくても、必要なときだけ GitHub の通知が届くようにしてある（`daytrade.yml` の各実行の最後に `scripts/daytrade-notify.js` が動く。コミットはしない）。
+
+- **Issue は計画日ごとに1つ**（題名 `デイトレ 2026-10-13（火）`、ラベル `daytrade`）。発注できる状態の最初の設計で作り、候補が0件でも作る。本文は候補の件数と各案の要点。
+- **コメントで知らせること**（どれも先頭で `@MFlab-inc` を呼ぶ。同じ出来事は1回だけ）:
+  1. 新しい案（設計②③・型Bの追加）— 銘柄・向き・型・Entry帯・A/B案のSL・TP1・RR・口座ごとの上限ロット・有効期限・確認条件・停止時間
+  2. 案の取消・再設計
+  3. 価格が Entry 帯に入った／帯から 0.1×H1 ATR 以内に近づいた（Intraday Snapshot の完了ごとに判定。版ごとに1回）
+  4. 採点の結果（到達／SL先・TP1先／未到達〔帯まであと◯pips〕／取消）— 採点は従来どおり翌営業日の設計①の前なので、金曜の案は月曜に、閉じた Issue へ追記される
+  5. 異常 — Daytrade Plan の失敗（1時間に1回まで）／設計の窓が終わっても設計が無い／入力（intraday.json・h1-bars.json・daytrade-context.json）の更新が60分以上止まっている
+- 計画日が終わる（有効期限 翌日 03:00）と、まとめをコメントして Issue を閉じる（金曜分は土曜 03:00 以降）。土日は Issue を作らない。
+- **Issue は公開される**。口座の資金・損失上限・手数料は書かない（上限ロットは `data/daytrade-plan.txt` と同じく載せる）。
+- 権限は `daytrade.yml` の `issues: write` と組み込みの `GITHUB_TOKEN` だけ（新しい Secrets は使わない）。通知が失敗しても計画の生成・コミットは止まらず、出なかった通知は次の実行で出る。
+- 止めるとき: `daytrade.yml` の `Notify` の2つの手順を消すか無効にする。リポジトリ側の他の変更は要らない。
+- 何が通知されるかを、Issue を作らずに確かめる: `node scripts/daytrade-notify.js --dry-run [--now=<ISO>] [--data-dir=<dir>]`（書く予定の本文を出すだけ）。
+- できないこと: `Intraday Snapshot` 自体が止まると `daytrade.yml` も起動しないので、その停止は通知できない（外部の起動の確認は `docs/intraday-external-cron.md`）。

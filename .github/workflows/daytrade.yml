@@ -9,6 +9,11 @@ name: Daytrade Plan
 # 同名が両方にあれば Secrets が優先。ファイル（accounts.json・計画・log.csv）には書かない。未設定なら『上限ロット 未設定・発注不可』になる。設定方法は data/daytrade/README.md。
 # 注意: Variables の値は Actions のログ（Generate plan の env 欄）に平文で出る。Secrets ならログでは *** に伏せられる。
 #
+# 通知（GitHub Issue）: 各実行の最後に scripts/daytrade-notify.js を動かし、計画日ごとの Issue（ラベル daytrade）にコメントする
+#   新しい案／取消・再設計／価格が Entry 帯に入った・近づいた／採点の結果／異常（この workflow の失敗・設計なし・入力の更新停止）。計画日が終わるとまとめを書いて閉じる。
+#   権限は issues: write だけ（組み込みの github.token。新しい Secrets は使わない）。コミットはしない（帯への接近の判定はファイルを書かない）。
+#   計画を作らなかった実行（何もしない・この時間は済み）でも動く。通知の失敗は計画の生成・コミットに影響させない（continue-on-error）。
+#
 # 起動: cron ではなく、intraday のワークフロー（Intraday Snapshot）が完了した直後（workflow_run）。入力が更新された直後に動くので、
 # 鮮度（20分）を満たす。GitHub の schedule が欠落・遅延する問題（daily.yml のコメント参照）の影響も受けない。
 # 実行の種類は『実行時刻（JST）』と『その計画日・その枠の設計が済んでいるか』で、scripts/daytrade/schedule.js が決める:
@@ -40,6 +45,7 @@ on:
 
 permissions:
   contents: write
+  issues: write   # 通知（Issue の作成・コメント・クローズ）。scripts/daytrade-notify.js
 
 # 起動が重なっても、同じ data/ へ同時に書かないようにする。待機中の run は1つしか持たれず、新しい run に置き換わるが、
 # 設計は『その枠で最初の実行』で決まる（設計が済んでいなければ次の実行が設計になる）ので、同じ窓の中に次の実行が来れば設計は抜けない。
@@ -117,3 +123,24 @@ jobs:
           done
           echo "::error::daytrade-plan のpushに3回失敗しました"
           exit 1
+
+      # 通知（Issue）。Commit and push のあと＝計画・ログが main に載ってから。計画を作らなかった実行でも、帯への接近の判定・期限後のまとめ・異常の通知を行う。
+      - name: Notify (GitHub Issue)
+        if: ${{ success() }}
+        continue-on-error: true   # 通知の失敗で、この workflow を赤くしない（出なかった通知は次の実行で出る）
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          NOW: ${{ steps.resolve.outputs.now }}
+        run: node scripts/daytrade-notify.js --now="$NOW"
+
+      # この workflow のどこかの手順が失敗したとき（Resolve・Generate plan・Commit and push など）。Issue に失敗を知らせる（1時間に1回まで）
+      - name: Notify failure (GitHub Issue)
+        if: ${{ failure() }}
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          NOW: ${{ steps.resolve.outputs.now }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/daytrade-notify.js --failure --run-url="$RUN_URL" --now="$NOW"

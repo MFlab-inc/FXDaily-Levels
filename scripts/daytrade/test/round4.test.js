@@ -309,5 +309,5 @@ test("workflow: Resolve と同じ時刻（now）を採点・生成の手順に�
   const yml = fs.readFileSync(path.join(__dirname, "..", "..", "..", ".github", "workflows", "daytrade.yml"), "utf8");
   assert.match(yml, /run: node scripts\/daytrade-score\.js --now="\$NOW"/);
   assert.match(yml, /run: node scripts\/daytrade-plan\.js --now="\$NOW" \$FORCE/);
-  assert.equal((yml.match(/NOW: \$\{\{ steps\.resolve\.outputs\.now \}\}/g) || []).length, 2);
+  assert.equal((yml.match(/NOW: \$\{\{ steps\.resolve\.outputs\.now \}\}/g) || []).length, 4); // 採点・生成・通知・失敗の通知
 });
