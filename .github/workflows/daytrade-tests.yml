@@ -38,5 +38,9 @@ jobs:
           node-version: "20"
       - name: Run daytrade tests
         run: node --test scripts/daytrade/test/*.test.js
+      - name: Dry-run actual committed data (no writes)
+        run: |
+          node scripts/daytrade-plan.js --run=design --slot=1 --force --dry-run --no-risk-feed --now=2026-10-12T06:05:00+09:00 > /tmp/daytrade-dry-run.txt
+          sed -n '/== 3\. 不採用の理由/,/== 4\. 価格根拠/p' /tmp/daytrade-dry-run.txt | sed '$d'
       - name: Run MTF tests (shared library)
         run: node --test mtf/test/*.test.js
