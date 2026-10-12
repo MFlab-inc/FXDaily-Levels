@@ -136,3 +136,57 @@ test("workflow: 口座の資金は Variables（同名の Secrets があればそ
   assert.ok(!/run:.*DAYTRADE_EQUITY|EQUITY.*(GITHUB_ENV|GITHUB_OUTPUT|tee)/.test(code));
   for (const m of code.matchAll(/^\s*(?:-\s*)?if:\s*(.+)$/gm)) assert.ok(!/EQUITY|vars\./.test(m[1]), `if に資金: ${m[1]}`);
 });
+
+// ---- 通知（GitHub Issue） ----
+function stepBlock(yml, name) {
+  const lines = yml.split("\n");
+  const i = lines.findIndex((l) => l.trim() === `- name: ${name}`);
+  assert.ok(i >= 0, name);
+  let j = i + 1;
+  while (j < lines.length && !/^\s+- name: /.test(lines[j])) j++;
+  return lines.slice(i, j).join("\n");
+}
+
+test("workflow: 通知は Commit and push のあとに動く。権限は issues: write だけ追加し、組み込みの github.token を使う（新しい Secrets を使わない）", () => {
+  const perm = /^permissions:\n((?:  .+\n)+)/m.exec(PLAN)[1];
+  assert.deepEqual(perm.trim().split("\n").map((l) => l.replace(/#.*$/, "").trim()).sort(), ["contents: write", "issues: write"]);
+  const lines = PLAN.split("\n");
+  const at = (n) => lines.findIndex((l) => l.trim() === `- name: ${n}`);
+  assert.ok(at("Commit and push") > 0 && at("Notify (GitHub Issue)") > at("Commit and push"));
+  assert.ok(at("Notify failure (GitHub Issue)") > at("Notify (GitHub Issue)"));
+  for (const n of ["Notify (GitHub Issue)", "Notify failure (GitHub Issue)"]) {
+    const b = stepBlock(PLAN, n);
+    assert.match(b, /continue-on-error: true/); // 通知の失敗で計画の生成・コミットを赤くしない
+    assert.match(b, /GITHUB_TOKEN: \$\{\{ github\.token \}\}/);
+    assert.match(b, /GITHUB_REPOSITORY: \$\{\{ github\.repository \}\}/);
+    assert.ok(!/secrets\./.test(b));
+    assert.ok(!/DAYTRADE_EQUITY/.test(b)); // 資金は渡さない（Issue は公開される）
+  }
+});
+
+test("workflow: 通知は計画を作らなかった実行（何もしない・済み）でも動く。失敗の通知は、どこかの手順が失敗したときだけ", () => {
+  const ok = stepBlock(PLAN, "Notify (GitHub Issue)");
+  const ng = stepBlock(PLAN, "Notify failure (GitHub Issue)");
+  assert.match(ok, /if: \$\{\{ success\(\) \}\}/);
+  assert.ok(!/steps\.resolve\.outputs\.action/.test(ok)); // action（design／status／skip）に依らない
+  assert.match(ok, /run: node scripts\/daytrade-notify\.js --now="\$NOW"/);
+  assert.match(ng, /if: \$\{\{ failure\(\) \|\| steps\.score\.outcome == 'failure' \}\}/); // 採点は continue-on-error なので、失敗しても全体は緑 → 失敗の通知は採点の失敗も見る
+  assert.match(stepBlock(PLAN, "Score previous plans"), /id: score/);
+  assert.match(ng, /run: node scripts\/daytrade-notify\.js --failure --run-url="\$RUN_URL" --detail="\$DETAIL" --now="\$NOW"/);
+  assert.match(ng, /DETAIL: \$\{\{ steps\.score\.outcome == 'failure' && 'Score previous plans（採点）' \|\| '' \}\}/);
+  for (const b of [ok, ng]) assert.match(b, /timeout-minutes: 5/); // 止まった接続で手順が居座らない
+  assert.match(ng, /RUN_URL: \$\{\{ github\.server_url \}\}\/\$\{\{ github\.repository \}\}\/actions\/runs\/\$\{\{ github\.run_id \}\}/);
+  // 通知はコミットしない（git add は計画・ログ・不採用の記録だけ。通知の手順に git の操作はない）
+  for (const b of [ok, ng]) assert.ok(!/git (add|commit|push)/.test(b));
+});
+
+test("workflow: 通知のスクリプトは書き込み先を Issue に限る（data/ にファイルを書かない）", () => {
+  const files = ["scripts/daytrade-notify.js", ...fs.readdirSync(path.join(ROOT, "scripts/daytrade/notify")).map((f) => `scripts/daytrade/notify/${f}`), "scripts/daytrade/gap.js"];
+  for (const f of files) {
+    const src = read(f).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    // 保存してよいのは dry-run の --save-state（引数で指定されたファイル）だけ
+    const writes = [...src.matchAll(/\b(writeFileSync|appendFileSync|renameSync|mkdirSync|writeAll|rmSync|unlinkSync)\(/g)].map((m) => m[1]);
+    if (f === "scripts/daytrade-notify.js") { assert.deepEqual(writes, ["writeFileSync"]); assert.match(src, /if \(args\["save-state"\]\) fs\.writeFileSync\(args\["save-state"\]/); }
+    else assert.deepEqual(writes, [], f);
+  }
+});
