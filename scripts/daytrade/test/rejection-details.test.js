@@ -61,5 +61,5 @@ test("途中終了は未計算値をnullにし、本文にEntry/SL/TP価格を�
   for (const p of PAIRS) fake.reference.volatility.pairs[p.code] = { state: "未取得" };
   const section = render(fake).split("== 3. ")[1].split("== 4. ")[0];
   assert.match(section, /SL幅 9.5p ＜ 10p、ATR14 19p/);
-  assert.doesNotMatch(section, /1\\.10[0-9]+/);
+  assert.doesNotMatch(section, /1\.10[0-9]+/);
 });
