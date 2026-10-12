@@ -48,8 +48,8 @@
   4. 採点の結果（到達／SL先・TP1先／未到達〔帯まであと◯pips〕／取消）— 採点は従来どおり翌営業日の設計①の前なので、金曜の案は月曜に、閉じた Issue へ追記される
   5. 異常 — Daytrade Plan の失敗（1時間に1回まで）／設計の窓が終わっても設計が無い／入力（intraday.json・h1-bars.json・daytrade-context.json）の更新が60分以上止まっている
 - 計画日が終わる（有効期限 翌日 03:00）と、まとめをコメントして Issue を閉じる（金曜分は土曜 03:00 以降）。土日は Issue を作らない。
-- **Issue は公開される**。口座の資金・損失上限・手数料は書かない（上限ロットは `data/daytrade-plan.txt` と同じく載せる）。
+- **Issue は公開される**。口座の資金・損失上限・手数料は書かない（上限ロットは `data/daytrade-plan.txt` と同じく載せる）。重複を防ぐ隠しマーカーは、`github-actions[bot]` が書いた本文・コメントだけを読む（他の人のコメントに同じ形の文字があっても無視する）。経済カレンダー由来の文字は、`@` の呼び出しやマーカーを作れないよう無害化して載せる。
 - 権限は `daytrade.yml` の `issues: write` と組み込みの `GITHUB_TOKEN` だけ（新しい Secrets は使わない）。通知が失敗しても計画の生成・コミットは止まらず、出なかった通知は次の実行で出る。
-- 止めるとき: `daytrade.yml` の `Notify` の2つの手順を消すか無効にする。リポジトリ側の他の変更は要らない。
+- 止めるとき: `daytrade.yml` の `Notify` の2つの手順を消す（`scripts/daytrade/test/workflow.test.js` の通知の試験も合わせて消す。試験が手順の存在を確かめているため）。Issue 側は、リポジトリの設定で Issue のコメントを制限する、または Issue を Lock しても、通知は止まらない（bot のコメントは書ける）。
 - 何が通知されるかを、Issue を作らずに確かめる: `node scripts/daytrade-notify.js --dry-run [--now=<ISO>] [--data-dir=<dir>]`（書く予定の本文を出すだけ）。
 - できないこと: `Intraday Snapshot` 自体が止まると `daytrade.yml` も起動しないので、その停止は通知できない（外部の起動の確認は `docs/intraday-external-cron.md`）。

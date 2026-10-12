@@ -22,6 +22,10 @@ const { FRESH_LIMIT_MIN } = require("../inputs");
  *   fail:<日 時>  ワークフローの失敗を、1時間に1回通知した
  *   nodesign:<日>:<枠>  設計の窓が終わっても設計が無いことを通知した
  *   stale:<フィード>:<as_of>  入力が1時間以上更新されていないことを、その as_of ごとに1回通知した
+ *   pending:<日>  異常の通知が先に出て、設計の結果がまだ無い状態で作った Issue（本文に候補の件数が無い）。design:<日> が付くまで『設計の結果』のコメントを待つ
+ *   design:<日>   その計画日の最初の設計の結果（候補の件数）を、本文またはコメントで知らせた
+ * マーカーを信用するのは、Actions の bot（github-actions[bot]）が書いた本文・コメントだけ（Issue は公開で、誰でもコメントできるため。isTrusted）。
+ * 外部由来の文字（カレンダーの題名など）は、マーカーや @ の呼び出しを作れないよう無害化してから文面に入れる（safeText）。
  */
 const MENTION = "@MFlab-inc";
 const LABEL = "daytrade";
@@ -31,19 +35,33 @@ const SCORE_WINDOW_HOURS = 72;      // 採点の通知は、採点から72時間
 const SCORED = new Set(["到達", "未到達", "失効後到達"]);
 const CANCELLED = "取消(再設計)";
 const FEEDS = ["intraday.json", "h1-bars.json", "daytrade-context.json"];
+const TRUSTED_AUTHORS = ["github-actions[bot]"]; // GITHUB_TOKEN で書いたときの書き手。手元で別のトークンを使うときは DAYTRADE_NOTIFY_TRUSTED（カンマ区切り）で足す
 
 // ---- 鍵とマーカー ----
 const clean = (s) => String(s).replace(/--+/g, "-_").replace(/[\r\n]+/g, " ").trim();
 const K = {
   new: (v) => clean(`new:${v}`), cancel: (v) => clean(`cancel:${v}`), near: (v) => clean(`near:${v}`), score: (v) => clean(`score:${v}`),
+  pending: (d) => clean(`pending:${d}`), design: (d) => clean(`design:${d}`),
   summary: (d) => clean(`summary:${d}`), fail: (hourLabel) => clean(`fail:${hourLabel}`), nodesign: (d, slot) => clean(`nodesign:${d}:${slot}`),
   stale: (name, asOf) => clean(`stale:${name}:${asOf ?? "unreadable"}`),
 };
+const isTrusted = (user, trusted = TRUSTED_AUTHORS) => Boolean(user && typeof user.login === "string" && trusted.includes(user.login));
+
+// 外部由来の文字（経済カレンダーの題名・実行の URL など）を、1行の無害な文字にする。
+// '<' '>' を全角にしてマーカー（HTML コメント）を作れなくし、'@' を全角にして呼び出しを作れなくし、[ ] と :// を崩してリンクを作れなくする。長さも切る
+const safeText = (s, max = 80) => String(s ?? "")
+  .replace(/[\u0000-\u001f\u007f\u200b-\u200f\u2028\u2029]/g, " ")
+  .replace(/</g, "＜").replace(/>/g, "＞").replace(/`/g, "'").replace(/@/g, "＠").replace(/\[/g, "［").replace(/\]/g, "］").replace(/:\/\//g, "：//")
+  .replace(/\s+/g, " ").trim().slice(0, max);
+
 const markerOf = (key) => `<!-- daytrade-notify key=${clean(key)} -->`;
 // テキスト（Issue の本文・コメントの本文）にあるマーカーの鍵を、書かれた順に返す
 const parseMarkers = (text) => [...String(text ?? "").matchAll(/<!-- daytrade-notify key=(.*?) -->/g)].map((m) => m[1]);
 
 const versionKey = (c) => clean(L.keyOf(candRow(c, "design", c.generated_at)));
+// 版の鍵の形（log.csv の keyOf の形）。マーカーから読んだ鍵がこの形でなければ、案として扱わない
+const VERSION_RE = /^\d{4}-\d{2}-\d{2}\|[AB]\|[A-Z]{6}\|(buy|sell)\|\d+(\.\d+)?\|\d+(\.\d+)?\|(\d+(\.\d+)?)?\|(\d+(\.\d+)?)?$/;
+const validVersion = (v) => VERSION_RE.test(v) && Boolean(pairOf(v.split("|")[2]));
 function parseVersionKey(v) {
   const [plan_date, setup, symbol, side, entry_low, entry_high, sl_a, sl_b] = String(v).split("|");
   return { plan_date, setup, symbol, side, entry_low, entry_high, sl_a, sl_b };
@@ -53,7 +71,7 @@ function announcedState(markers) {
   const m = new Map();
   for (const k of markers) {
     const mm = /^(new|cancel):(.+)$/.exec(k);
-    if (mm) m.set(mm[2], mm[1]); // 版の鍵（clean 済み）
+    if (mm && validVersion(mm[2])) m.set(mm[2], mm[1]); // 版の鍵（clean 済み）。形が違うものは読まない
   }
   return m;
 }
@@ -109,7 +127,7 @@ function entryBlockers(c, nowMs, planDate) {
   if (t) out.push(t);
   for (const w of c.stops || []) {
     const s = parseIso(w.start), e = parseIso(w.end);
-    if (Number.isFinite(s) && Number.isFinite(e) && nowMs >= s && nowMs <= e) out.push(`停止中: ${w.time_jst ?? ""} [${w.currency}] ${w.event}`);
+    if (Number.isFinite(s) && Number.isFinite(e) && nowMs >= s && nowMs <= e) out.push(`停止中: ${safeText(w.time_jst, 8)} [${safeText(w.currency, 6)}] ${safeText(w.event)}`);
   }
   return out;
 }
@@ -178,7 +196,7 @@ function anomalyEvents({ nowMs, plan, logRows, feeds, failure, markers }) {
 }
 
 module.exports = {
-  MENTION, LABEL, NEAR_ATR, STALE_ALERT_MIN, SCORE_WINDOW_HOURS, SCORED, CANCELLED, FEEDS, K,
-  markerOf, parseMarkers, versionKey, parseVersionKey, announcedState, isOperating, hourLabel, entryBlockers,
+  MENTION, LABEL, NEAR_ATR, STALE_ALERT_MIN, SCORE_WINDOW_HOURS, SCORED, CANCELLED, FEEDS, TRUSTED_AUTHORS, K,
+  isTrusted, safeText, markerOf, parseMarkers, versionKey, validVersion, parseVersionKey, announcedState, isOperating, hourLabel, entryBlockers,
   candidateEvents, scoreEvents, isExpired, closeDue, daySummary, anomalyEvents, jstDow,
 };

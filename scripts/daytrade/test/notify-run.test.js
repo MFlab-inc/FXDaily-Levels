@@ -227,19 +227,16 @@ test("異常: 失敗の通知は1時間に1回（Issue が無ければ作る）�
     assert.deepEqual((await w.run("2026-10-08T10:40:00+09:00", { failure: { run_url: "u" } })).ops, []);
     assert.deepEqual(kinds((await w.run("2026-10-08T11:10:00+09:00", { failure: { run_url: "u" } })).ops), ["comment"]);
     for (const t of ["2026-10-10T10:00:00+09:00", "2026-10-12T04:00:00+09:00"]) assert.deepEqual((await w.run(t, { failure: { run_url: "u" } })).ops, [], t);
-    // Issue が無い日の失敗 → Issue を作ってからコメント
+    // Issue が無い日の失敗 → Issue を作ってからコメント。公開前かもしれない手元の計画は信用せず、候補を載せない本文（pending の印つき）で作る
     const w2 = world();
     try {
       w2.put("daytrade-plan.json", plan());
-      const r2 = await w2.run("2026-10-08T07:10:00+09:00", { failure: { run_url: "u" } });
+      const r2 = await w2.run("2026-10-08T07:10:00+09:00", { failure: { run_url: "https://github.com/o/r/actions/runs/1", detail: "Score previous plans（採点）" } });
       assert.deepEqual(kinds(r2.ops), ["create_issue", "comment"]);
-      assert.match(r2.ops[0].body, /設計②（15:30）時点の候補: \*\*4件\*\*/); // 設計があれば、その要点をのせる
-      const w3 = world();
-      try {
-        w3.put("daytrade-plan.json", plan((q) => { q.order_ok = false; }));
-        const r3 = await w3.run("2026-10-08T07:10:00+09:00", { failure: { run_url: "u" } });
-        assert.match(r3.ops[0].body, /設計: 発注できる状態の設計はまだありません/); // 発注できる状態の設計が無ければ、候補は載せない
-      } finally { w3.cleanup(); }
+      assert.match(r2.ops[0].body, /設計: 発注できる状態の設計はまだありません/);
+      assert.ok(!/EURUSD|AUDUSD/.test(r2.ops[0].body));
+      assert.deepEqual(D.parseMarkers(r2.ops[0].body), ["pending:2026-10-08"]);
+      assert.match(r2.ops[1].body, /失敗した手順: Score previous plans（採点）/);
     } finally { w2.cleanup(); }
   } finally { w.cleanup(); }
 });
@@ -297,5 +294,222 @@ test("公開される Issue: 本文・コメントのどこにも、口座の資
     assert.ok(text.length > 500);
     assert.ok(!/500000|3000000|500,000|3,000,000|equity|損失上限|手数料|7,500|45,000/i.test(text));
     assert.match(text, /上限ロット A=0\.16 \/ B=1\.00/);
+  } finally { w.cleanup(); }
+});
+
+// ================= レビューの指摘に対応する試験 =================
+const BOTU = { login: "github-actions[bot]", type: "Bot" };
+const ATTACKER = { login: "someone-else", type: "User" };
+const D2 = { slot: 2, generated_at: "2026-10-08T15:30:00+09:00", inputs_ok: true };
+const D3 = { slot: 3, generated_at: "2026-10-08T21:30:00+09:00", inputs_ok: true };
+const ops = (client, kind) => client.ops.filter((o) => o.op === kind);
+const forge = (client, number, text, user = ATTACKER) => { const i = client.state().issues.find((x) => x.number === number); i.comments.push({ id: 9000 + i.comments.length, body: text, created_at: null, user }); };
+
+test("偽のマーカー: 他の人のコメントにマーカーがあっても読まない（通知を止められない・増やされない）。bot 以外が作った同じ題名の Issue も使わない", async () => {
+  const w = world();
+  try {
+    const p1 = withDesign(1, "2026-10-08T06:10:00+09:00", sel(ALL, "AUDUSD", "EURUSD"));
+    await w.run("2026-10-08T06:15:00+09:00", { plan: p1 });
+    // 外の人が、これから出る通知の印を先に書き込む
+    const gb = vOf(ALL, "GBPUSD"), eu = vOf(ALL, "EURUSD");
+    forge(w.client, 1, [D.markerOf(D.K.new(gb)), D.markerOf(D.K.near(eu)), D.markerOf(D.K.summary("2026-10-08")), D.markerOf(D.K.nodesign("2026-10-08", 2)), D.markerOf(D.K.cancel(vOf(ALL, "AUDUSD")))].join("\n"));
+    const p2 = withDesign(2, "2026-10-08T15:30:00+09:00", sel(ALL, "AUDUSD", "EURUSD", "GBPUSD"), { prev: [D1] });
+    let r = await w.run("2026-10-08T15:35:00+09:00", { plan: p2 });
+    assert.deepEqual(kinds(r.ops), ["comment"]);
+    assert.match(r.ops[0].body, /新しい案 1件[\s\S]*GBPUSD 売り 型A/); // 偽の new: に止められない
+    r = await w.run("2026-10-08T16:35:00+09:00", { prices: { EURUSD: 1.1041 } });
+    assert.match(r.ops[0].body, /EURUSD 売り：帯に到達/); // 偽の near: に止められない
+    // 偽の cancel: が付いても、案を出し直したりしない
+    assert.deepEqual((await w.run("2026-10-08T16:50:00+09:00", { prices: { EURUSD: 1.1041 } })).ops, []);
+    // 期限後のまとめ・クローズも、偽の summary: に止められない
+    w.setLog([]);
+    r = await w.run("2026-10-09T03:05:00+09:00");
+    assert.deepEqual(kinds(r.ops), ["comment", "close"]);
+    assert.match(r.ops[0].body, /計画日 2026-10-08 が終了しました/);
+    // bot 以外が作った（ラベル付きの）同じ題名の Issue は対象にしない → bot が自分の Issue を作る
+    const w2 = world();
+    try {
+      const fake = { issues: [{ number: 1, title: "デイトレ 2026-10-08（木）", state: "open", body: `${D.markerOf(D.K.design("2026-10-08"))}${D.markerOf(D.K.new(vOf(ALL, "EURUSD")))}`, labels: ["daytrade"], comments: [], user: ATTACKER }] };
+      const c2 = createMemoryClient(fake);
+      const rr = await runNotify({ dataDir: w2.dir, nowMs: iso("2026-10-08T06:15:00+09:00"), client: c2, log: () => {} }).catch((e) => e);
+      assert.ok(!(rr instanceof Error));
+      w2.put("daytrade-plan.json", withDesign(1, "2026-10-08T06:10:00+09:00", sel(ALL, "EURUSD")));
+      w2.put("intraday.json", intraday(iso("2026-10-08T06:15:00+09:00"), {}));
+      for (const n of ["h1-bars.json", "daytrade-context.json"]) w2.put(n, { as_of: J.jstIso(iso("2026-10-08T06:13:00+09:00")) });
+      await runNotify({ dataDir: w2.dir, nowMs: iso("2026-10-08T06:15:00+09:00"), client: c2, log: () => {} });
+      assert.equal(ops(c2, "create_issue").length, 1);
+      assert.equal(c2.state().issues.find((i) => i.number !== 1).user.login, "github-actions[bot]");
+    } finally { w2.cleanup(); }
+  } finally { w.cleanup(); }
+});
+
+test("同じ題名の Issue が複数あれば、開いているもの・新しいものを使う（古い閉じた Issue に書かない）", async () => {
+  const w = world();
+  try {
+    const mkIssue = (number, state) => ({ number, title: "デイトレ 2026-10-08（木）", state, body: D.markerOf(D.K.design("2026-10-08")), labels: ["daytrade"], comments: [] });
+    const client = createMemoryClient({ issues: [mkIssue(1, "closed"), mkIssue(2, "open"), mkIssue(3, "open")] }); // 3 が最新
+    w.client = client;
+    const p = withDesign(2, "2026-10-08T15:30:00+09:00", sel(ALL, "EURUSD"), { prev: [D1] });
+    await w.run("2026-10-08T15:35:00+09:00", { plan: p, client });
+    const r = await w.run("2026-10-08T16:35:00+09:00", { prices: { EURUSD: 1.1041 }, client });
+    assert.deepEqual(client.ops.map((o) => [o.op, o.number]), [["comment", 3], ["comment", 3]]); // 新しい案 → 帯。どちらも最新の開いている Issue
+    assert.equal(r.errors.length, 0);
+    const c2 = createMemoryClient({ issues: [mkIssue(1, "open"), mkIssue(2, "closed")] }); // 開いているものを優先（古くても）
+    w.client = c2;
+    await w.run("2026-10-08T16:40:00+09:00", { plan: p, prices: { EURUSD: 1.1041 }, client: c2 });
+    assert.deepEqual(c2.ops.map((o) => o.number), [1, 1]);
+  } finally { w.cleanup(); }
+});
+
+test("Issue を作るのに失敗したら、同じ実行で重ねて作らない（作られていれば、次の実行が見つける）", async () => {
+  const w = world();
+  try {
+    let creates = 0;
+    const flaky = { ...w.client, createIssue: async (x) => { creates++; throw new Error("HTTP 502 応答が返らない"); } };
+    // 設計②だけの計画（設計①の異常もある）。今日の計画の Issue 作成が失敗 → 異常の通知では作り直さない
+    const p = withDesign(2, "2026-10-08T15:30:00+09:00", sel(ALL, "EURUSD"), { prev: [] });
+    const r = await w.run("2026-10-08T15:35:00+09:00", { plan: p, client: flaky });
+    assert.equal(creates, 1);
+    assert.equal(r.errors.length, 1);
+    assert.match(r.errors[0], /今日の計画/);
+    assert.equal(w.client.state().issues.length, 0);
+  } finally { w.cleanup(); }
+});
+
+test("異常が先に出て作られた Issue: 設計①の結果（候補0件でも）を、最初の設計ができた実行でコメントする。候補は重ねて通知しない", async () => {
+  const w = world();
+  try {
+    let r = await w.run("2026-10-08T06:20:00+09:00", { failure: { run_url: "https://github.com/o/r/actions/runs/1" } });
+    assert.deepEqual(kinds(r.ops), ["create_issue", "comment"]);
+    // 設計①: 候補0件 → 『設計の結果』のコメント（本文は書き換えない）
+    const p0 = withDesign(1, "2026-10-08T06:30:00+09:00", []);
+    r = await w.run("2026-10-08T06:35:00+09:00", { plan: p0 });
+    assert.deepEqual(kinds(r.ops), ["comment"]);
+    assert.match(r.ops[0].body, /^@MFlab-inc 設計の結果/);
+    assert.match(r.ops[0].body, /設計①（06:30）時点の候補: \*\*0件\*\*[\s\S]*候補はありません/);
+    assert.deepEqual((await w.run("2026-10-08T06:50:00+09:00", { plan: p0 })).ops, []);
+    // 候補があるとき: 1つのコメントに要点。『新しい案』を別に重ねない。設計②の追加分だけが新しい案
+    const w2 = world();
+    try {
+      await w2.run("2026-10-08T06:20:00+09:00", { failure: { run_url: "https://github.com/o/r/actions/runs/2" } });
+      const p1 = withDesign(1, "2026-10-08T06:30:00+09:00", sel(ALL, "AUDUSD", "EURUSD"));
+      const a = await w2.run("2026-10-08T06:35:00+09:00", { plan: p1 });
+      assert.deepEqual(kinds(a.ops), ["comment"]);
+      assert.match(a.ops[0].body, /^@MFlab-inc 設計の結果[\s\S]*候補: \*\*2件\*\*[\s\S]*AUDUSD 買い 型A[\s\S]*EURUSD 売り 型A/);
+      assert.deepEqual((await w2.run("2026-10-08T06:50:00+09:00", { plan: p1 })).ops, []);
+      const p2 = withDesign(2, "2026-10-08T15:30:00+09:00", sel(ALL, "AUDUSD", "EURUSD", "GBPUSD"), { prev: [D1] });
+      const b = await w2.run("2026-10-08T15:35:00+09:00", { plan: p2 });
+      assert.deepEqual(kinds(b.ops), ["comment"]);
+      assert.match(b.ops[0].body, /新しい案 1件[\s\S]*GBPUSD/);
+      assert.ok(!/AUDUSD|EURUSD/.test(b.ops[0].body));
+    } finally { w2.cleanup(); }
+  } finally { w.cleanup(); }
+});
+
+test("同じ実行で Issue を作ってから異常が見つかっても、Issue は1つだけ（設計②からの運用開始日など）", async () => {
+  const w = world();
+  try {
+    const p = withDesign(2, "2026-10-08T15:30:00+09:00", sel(ALL, "EURUSD"), { prev: [] });
+    const r = await w.run("2026-10-08T15:35:00+09:00", { plan: p });
+    assert.deepEqual(kinds(r.ops), ["create_issue", "comment"]);
+    assert.match(r.ops[0].body, /設計②（15:30）時点の候補: \*\*1件\*\*/); // 設計②で作った Issue の見出しは設計②
+    assert.match(r.ops[1].body, /設計①がありません/);
+    assert.equal(w.client.state().issues.length, 1);
+    assert.equal(r.ops[1].number, r.ops[0].number);
+  } finally { w.cleanup(); }
+});
+
+test("まとめを書いたあとで閉じるのに失敗したら、次の実行は閉じるだけ（まとめを重ねない）。まとめの印が付いている", async () => {
+  const w = world();
+  try {
+    const p = withDesign(3, "2026-10-08T21:30:00+09:00", sel(ALL, "EURUSD"), { prev: [D1, D2] });
+    await w.run("2026-10-08T21:35:00+09:00", { plan: p });
+    w.setLog([]);
+    let closes = 0;
+    const flaky = { ...w.client, closeIssue: async (n) => { closes++; if (closes === 1) throw new Error("HTTP 502"); return w.client.closeIssue(n); } };
+    const r1 = await w.run("2026-10-09T03:05:00+09:00", { client: flaky });
+    assert.deepEqual(kinds(r1.ops), ["comment"]);
+    assert.equal(r1.errors.length, 1);
+    assert.deepEqual(D.parseMarkers(r1.ops[0].body), ["summary:2026-10-08"]);
+    assert.equal(w.client.state().issues[0].state, "open");
+    const r2 = await w.run("2026-10-09T03:20:00+09:00");
+    assert.deepEqual(kinds(r2.ops), ["close"]);
+    assert.deepEqual((await w.run("2026-10-09T03:35:00+09:00")).ops, []);
+  } finally { w.cleanup(); }
+});
+
+test("運用開始の日: 採点の行があっても、Issue の無い計画日には Issue を作らない（さかのぼって作らない）", async () => {
+  const w = world();
+  try {
+    const eu = by(ALL, "EURUSD");
+    const d = candRow({ ...eu, plan_date: "2026-10-07" }, "design", "2026-10-07T15:30:00+09:00");
+    w.setLog([{ ...d, plan_date: "2026-10-07" }, { ...d, plan_date: "2026-10-07", run: "status", generated_at: "2026-10-08T06:20:00+09:00", reached: "未到達" }]);
+    const p = withDesign(1, "2026-10-08T06:10:00+09:00", []);
+    const r = await w.run("2026-10-08T06:25:00+09:00", { plan: p });
+    assert.deepEqual(kinds(r.ops), ["create_issue"]);
+    assert.equal(r.ops[0].title, "デイトレ 2026-10-08（木）");
+    assert.equal(w.client.state().issues.length, 1);
+  } finally { w.cleanup(); }
+});
+
+test("日付が変わる・週末をまたぐ: 昨日の計画のままの朝は新しい計画日の Issue。月曜の最初の実行で、金曜の Issue をまとめて閉じ、採点を書き、月曜の Issue を作る", async () => {
+  const w = world();
+  try {
+    // 火曜 06:30、plan.json はまだ月曜のもの。失敗の通知 → 火曜の題名で作る
+    const mon = plan((q) => { q.plan_date = "2026-10-12"; q.designs = [{ slot: 1, generated_at: "2026-10-12T06:10:00+09:00", inputs_ok: true }]; q.candidates = [by(ALL, "EURUSD")]; });
+    const r = await w.run("2026-10-13T06:30:00+09:00", { plan: mon, failure: { run_url: "https://github.com/o/r/actions/runs/3" } });
+    assert.equal(r.ops[0].title, "デイトレ 2026-10-13（火）");
+    assert.ok(!/EURUSD/.test(r.ops[0].body));
+    // 金曜の Issue（開いたまま）→ 週末に実行なし → 月曜
+    const w2 = world();
+    try {
+      const fri = plan((q) => { q.plan_date = "2026-10-09"; q.designs = [{ slot: 1, generated_at: "2026-10-09T06:10:00+09:00", inputs_ok: true }]; q.candidates = [by(ALL, "EURUSD")]; });
+      await w2.run("2026-10-09T06:15:00+09:00", { plan: fri });
+      const eu = by(ALL, "EURUSD");
+      const d = { ...candRow({ ...eu, plan_date: "2026-10-09" }, "design", "2026-10-09T06:10:00+09:00"), plan_date: "2026-10-09", expires_at: "2026-10-10T03:00:00+09:00" };
+      w2.setLog([d, { ...d, run: "status", generated_at: "2026-10-12T06:20:00+09:00", reached: "到達", reached_at: "2026-10-09T20:00:00+09:00", first_hit_a: "TP1", first_hit_b: "TP1" }]);
+      const monPlan = plan((q) => { q.plan_date = "2026-10-12"; q.designs = [{ slot: 1, generated_at: "2026-10-12T06:10:00+09:00", inputs_ok: true }]; q.candidates = []; });
+      const m = await w2.run("2026-10-12T06:25:00+09:00", { plan: monPlan });
+      assert.deepEqual(m.ops.map((o) => [o.op, o.title]), [["comment", "デイトレ 2026-10-09（金）"], ["close", "デイトレ 2026-10-09（金）"], ["comment", "デイトレ 2026-10-09（金）"], ["create_issue", "デイトレ 2026-10-12（月）"]]);
+      assert.match(m.ops[0].body, /計画日 2026-10-09 が終了しました/);
+      assert.match(m.ops[2].body, /採点の結果（計画日 2026-10-09）[\s\S]*到達（10-09 20:00の足） ／ A案 TP1先、B案 TP1先/);
+      assert.deepEqual((await w2.run("2026-10-12T06:40:00+09:00", { plan: monPlan })).ops, []);
+    } finally { w2.cleanup(); }
+  } finally { w.cleanup(); }
+});
+
+test("設計の窓が3つとも終わって設計が無いとき、枠ごとに別のコメント（それぞれの枠を名指し）", async () => {
+  const w = world();
+  try {
+    const none = plan((q) => { q.designs = []; q.candidates = []; q.order_ok = false; q.design_missing = true; });
+    const r = await w.run("2026-10-08T23:10:00+09:00", { plan: none });
+    assert.deepEqual(kinds(r.ops), ["create_issue", "comment", "comment", "comment"]);
+    assert.deepEqual(r.ops.slice(1).map((o) => /設計(①|②|③)がありません/.exec(o.body)[1]), ["①", "②", "③"]);
+    assert.deepEqual(r.ops.slice(1).map((o) => D.parseMarkers(o.body)), [["nodesign:2026-10-08:1"], ["nodesign:2026-10-08:2"], ["nodesign:2026-10-08:3"]]);
+    assert.deepEqual((await w.run("2026-10-08T23:25:00+09:00", { plan: none })).ops, []);
+  } finally { w.cleanup(); }
+});
+
+test("コメントを読み切れない・ラベルの用意に失敗する: 読み切れなければ何も書かない（二重に通知しない）。ラベルの失敗は Issue の作成を止めない（1回の実行で1回だけ用意する）", async () => {
+  const w = world();
+  try {
+    const p = withDesign(1, "2026-10-08T06:10:00+09:00", sel(ALL, "EURUSD"));
+    await w.run("2026-10-08T06:15:00+09:00", { plan: p });
+    forge(w.client, 1, "x", BOTU); // コメントがある Issue（読む必要がある）
+    let adds = 0;
+    const cut = { ...w.client, listComments: async () => { throw new Error("GET /issues/1/comments: 3000件を超えていて読み切れません"); }, addComment: async () => { adds++; } };
+    const p2 = withDesign(2, "2026-10-08T15:30:00+09:00", sel(ALL, "EURUSD", "GBPUSD"), { prev: [D1] });
+    const r = await w.run("2026-10-08T15:35:00+09:00", { plan: p2, client: cut });
+    assert.equal(adds, 0);
+    assert.ok(r.errors.length >= 1 && r.errors.every((e) => /読み切れません/.test(e)));
+    const w2 = world();
+    try {
+      let labels = 0;
+      const nolabel = { ...w2.client, ensureLabel: async () => { labels++; throw new Error("HTTP 403"); } };
+      const rr = await w2.run("2026-10-08T06:15:00+09:00", { plan: p, client: nolabel });
+      assert.deepEqual(kinds(rr.ops), ["create_issue"]);
+      assert.equal(labels, 1);
+      assert.deepEqual(rr.errors, []);
+    } finally { w2.cleanup(); }
   } finally { w.cleanup(); }
 });

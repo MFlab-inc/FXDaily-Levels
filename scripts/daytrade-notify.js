@@ -4,8 +4,9 @@
  *   node scripts/daytrade-notify.js [--now=<ISO>] [--data-dir=<dir>]
  *   --dry-run             Issue を作らない・書かない。GitHub に接続せず、メモリ上の Issue に対して『書く予定の本文』を標準出力へ出す
  *   --state=<file>        （dry-run）メモリ上の Issue の初期状態（JSON）。--save-state=<file> で終了時の状態を保存（続きの試験用）
- *   --failure             ワークフローの失敗の通知だけを出す（失敗した手順から呼ぶ）。--run-url=<URL> を本文に付ける
- * 環境変数: GITHUB_TOKEN（ワークフローの github.token。権限は issues: write）、GITHUB_REPOSITORY（owner/repo）、GITHUB_SERVER_URL
+ *   --failure             ワークフローの失敗の通知だけを出す（失敗した手順から呼ぶ）。--run-url=<URL>・--detail=<失敗した手順の名前> を本文に付ける
+ * 環境変数: GITHUB_TOKEN（ワークフローの github.token。権限は issues: write）、GITHUB_REPOSITORY（owner/repo）、GITHUB_SERVER_URL、
+ *   DAYTRADE_NOTIFY_TRUSTED（任意。マーカーを信用する書き手を足す。カンマ区切り。既定は github-actions[bot] だけ。手元で個人のトークンを使うとき用）
  * 通知の中身と重複防止の仕組みは scripts/daytrade/notify/detect.js、文面は format.js。口座の資金は読まない・書かない（Issue は公開される）。
  */
 const fs = require("fs");
@@ -14,6 +15,7 @@ const { parseArgs, dataDir: defaultDataDir } = require("./daytrade/cli");
 const { parseIso, jstIso } = require("./daytrade/jst");
 const { createClient, createMemoryClient } = require("./daytrade/notify/github");
 const { runNotify } = require("./daytrade/notify/run");
+const { TRUSTED_AUTHORS } = require("./daytrade/notify/detect");
 
 const stripMarkers = (s) => String(s).replace(/\n*<!-- daytrade-notify key=.*? -->/g, "");
 
@@ -31,8 +33,9 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
   } else {
     client = (deps.createClient || createClient)({ token: env.GITHUB_TOKEN, repo: env.GITHUB_REPOSITORY, fetchImpl: deps.fetchImpl || globalThis.fetch, log: io.log });
   }
-  const failure = args.failure ? { run_url: typeof args["run-url"] === "string" ? args["run-url"] : null } : null;
-  const r = await runNotify({ dataDir, nowMs, client, failure, repoUrl, log: io.log });
+  const failure = args.failure ? { run_url: typeof args["run-url"] === "string" ? args["run-url"] : null, detail: typeof args.detail === "string" && args.detail ? args.detail : null } : null;
+  const trusted = [...TRUSTED_AUTHORS, ...String(env.DAYTRADE_NOTIFY_TRUSTED || "").split(",").map((x) => x.trim()).filter(Boolean)];
+  const r = await runNotify({ dataDir, nowMs, client, failure, repoUrl, trusted, log: io.log });
   if (dry) {
     for (const op of client.ops) {
       if (op.op === "create_issue") io.log(`\n=== [dry-run] Issue を作る（ラベル ${op.labels.join(",")}）: ${op.title} ===\n${stripMarkers(op.body)}`);

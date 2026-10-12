@@ -170,8 +170,11 @@ test("workflow: 通知は計画を作らなかった実行（何もしない・�
   assert.match(ok, /if: \$\{\{ success\(\) \}\}/);
   assert.ok(!/steps\.resolve\.outputs\.action/.test(ok)); // action（design／status／skip）に依らない
   assert.match(ok, /run: node scripts\/daytrade-notify\.js --now="\$NOW"/);
-  assert.match(ng, /if: \$\{\{ failure\(\) \}\}/);
-  assert.match(ng, /run: node scripts\/daytrade-notify\.js --failure --run-url="\$RUN_URL" --now="\$NOW"/);
+  assert.match(ng, /if: \$\{\{ failure\(\) \|\| steps\.score\.outcome == 'failure' \}\}/); // 採点は continue-on-error なので、失敗しても全体は緑 → 失敗の通知は採点の失敗も見る
+  assert.match(stepBlock(PLAN, "Score previous plans"), /id: score/);
+  assert.match(ng, /run: node scripts\/daytrade-notify\.js --failure --run-url="\$RUN_URL" --detail="\$DETAIL" --now="\$NOW"/);
+  assert.match(ng, /DETAIL: \$\{\{ steps\.score\.outcome == 'failure' && 'Score previous plans（採点）' \|\| '' \}\}/);
+  for (const b of [ok, ng]) assert.match(b, /timeout-minutes: 5/); // 止まった接続で手順が居座らない
   assert.match(ng, /RUN_URL: \$\{\{ github\.server_url \}\}\/\$\{\{ github\.repository \}\}\/actions\/runs\/\$\{\{ github\.run_id \}\}/);
   // 通知はコミットしない（git add は計画・ログ・不採用の記録だけ。通知の手順に git の操作はない）
   for (const b of [ok, ng]) assert.ok(!/git (add|commit|push)/.test(b));

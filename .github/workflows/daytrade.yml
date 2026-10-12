@@ -84,8 +84,9 @@ jobs:
 
       # 前日までの案の採点（設計の前に動かす。何度動かしても同じ結果で、済んだ案は触らない）
       - name: Score previous plans
+        id: score
         if: ${{ steps.resolve.outputs.action == 'design' }}
-        continue-on-error: true   # 採点の失敗で設計を止めない（次の設計で再試行される）
+        continue-on-error: true   # 採点の失敗で設計を止めない（次の設計で再試行される）。失敗は Issue の通知（Notify failure）で知らせる
         env:
           NOW: ${{ steps.resolve.outputs.now }}
         run: node scripts/daytrade-score.js --now="$NOW"
@@ -128,19 +129,23 @@ jobs:
       - name: Notify (GitHub Issue)
         if: ${{ success() }}
         continue-on-error: true   # 通知の失敗で、この workflow を赤くしない（出なかった通知は次の実行で出る）
+        timeout-minutes: 5
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           NOW: ${{ steps.resolve.outputs.now }}
         run: node scripts/daytrade-notify.js --now="$NOW"
 
-      # この workflow のどこかの手順が失敗したとき（Resolve・Generate plan・Commit and push など）。Issue に失敗を知らせる（1時間に1回まで）
+      # この workflow のどこかの手順が失敗したとき（Resolve・Generate plan・Commit and push など）と、採点（continue-on-error のため失敗しても全体は緑）が失敗したとき。
+      # Issue に失敗を知らせる（1時間に1回まで）。失敗した手順の名前と、実行の URL つき
       - name: Notify failure (GitHub Issue)
-        if: ${{ failure() }}
+        if: ${{ failure() || steps.score.outcome == 'failure' }}
         continue-on-error: true
+        timeout-minutes: 5
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           NOW: ${{ steps.resolve.outputs.now }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: node scripts/daytrade-notify.js --failure --run-url="$RUN_URL" --now="$NOW"
+          DETAIL: ${{ steps.score.outcome == 'failure' && 'Score previous plans（採点）' || '' }}
+        run: node scripts/daytrade-notify.js --failure --run-url="$RUN_URL" --detail="$DETAIL" --now="$NOW"
