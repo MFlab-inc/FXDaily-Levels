@@ -16,7 +16,9 @@ const { FRESH_LIMIT_MIN } = require("../inputs");
  * 鍵:
  *   new:<版>      案を通知した（版 = log.csv と同じ plan_date|型|銘柄|向き|Entry帯|SL(A)|SL(B)）。cancel:<版> が後に付くまで再通知しない
  *   cancel:<版>   取消（再設計）を通知した。これより後にまた案が出たら、new: を出し直す（取消のあとに同じ案が戻った）
- *   near:<版>     価格が帯に入った／帯の近く（0.1×H1 ATR 以内）に来たことを、版ごとに1回通知した
+ *   near:<版>     価格が帯の近く（帯の外で、帯から 0.1×H1 ATR 以内）に来たことを、版ごとに1回通知した
+ *   band:<版>     価格が帯に入った（到達）ことを、版ごとに1回通知した。near: とは別の出来事（近く → 到達の順に両方出る。最初から帯の中なら到達だけ。
+ *                 到達を通知したあとは、近くを出さない）
  *   score:<版>    採点の結果を通知した
  *   summary:<日>  計画日の終了のまとめを出した（Issue を閉じた）
  *   fail:<日 時>  ワークフローの失敗を、1時間に1回通知した
@@ -40,7 +42,7 @@ const TRUSTED_AUTHORS = ["github-actions[bot]"]; // GITHUB_TOKEN で書いたと
 // ---- 鍵とマーカー ----
 const clean = (s) => String(s).replace(/--+/g, "-_").replace(/[\r\n]+/g, " ").trim();
 const K = {
-  new: (v) => clean(`new:${v}`), cancel: (v) => clean(`cancel:${v}`), near: (v) => clean(`near:${v}`), score: (v) => clean(`score:${v}`),
+  new: (v) => clean(`new:${v}`), cancel: (v) => clean(`cancel:${v}`), near: (v) => clean(`near:${v}`), band: (v) => clean(`band:${v}`), score: (v) => clean(`score:${v}`),
   pending: (d) => clean(`pending:${d}`), design: (d) => clean(`design:${d}`),
   summary: (d) => clean(`summary:${d}`), fail: (hourLabel) => clean(`fail:${hourLabel}`), nodesign: (d, slot) => clean(`nodesign:${d}:${slot}`),
   stale: (name, asOf) => clean(`stale:${name}:${asOf ?? "unreadable"}`),
@@ -102,19 +104,22 @@ function candidateEvents({ nowMs, plan, intraday, markers }) {
   const newCands = [...current].filter(([v]) => state.get(v) !== "new").map(([, c]) => c);
   const cancelled = [...state].filter(([v, s]) => s === "new" && !current.has(v)).map(([v]) => ({ v, info: parseVersionKey(v) }));
 
-  // 帯への到達・接近（版ごとに1回）。価格は intraday.json の現在値で、鮮度（20分）を満たすときだけ
+  // 帯への接近（near:）と到達（band:）。別々の出来事として、どちらも版ごとに1回。到達を通知したあとは何も出さない（最初から帯の中なら到達だけ）。
+  // 価格は intraday.json の現在値で、鮮度（20分）を満たすときだけ
   const near = [];
   const asOf = parseIso(intraday?.as_of);
   if (Number.isFinite(asOf) && nowMs - asOf <= FRESH_LIMIT_MIN * MIN) {
     for (const [v, c] of current) {
-      if (done.has(K.near(v))) continue;
+      if (done.has(K.band(v))) continue;
       const pair = pairOf(c.symbol);
       const price = intraday?.pairs?.[c.symbol]?.price;
       if (!pair || !Number.isFinite(price) || !c.band || !Number.isFinite(c.atr_pips)) continue;
       const dist = price < c.band.low ? c.band.low - price : price > c.band.high ? price - c.band.high : 0;
       const inBand = dist === 0;
       if (!inBand && !N.lte(dist, NEAR_ATR * c.atr_pips * pair.pip)) continue;
-      near.push({ v, c, kind: inBand ? "in_band" : "near", price, distance_pips: Number((dist / pair.pip).toFixed(1)), entry_reasons: entryBlockers(c, nowMs, plan.plan_date) });
+      const kind = inBand ? "in_band" : "near";
+      if (kind === "near" && done.has(K.near(v))) continue;
+      near.push({ v, c, kind, key: inBand ? K.band(v) : K.near(v), price, distance_pips: Number((dist / pair.pip).toFixed(1)), entry_reasons: entryBlockers(c, nowMs, plan.plan_date) });
     }
   }
   return { active: true, newCands, cancelled, near };
@@ -160,7 +165,7 @@ function daySummary({ logRows, planDate, markers }) {
   const scored = latest.filter((r) => r.run === "status" && SCORED.has(r.reached)).length;
   return {
     versions: latest.length, cancelled, scored, valid_at_expiry: latest.length - cancelled,
-    near_notified: markers.filter((k) => k.startsWith("near:")).length,
+    near_notified: markers.filter((k) => k.startsWith("near:") || k.startsWith("band:")).length,
     new_notified: markers.filter((k) => k.startsWith("new:")).length,
   };
 }

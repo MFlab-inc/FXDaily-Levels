@@ -102,7 +102,7 @@ test("帯への到達・接近: 帯の中=到達、帯から 0.1×H1 ATR（20pip
   assert.equal(near({ AUDUSD: 0.6559 })[0].kind, "in_band");
   assert.equal(near({ AUDUSD: 0.6562 })[0].kind, "near");
   // 通知済み（版ごとに1回）。別の銘柄は別
-  assert.deepEqual(near({ EURUSD: 1.1041, AUDUSD: 0.6559 }, { markers: [D.K.near(vOf(p, "EURUSD"))] }).map((x) => x.c.symbol), ["AUDUSD"]);
+  assert.deepEqual(near({ EURUSD: 1.1041, AUDUSD: 0.6559 }, { markers: [D.K.band(vOf(p, "EURUSD"))] }).map((x) => x.c.symbol), ["AUDUSD"]);
   // 価格が古い（20分より前）・価格が無い・intraday が無い → 出さない。20分ちょうどは可
   assert.deepEqual(near({ EURUSD: 1.1041 }, { age: 21 }), []);
   assert.equal(near({ EURUSD: 1.1041 }, { age: 20 }).length, 1);
@@ -152,8 +152,8 @@ test("計画日の終了: 有効期限（翌03:00）以後に1回。金曜の計
   assert.equal(D.closeDue({ nowMs: iso("2026-10-10T03:00:00+09:00"), issueDate: "2026-10-09", markers: [] }), true); // 金曜 → 土曜 03:00
   const c = by(BASE, "EURUSD"), a = by(BASE, "AUDUSD");
   const rows = [candRow(c, "design", c.generated_at), candRow(a, "design", a.generated_at), { ...candRow(a, "design", a.generated_at), run: "status", reached: "取消(再設計)" }];
-  const s = D.daySummary({ logRows: rows, planDate: "2026-10-08", markers: [D.K.new("x"), D.K.new("y"), D.K.near("z")] });
-  assert.deepEqual(s, { versions: 2, cancelled: 1, scored: 0, valid_at_expiry: 1, near_notified: 1, new_notified: 2 });
+  const s = D.daySummary({ logRows: rows, planDate: "2026-10-08", markers: [D.K.new("x"), D.K.new("y"), D.K.near("z"), D.K.band("z")] });
+  assert.deepEqual(s, { versions: 2, cancelled: 1, scored: 0, valid_at_expiry: 1, near_notified: 2, new_notified: 2 }); // 近くと到達は別々に数える
 });
 
 test("市場が動いている時間: 平日の計画日の JST 06:00〜翌02:59。月曜の早朝・土日は異常を出さない", () => {
@@ -284,7 +284,8 @@ test("帯のコメント: 『EURUSD 売り：帯に到達（現在値 ◯）。M
   assert.match(r.body, /\nEURUSD 売り：帯に到達（現在値 1\.10410）。M15の確認条件を見る/);
   assert.match(r.body, /確認条件: 帯に到達したあと、M15が基準価格（1\.10400）より下で陰線確定/);
   assert.match(r.body, /新規不可: 停止中: 15:40 \[EUR\] ECB Speaks/);
-  assert.deepEqual(r.keys, ev.map((e) => D.K.near(e.v)));
+  assert.deepEqual(r.keys, [D.K.near(vOf(p, "AUDUSD")), D.K.band(vOf(p, "EURUSD"))]); // 近く→near:、到達→band:
+  assert.deepEqual(ev.map((e) => e.key), r.keys);
 });
 
 test("採点・まとめ・異常の文面: 数字と状態だけ（判定文なし）。どれも @MFlab-inc で始まり、鍵のマーカーで終わる", () => {
@@ -370,7 +371,7 @@ test("無害化: 外部由来の文字（経済カレンダーの題名など）
 });
 
 test("鍵の形を固定する（Issue に残るので、変えると既存の通知済みの印が効かなくなる）", () => {
-  assert.equal(D.K.new("V"), "new:V"); assert.equal(D.K.cancel("V"), "cancel:V"); assert.equal(D.K.near("V"), "near:V"); assert.equal(D.K.score("V"), "score:V");
+  assert.equal(D.K.new("V"), "new:V"); assert.equal(D.K.cancel("V"), "cancel:V"); assert.equal(D.K.near("V"), "near:V"); assert.equal(D.K.band("V"), "band:V"); assert.equal(D.K.score("V"), "score:V");
   assert.equal(D.K.summary("2026-10-08"), "summary:2026-10-08");
   assert.equal(D.K.fail("2026-10-08 10"), "fail:2026-10-08 10");
   assert.equal(D.K.nodesign("2026-10-08", 2), "nodesign:2026-10-08:2");
@@ -533,4 +534,35 @@ test("公開される Issue に、口座の資金から逆算できる数字（�
     assert.ok(!all.includes(v.toLocaleString("en-US")), `${v.toLocaleString("en-US")} を出さない`);
   }
   assert.ok(!/損失上限|手数料|資金|equity/i.test(all));
+});
+
+test("帯の近く／帯に到達は別々の出来事: 版ごとにそれぞれ1回。近く → 到達の順で両方出る。最初から帯の中なら到達だけ。到達のあとは近くを出さない", () => {
+  const p = plan();
+  const v = vOf(p, "EURUSD");
+  const at = (price, markers) => D.candidateEvents({ nowMs: NOW, plan: p, intraday: intraday(NOW, { EURUSD: price }), markers }).near.map((e) => [e.kind, e.key]);
+  const NEAR = D.K.near(v), BAND = D.K.band(v);
+  // ふつうの流れ: 近づく → 近くを通知 → 帯に入る → 到達を通知
+  assert.deepEqual(at(1.1038, []), [["near", NEAR]]);
+  assert.deepEqual(at(1.1038, [NEAR]), []); // 近くは1回
+  assert.deepEqual(at(1.1041, [NEAR]), [["in_band", BAND]]); // 近くを通知済みでも、到達は別に出る
+  assert.deepEqual(at(1.1041, [NEAR, BAND]), []); // 到達も1回
+  // 最初から帯の中: 到達だけ。そのあと帯の近くまで戻っても、近くは出さない
+  assert.deepEqual(at(1.1041, []), [["in_band", BAND]]);
+  assert.deepEqual(at(1.1038, [BAND]), []);
+  assert.deepEqual(at(1.1044, [BAND]), []);
+  // 到達を通知したあとは、帯の中でも近くでも何も出ない（版ごとに1回ずつ）
+  assert.deepEqual(at(1.1040, [NEAR, BAND]), []);
+  // 近くを通知せずに帯の外へ戻った → 近くはまだ出せる（到達していないので）
+  assert.deepEqual(at(1.1038, []), [["near", NEAR]]);
+  // 版が違えば別（再設計で帯が変わった版は、新しく近く・到達を出せる）
+  const moved = plan((q) => { const c = by(q, "EURUSD"); c.band = { low: 1.1050, high: 1.1052 }; c.worst_entry = 1.1050; c.schemes.A.sl = 1.1060; c.schemes.B.sl = 1.1070; });
+  const e = D.candidateEvents({ nowMs: NOW, plan: moved, intraday: intraday(NOW, { EURUSD: 1.1051 }), markers: [NEAR, BAND] }).near;
+  assert.deepEqual(e.map((x) => [x.kind, x.key]), [["in_band", D.K.band(D.versionKey(by(moved, "EURUSD")))]]);
+  // 文面: 近く／到達で別の文、別の鍵
+  const now = NOW;
+  const evs = (price) => D.candidateEvents({ nowMs: now, plan: p, intraday: intraday(now, { EURUSD: price }), markers: [] }).near;
+  assert.match(F.nearComment({ events: evs(1.1038), nowMs: now }).body, /EURUSD 売り：帯の近く（現在値 1\.10380、帯まで 2pips）。M15の確認条件を見る/);
+  assert.match(F.nearComment({ events: evs(1.1041), nowMs: now }).body, /EURUSD 売り：帯に到達（現在値 1\.10410）。M15の確認条件を見る/);
+  assert.deepEqual(F.nearComment({ events: evs(1.1038), nowMs: now }).keys, [NEAR]);
+  assert.deepEqual(F.nearComment({ events: evs(1.1041), nowMs: now }).keys, [BAND]);
 });

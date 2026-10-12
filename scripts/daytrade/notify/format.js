@@ -140,7 +140,7 @@ function cancelComment({ cancelled, newCands, nowMs }) {
 
 // 価格が帯に入った／帯の近く（0.1×H1 ATR 以内）に来た
 function nearComment({ events, nowMs }) {
-  const keys = events.map((e) => D.K.near(e.v));
+  const keys = events.map((e) => e.key);
   const lines = [];
   for (const e of events) {
     const pair = pairOf(e.c.symbol);

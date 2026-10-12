@@ -278,7 +278,7 @@ test("結合: 偽の GitHub に本物の REST クライアントで3回以上流
   for (const t of ["2026-10-08T16:50:00+09:00", "2026-10-08T17:05:00+09:00", "2026-10-08T17:20:00+09:00"]) { r = await run(t, p2, { EURUSD: 1.1041 }); assert.deepEqual(r.errors, []); }
   assert.equal(gh.posts.length, 3);
   // 他の人が偽のマーカーを書いても、読まれない（AUDUSD の帯の通知は出る）
-  gh.issues[0].comments.push({ id: 999, body: D.markerOf(D.K.near(D.versionKey(by(p2, "AUDUSD")))), user: { login: "someone", type: "User" } });
+  gh.issues[0].comments.push({ id: 999, body: D.markerOf(D.K.band(D.versionKey(by(p2, "AUDUSD")))) + D.markerOf(D.K.near(D.versionKey(by(p2, "AUDUSD")))), user: { login: "someone", type: "User" } });
   await run("2026-10-08T17:35:00+09:00", p2, { AUDUSD: 0.6559 });
   assert.equal(gh.posts.length, 4);
   assert.match(gh.posts[3][1], /AUDUSD 買い：帯に到達/);

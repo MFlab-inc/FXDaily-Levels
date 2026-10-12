@@ -312,13 +312,13 @@ test("偽のマーカー: 他の人のコメントにマーカーがあっても
     await w.run("2026-10-08T06:15:00+09:00", { plan: p1 });
     // 外の人が、これから出る通知の印を先に書き込む
     const gb = vOf(ALL, "GBPUSD"), eu = vOf(ALL, "EURUSD");
-    forge(w.client, 1, [D.markerOf(D.K.new(gb)), D.markerOf(D.K.near(eu)), D.markerOf(D.K.summary("2026-10-08")), D.markerOf(D.K.nodesign("2026-10-08", 2)), D.markerOf(D.K.cancel(vOf(ALL, "AUDUSD")))].join("\n"));
+    forge(w.client, 1, [D.markerOf(D.K.new(gb)), D.markerOf(D.K.near(eu)), D.markerOf(D.K.band(eu)), D.markerOf(D.K.summary("2026-10-08")), D.markerOf(D.K.nodesign("2026-10-08", 2)), D.markerOf(D.K.cancel(vOf(ALL, "AUDUSD")))].join("\n"));
     const p2 = withDesign(2, "2026-10-08T15:30:00+09:00", sel(ALL, "AUDUSD", "EURUSD", "GBPUSD"), { prev: [D1] });
     let r = await w.run("2026-10-08T15:35:00+09:00", { plan: p2 });
     assert.deepEqual(kinds(r.ops), ["comment"]);
     assert.match(r.ops[0].body, /新しい案 1件[\s\S]*GBPUSD 売り 型A/); // 偽の new: に止められない
     r = await w.run("2026-10-08T16:35:00+09:00", { prices: { EURUSD: 1.1041 } });
-    assert.match(r.ops[0].body, /EURUSD 売り：帯に到達/); // 偽の near: に止められない
+    assert.match(r.ops[0].body, /EURUSD 売り：帯に到達/); // 偽の near:／band: に止められない
     // 偽の cancel: が付いても、案を出し直したりしない
     assert.deepEqual((await w.run("2026-10-08T16:50:00+09:00", { prices: { EURUSD: 1.1041 } })).ops, []);
     // 期限後のまとめ・クローズも、偽の summary: に止められない
@@ -511,5 +511,35 @@ test("コメントを読み切れない・ラベルの用意に失敗する: 読
       assert.equal(labels, 1);
       assert.deepEqual(rr.errors, []);
     } finally { w2.cleanup(); }
+  } finally { w.cleanup(); }
+});
+
+test("帯の近く → 帯に到達: 別々のコメントで1回ずつ（近く→到達の順）。最初から帯の中なら到達だけ。離れて戻っても、到達のあとは出さない", async () => {
+  const w = world();
+  try {
+    const p = withDesign(2, "2026-10-08T15:30:00+09:00", sel(ALL, "EURUSD", "AUDUSD"), { prev: [D1] });
+    await w.run("2026-10-08T15:35:00+09:00", { plan: p });
+    // EURUSD: 近づく（帯の下 2pips）→ 近く
+    let r = await w.run("2026-10-08T16:35:00+09:00", { prices: { EURUSD: 1.1038, AUDUSD: 0.6600 } });
+    assert.deepEqual(kinds(r.ops), ["comment"]);
+    assert.match(r.ops[0].body, /^@MFlab-inc EURUSD 売り：帯の近く（現在値 1\.10380、帯まで 2pips）/);
+    assert.deepEqual(D.parseMarkers(r.ops[0].body), [D.K.near(vOf(ALL, "EURUSD"))]);
+    assert.deepEqual((await w.run("2026-10-08T16:50:00+09:00", { prices: { EURUSD: 1.1038 } })).ops, []); // 近くは1回
+    // 帯に入る → 到達（別のコメント）
+    r = await w.run("2026-10-08T17:05:00+09:00", { prices: { EURUSD: 1.1041 } });
+    assert.deepEqual(kinds(r.ops), ["comment"]);
+    assert.match(r.ops[0].body, /^@MFlab-inc EURUSD 売り：帯に到達（現在値 1\.10410）。M15の確認条件を見る/);
+    assert.deepEqual(D.parseMarkers(r.ops[0].body), [D.K.band(vOf(ALL, "EURUSD"))]);
+    // 帯を出て近くへ戻る・また入る → どちらも出さない
+    for (const [t, px] of [["17:20", 1.1038], ["17:35", 1.1041], ["17:50", 1.1044]]) assert.deepEqual((await w.run(`2026-10-08T${t}:00+09:00`, { prices: { EURUSD: px } })).ops, [], t);
+    // AUDUSD: 最初から帯の中 → 到達だけ。そのあと帯の近くに戻っても近くは出ない
+    r = await w.run("2026-10-08T18:05:00+09:00", { prices: { AUDUSD: 0.6559 } });
+    assert.deepEqual(kinds(r.ops), ["comment"]);
+    assert.match(r.ops[0].body, /AUDUSD 買い：帯に到達/);
+    assert.deepEqual((await w.run("2026-10-08T18:20:00+09:00", { prices: { AUDUSD: 0.6562 } })).ops, []);
+    // 計画日のまとめは、近くと到達を合わせた件数（EURUSD 2件 ＋ AUDUSD 1件）
+    w.setLog([]);
+    const done = await w.run("2026-10-09T03:05:00+09:00", { plan: withDesign(3, "2026-10-08T21:30:00+09:00", sel(ALL, "EURUSD", "AUDUSD"), { prev: [D1, D2] }) });
+    assert.match(done.ops[0].body, /帯への到達・接近のお知らせ: 3件/);
   } finally { w.cleanup(); }
 });
