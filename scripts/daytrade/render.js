@@ -72,6 +72,23 @@ function basisBlock(c) {
   return L.join("\n");
 }
 
+// テキストには検算に効く数量だけを出し、Entry・SL・TPの価格は出さない。
+function rejectionNumbers(r) {
+  if (!r.detail || typeof r.detail !== "object") return "";
+  const d = r.detail;
+  const p = (v) => Number.isFinite(v) ? String(v) : "—";
+  const parts = [];
+  if (r.reason === "unreachable") parts.push(`基準まで ${p(d.distance_to_reference_pips)}p ＞ ADR残り ${p(d.adr_remaining_pips)}p`);
+  else if (r.reason === "sl_narrow") parts.push(`SL幅 ${p(d.sl?.width_pips)}p ＜ 10p`, `ATR14 ${p(d.h1_atr14_pips)}p`);
+  else if (r.reason === "rr_low") parts.push(`利益幅 ${p(d.profit_pips)}p ＜ SL幅 ${p(d.sl?.width_pips)}p`, `RR ${p(d.rr)}`);
+  else if (r.reason === "cost_low") parts.push(`追加コスト上限 ${p(d.cost_cap_pips)}p ＜ ${p(d.cost_threshold_pips)}p`, `RR ${p(d.rr)}`);
+  else if (r.reason === "adr_over") parts.push(`ADR消化 ${p(d.adr_used_pct)}% ＞ 80%`, `ADR残り ${p(d.adr_remaining_pips)}p`);
+  else if (r.reason === "no_obstacle") parts.push("最初の障害なし", `SL幅 ${p(d.sl?.width_pips)}p`);
+  else if (r.reason === "no_reference") parts.push("基準水準なし", `ATR14 ${p(d.h1_atr14_pips)}p`);
+  else if (r.reason === "no_data") parts.push("計算済みの価格指標なし");
+  return parts.length ? `（${parts.join("、")}）` : "";
+}
+
 function render(plan, accountsParam = {}) {
   const L = [];
   const accts = plan.accounts || accountsParam;
@@ -124,7 +141,7 @@ function render(plan, accountsParam = {}) {
   else {
     if (sm.rejected_cases === undefined) L.push("  （旧形式の計画のため一覧はありません。次の設計で作り直します）");
     else if (!sm.rejected_cases.length) L.push("  なし");
-    for (const r of sm.rejected_cases || []) L.push(`  ${r.symbol} 型${r.setup} ${r.scheme}案: ${r.reason_text}${r.detail ? `: ${r.detail}` : ""}${r.counted ? "" : "（6分類外）"}`);
+    for (const r of sm.rejected_cases || []) L.push(`  ${r.symbol} 型${r.setup} ${r.scheme}案: ${r.reason_text}${r.detail ? `: ${r.detail}` : ""}${r.counted ? "" : "（6分類外）"}${rejectionNumbers(r)}`);
     L.push("  ── 参考情報 ──");
     L.push(`  候補数: ${sm.candidate_rows}件（A案を通った案 ${sm.scheme_pass.A}、B案を通った案 ${sm.scheme_pass.B}）`);
     L.push(`  不採用の内訳（件数）: ${COUNTED.map((k) => `${REASONS[k]} ${sm.rejections[k]}`).join(" ／ ")}`);
