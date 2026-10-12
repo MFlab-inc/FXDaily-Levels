@@ -141,7 +141,7 @@ function render(plan, accountsParam = {}) {
   else {
     if (sm.rejected_cases === undefined) L.push("  （旧形式の計画のため一覧はありません。次の設計で作り直します）");
     else if (!sm.rejected_cases.length) L.push("  なし");
-    for (const r of sm.rejected_cases || []) L.push(`  ${r.symbol} 型${r.setup} ${r.scheme}案: ${r.reason_text}${r.detail ? `: ${r.detail}` : ""}${r.counted ? "" : "（6分類外）"}${rejectionNumbers(r)}`);
+    for (const r of sm.rejected_cases || []) L.push(`  ${r.symbol} 型${r.setup} ${r.scheme}案: ${r.reason_text}${typeof r.detail === "string" && r.detail ? `: ${r.detail}` : ""}${r.counted ? "" : "（6分類外）"}${rejectionNumbers(r)}`);
     L.push("  ── 参考情報 ──");
     L.push(`  候補数: ${sm.candidate_rows}件（A案を通った案 ${sm.scheme_pass.A}、B案を通った案 ${sm.scheme_pass.B}）`);
     L.push(`  不採用の内訳（件数）: ${COUNTED.map((k) => `${REASONS[k]} ${sm.rejections[k]}`).join(" ／ ")}`);
