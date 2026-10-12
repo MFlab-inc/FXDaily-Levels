@@ -200,8 +200,10 @@ function anomalyComment({ evs, planDate }) {
   const first = evs[0];
   if (first.kind === "failure") {
     lines.push(`${D.MENTION} **Daytrade Plan が失敗しました**`);
-    if (first.failure.detail) lines.push("", `- 失敗した手順: ${D.safeText(first.failure.detail, 60)}`);
-    if (/^https:\/\/[\w.\/-]+$/.test(first.failure.run_url || "")) lines.push("", `- 実行: ${first.failure.run_url}`);
+    const items = [];
+    if (first.failure.detail) items.push(`- 失敗した手順: ${D.safeText(first.failure.detail, 60)}`);
+    if (/^https:\/\/[\w.\/-]+$/.test(first.failure.run_url || "")) items.push(`- 実行: ${first.failure.run_url}`);
+    if (items.length) lines.push("", ...items);
     lines.push("", "計画（data/daytrade-plan.txt）は前回の内容のままです。次の Intraday Snapshot の完了で再実行されます。");
   } else if (first.kind === "nodesign") {
     lines.push(`${D.MENTION} **設計${SLOT[first.slot]}がありません**（窓 ${hm(jstIso(first.window.start))}〜${hm(jstIso(first.window.end))} が終わりました。計画日 ${planDate}）`, "",
