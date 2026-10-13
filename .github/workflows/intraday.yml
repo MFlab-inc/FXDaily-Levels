@@ -29,10 +29,11 @@ permissions:
 
 # Intraday Snapshot を同時に2本動かさない。起動元は3つある（外部cron の毎時 :05・:23・:35・:50、GitHub の schedule の :02・:17・:32・:47
 # 〔遅れて届くことがある〕、Daily FX Data 完了時の workflow_run）。同じ分に重なると、Twelve Data のクレジット（1回あたり約31）が二重に使われて
-# 1分あたりの上限（55）を超え（2026-10-13 05:50 JST に1分57クレジット）、同じ data/ への push も衝突する（その回の schedule 側は
-# 「Commit and push data」で失敗した）。後から来た方は前の完了を待つ（cancel-in-progress: false）。
+# 1分あたりの上限（55）を超え（2026-10-13 05:50 JST に1分57クレジット。11:23 JST にも同じ重なりで HTTP 429）、同じ data/ への push も
+# 衝突する（どちらも schedule 側が「Commit and push data」で失敗した）。後から来た方は前の完了を待つ（cancel-in-progress: false）。
 # 待機できる run は1つだけで、待機中にさらに新しい run が来ると古い待機は取り消される。どれも同じ仕事なので問題ない
 # （次に動く run は、前の取得から5分未満なら intraday.js・daytrade.js が API を呼ばずに終わる）。
+# ただし手動実行で force を指定した run も、待機中に新しい run が来れば取り消される（確実に取得したいときは、実行中の run が終わってから起動する）。
 concurrency:
   group: intraday-snapshot
   cancel-in-progress: false
@@ -43,11 +44,19 @@ jobs:
     # schedule/workflow_dispatch経由は従来通り常に実行する。
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    # 前の run を待つ仕組み（concurrency）なので、止まった run が後続を長く塞がないようにする。通常は30秒前後（直近1週間の最大 64秒）
+    # 前の run を待つ仕組み（concurrency）なので、止まった run が後続を長く塞がないようにする。通常は30秒前後（直近1週間の最大 64秒）。
+    # ジョブが始まってからの上限なので、ランナーが取れないまま待つ止まり方（過去に schedule で4回、約15分で取り消し）には効かない。
+    # その間は後続も待たされる（最大で約15分遅れる）。
     timeout-minutes: 10
     steps:
+      # ref を明示する（重要）。ref を省くと、起動した時点のコミット（GITHUB_SHA）に固定される。concurrency で待たされた run は、
+      # 待っている間に前の run が push した最新の data/ を見られず、直前の取得に気づけない（5分スキップが効かず、再取得して、
+      # push も同じファイルで rebase 衝突する）。ブランチ名の ref なら、job が実際に始まった時点の最新を取得する
+      # （daytrade.yml と同じ書き方。schedule・workflow_run は既定ブランチ、手動実行は選んだブランチ）。
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.repository.default_branch || github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

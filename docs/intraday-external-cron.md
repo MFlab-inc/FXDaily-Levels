@@ -2,7 +2,7 @@
 
 `intraday.yml` は GitHub の schedule（毎時 2・17・32・47 分）で動く設計だが、schedule はほとんど届かない。`daily.yml` は外部の定期実行サービスから `workflow_dispatch` を呼んで確実に動かしているので、**同じ方式で `intraday.yml` を毎時 5・20・35・50 分に起動する**。外部の定期実行サービスはこのリポジトリの外にあり、設定の変更はそちらの画面で行う（このリポジトリでは変更できない）。
 
-**この文書の位置づけ**：調べた事実（§1）と、外部サービスでの登録の内容・手順（§2〜§4）。`intraday.yml` 自体は変更しない（すでに `workflow_dispatch` がある。§1-3）。
+**この文書の位置づけ**：調べた事実（§1）と、外部サービスでの登録の内容・手順（§2〜§4）、重なった起動への対策（§5）。この文書を書いた時点（2026-10-09）では `intraday.yml` を変更しなかった。2026-10-13 に `concurrency` などを足した（§5）。
 
 ## 1. 調べたこと（2026-10-09 に確認。GitHub Actions の実行履歴）
 
@@ -61,15 +61,15 @@
 
 | 方式 | 内容 |
 |---|---|
-| cron 式（UTC） | `5,20,35,50 * * * 1-5` と `5,20,35,50 21-23 * * 0` の 2 本 |
-| 日本時間で指定する画面なら | 月曜 06:05 〜 土曜 08:50（毎時 5・20・35・50 分） |
+| cron 式（UTC） | `5,23,35,50 * * * 1-5` と `5,23,35,50 21-23 * * 0` の 2 本（当初は `:20` としていたが、`daily.yml` の外部cron〔:20〕と同じ分になるため `:23` にした。§4） |
+| 日本時間で指定する画面なら | 月曜 06:05 〜 土曜 08:50（毎時 5・23・35・50 分） |
 
-`intraday.yml` の `schedule`（毎時 2・17・32・47 分）は、そのまま残す（届いたときの予備。外部cronの 3 分前に動く）。
+`intraday.yml` の `schedule`（毎時 2・17・32・47 分）は、そのまま残す（届いたときの予備。:02・:32・:47 は外部cronの :05・:35・:50 の3分前、:17 は :23 の6分前）。ただし schedule は定刻には届かず、直近の実測では定義の分より1.6〜14.6分（中央値6.5分）遅れて届いている。そのため外部cronと同じ分に重なることがある（§5）。
 
 ## 3. 登録のあとに確認すること
 
 1. サービスの「今すぐ実行／テスト」があれば 1 回実行する。応答が **204**（本文なし）または 200（`X-GitHub-Api-Version: 2026-03-10` のとき）なら通っている。**422 なら本文に `inputs` が残っている**。
-2. <https://github.com/MFlab-inc/FXDaily-Levels/actions/workflows/intraday.yml> を開き、Event を `workflow_dispatch` に絞る。実行者が `MFlab-inc`、起動時刻が :05・:20・:35・:50 分の :09〜:10 秒ごろであること。
+2. <https://github.com/MFlab-inc/FXDaily-Levels/actions/workflows/intraday.yml> を開き、Event を `workflow_dispatch` に絞る。実行者が `MFlab-inc`、起動時刻が :05・:23・:35・:50 分の :03〜:10 秒ごろであること。
 3. 翌営業日に、1 日の `intraday.yml` の実行（schedule＋workflow_dispatch＋workflow_run）が **96 回以上**（外部cronの 96 回に、届いた schedule と `workflow_run` の分が加わる）になっていること。確認のコマンド（GitHub の API）：
 
 ```
@@ -89,12 +89,25 @@ gh api "repos/MFlab-inc/FXDaily-Levels/actions/workflows/intraday.yml/runs?per_p
 
 ## 5. 同時実行の抑止と、取得のスキップ（2026-10-13 追記）
 
-**起きたこと**：2026-10-13 05:50 JST に、外部cron（05:50:23 起動）と GitHub の schedule（05:50:31 起動。定義は毎時 `:47` なので、約3分半遅れて届いたと見られる）が8秒差で重なり、Twelve Data を1分に57クレジット使った（上限は55）。データの更新自体は外部cron側の run が成功した。schedule 側は取得・ビルドの手順が成功し、**「Commit and push data」で失敗**した（同じ `data/` への push の衝突によるものと見られる。実行ログは取得できなかったので推定）。過去1週間（2026-10-06 02:20Z〜10-13 02:20Z）の Intraday Snapshot は 165 回（外部cron 119・schedule 22・workflow_run 24）で、同じ分に2本以上起動したのはこの1回だけだった。
+**起きたこと**：外部cron（`workflow_dispatch`）と GitHub の schedule が、同じ分に重なって起動した。過去1週間（2026-10-06 03:45Z〜10-13 03:45Z。Intraday Snapshot 173 回〔外部cron 125・schedule 23・workflow_run 25〕）で、**同じ分に2本以上起動したのは2回**。どちらも外部cronの run は成功し、schedule の run は失敗した。
+
+| 起動（JST） | 外部cron | schedule | 結果 |
+|---|---|---|---|
+| 2026-10-13 05:50 | 05:50:23 | 05:50:31（定義は :47。約3分半遅れ） | 1分に57クレジット（上限55）。schedule 側は取得・ビルドが成功し、「Commit and push data」で失敗 |
+| 2026-10-13 11:23 | 11:23:03 | 11:23:25（定義は :17。約6分遅れ） | schedule 側の `daytrade.js` が EUR/JPY の H1 で HTTP 429（レート制限）。「Commit and push data」で失敗 |
+
+11:23 の schedule の run のログで確認できた原因：**push が拒否され（外部cronの run が先に push していた）、`git pull --rebase` が `data/` の全ファイルで衝突して終了コード 1**。05:50 の run のログは取得できなかったが、失敗した手順は同じ。`workflow_run`（Daily FX Data の完了）は、どちらの分にも関わっていない。
 
 **対策**（`intraday.yml`・`intraday.js`・`daytrade.js`。`lib/recent-fetch.js`）：
 
-1. `concurrency`（グループ `intraday-snapshot`、走っている run は止めない）：同時に1本だけ動き、後から来た run は前の完了を待つ。待機できる run は1つで、待機中にさらに新しい run が来ると古い待機は取り消される（どれも同じ仕事で、次に動く run が下の判定をする）。止まった run が後続を塞がないよう、job に `timeout-minutes: 10` を付けた（通常は30秒前後）。
-2. 取得のスキップ：`intraday.js`（`data/intraday.json`）と `daytrade.js`（`data/h1-bars.json` と `data/daytrade-context.json` の古い方）は、**前回の取得（`as_of`）から5分未満**なら、Twelve Data（・Yahoo・カレンダー）を呼ばずに**終了コード 0 で終わる**。後続の手順と Daytrade Plan（workflow_run）は今までどおり動く。次の場合は**スキップしない**（これまでどおり取得する）：前回の取得が不完全（銘柄の欠け・`errors`。`intraday.js` は quote のバッチ失敗）／**日次レベル（`daily-levels.json`）の `as_of` が前回の取得より新しい**（Daily FX Data の完了直後の再取得で、新しい日次との突き合わせを更新するため）／ファイルが無い・壊れている・時刻が読めない。手動で必ず取得したいときは `--force`、または手動実行（workflow_dispatch）の `force` をオンにする。
-3. スキップしても `Build GPT feed` とコミットの手順は動く（`rates.yml` の更新をフィードへ反映するのも、この手順のため）。`build-feed.js` は `feed_generated_at`（現在時刻）をフィードに書くので、スキップした run でも、そのファイルだけが更新されてコミットされることがある。
+1. `concurrency`（グループ `intraday-snapshot`、走っている run は止めない）：同時に1本だけ動き、後から来た run は前の完了を待つ。待機できる run は1つで、待機中にさらに新しい run が来ると古い待機は取り消される（手動の `force` の run も同じ）。止まった run が後続を塞がないよう、job に `timeout-minutes: 10` を付けた（通常は30秒前後）。ランナーが取れないまま待つ止まり方（過去に schedule で4回、約15分で取り消し）には効かず、その間は後続も待たされる。
+2. **Checkout の `ref` を明示した**（`daytrade.yml` と同じ書き方）。`ref` を省くと、run が作られた時点のコミットに固定される。待たされた run は、待っている間に前の run が push した `data/` を見られず、「直前の取得」に気づけない（11:23 の run のログで、起動時点のコミット `67addf8` を取得していたことを確認）。
+3. 取得のスキップ：`intraday.js`（`data/intraday.json`）と `daytrade.js`（`data/h1-bars.json` と `data/daytrade-context.json` の古い方）は、**前回の取得（`as_of`）から5分未満**なら、Twelve Data（・Yahoo・カレンダー）を呼ばずに**終了コード 0 で終わる**。後続の手順と Daytrade Plan（workflow_run）は今までどおり動く。次の場合は**スキップしない**（これまでどおり取得する）：
+   - 前回の取得が不完全（銘柄の欠け・`errors`。`intraday.js` は quote のバッチ失敗）
+   - **日次レベルが新しい**：`daily-levels.json` の `as_of` が前回の取得より新しい／`daytrade.js` は `h1-bars.json` の `consistency_check.checked_against.daily_as_of` が `daily-levels.json` の `as_of` と違う／`intraday.js` は `session_date` が日次と違う（Daily FX Data の完了直後の再取得で、新しい日次との突き合わせを更新するため）
+   - **日付（JST）が変わった**：前回の取得と日付が違う／`intraday.js` は `economic-calendar.json` の `date` が当日でない（カレンダーは `intraday.js` だけが当日分に書き換える）
+   - ファイルが無い・壊れている・時刻が読めない
+   手動で必ず取得したいときは `--force`、または手動実行（workflow_dispatch）の `force` をオンにする。
+4. スキップしても `Build GPT feed` とコミットの手順は動く（`rates.yml` の更新をフィードへ反映するのも、この手順のため）。`build-feed.js` は `feed_generated_at`（現在時刻）をフィードに書くので、スキップした run でも、そのファイルだけが更新されてコミットされることがある（これまでも、取得のたびに同じ理由で更新されていた）。
 
-外部cron（:05・:23・:35・:50）と schedule（:02・:17・:32・:47）は3分ずれているので、schedule が定刻に届いた回は、外部cronの run が（5分未満で）スキップされる。外部cronの設定は変えなくてよい。
+外部cron（:05・:23・:35・:50）と schedule（:02・:17・:32・:47）の組のうち、スキップが働くのは**前の run の開始から5分未満**のもの（:02→:05、:32→:35、:47→:50）だけで、:17→:23（6分）は働かない。そのかわり `concurrency` が、重なった run を直列にする。schedule は届く時刻が定まらないので、どの組になるかは決まらない。外部cronの設定は変えなくてよい。
