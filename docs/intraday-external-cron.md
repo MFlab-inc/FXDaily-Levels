@@ -42,7 +42,7 @@
 
 ### 1-3. `intraday.yml` の `workflow_dispatch`
 
-すでにある（`on:` に `workflow_dispatch: {}`、入力なし）。**足す必要はなく、`intraday.yml` は変更しない**。これまでの `workflow_dispatch` の実行（2026-07-15〜10-02 の 116 回）は、不規則な時刻の手動実行。
+すでにある。**2026-10-13 以降は任意の入力 `force`（既定オフ）を1つ持つ**（それまでは入力なしの `{}`）。外部cronの本文は `{"ref":"main"}` のままでよく、`force` は付けない（手動で必ず再取得したいときだけ使う。§5）。これまでの `workflow_dispatch` の実行（2026-07-15〜10-02 の 116 回）は、不規則な時刻の手動実行。
 
 ## 2. 外部サービスに登録する内容
 
@@ -55,7 +55,7 @@
 | 本文（JSON） | `{"ref":"main","inputs":{"if_stale":…}}` | **`{"ref":"main"}`**（`inputs` を付けない） |
 | 実行時刻 | UTC 21:20・22:20・23:20 | 下の表 |
 
-**本文に `inputs` を付けてはいけない**：`intraday.yml` の `workflow_dispatch` は入力を持たない（`{}`）。宣言されていない入力（例：`if_stale`）を付けると、GitHub は 422（`Unexpected inputs provided`）で拒否する。既存ジョブを複製すると `inputs` ごと複製されるので、**必ず消す**。
+**本文に `inputs` を付けない**：`intraday.yml` の `workflow_dispatch` が持つ入力は `force`（任意）だけで、外部cronには要らない。宣言されていない入力（例：`if_stale`）を付けると、GitHub は 422（`Unexpected inputs provided`）で拒否する。既存ジョブ（`daily.yml` 用）を複製すると `inputs` ごと複製されるので、**必ず消す**。
 
 ### 実行時刻（`schedule` と同じ範囲を、3分ずらした分で）
 
@@ -82,7 +82,19 @@ gh api "repos/MFlab-inc/FXDaily-Levels/actions/workflows/intraday.yml/runs?per_p
 
 - **Twelve Data のクレジット**：1 回の `intraday.yml` で、`intraday.js` が 7 クレジット（`/quote` のバッチ 1 回）、`daytrade.js` が 12 銘柄 × 2 系列 = 24 リクエスト（`time_series`）。合計でおよそ 31 クレジット／回（見積もり。実測ではない）。外部cronで 15 分ごとに確実に動くと、1 日 96 回で約 3,000 クレジット。schedule も届いた日は、その分が上乗せされる。契約しているプランの 1 日・1 分あたりの上限に収まるかを、先に確認する。
 - **毎時 :20 は、`daily.yml` の外部cron（UTC 21:20・22:20・23:20）と同じ分**。この 3 時間は、`daily.yml` と `intraday.yml` が同じ秒に起動して、Twelve Data を同時に呼ぶ。さらに `daily.yml` の完了で `intraday.yml` が `workflow_run` でもう 1 回動く。1 分あたりの上限が心配なら、その 3 時間だけ :20 を :23 などにずらす。
-- **同時実行の抑止が無い**：`intraday.yml` に `concurrency` が無い。1 回の実行は中央値 29 秒（最大 904 秒。schedule の実行 18 回の実測）で、schedule（:02）と外部cron（:05）は 3 分離れているので、通常は重ならない。重なったときの push の衝突は、`intraday.yml` の再試行（3 回）が処理する。
+- **同時実行の抑止**：2026-10-13 から `intraday.yml` に `concurrency`（グループ `intraday-snapshot`、`cancel-in-progress: false`）がある。同じ分に重なっても、後から来た方は前の完了を待つ（§5）。それ以前は無く、2026-10-13 05:50 JST に外部cronと schedule が8秒差で重なって、1分に57クレジットを使い、schedule 側が「Commit and push data」で失敗した。
 - **下流の実行が増える**：`Intraday Snapshot` の完了で、`daytrade.yml`（状態更新は 1 時間に 1 回まで）と `rates.yml`（`--if-stale`。取得済みなら外部へ接続しない）が起動する。実行の数は増えるが、コミットは増えにくい設計。
-- **`intraday.yml` を変えずにできる改善は、ここでは扱わない**：`concurrency` の追加や、取得済みなら API を呼ばずに終わる `--if-stale` に相当する処理（`daily.yml` の方式）は、`intraday.yml` への変更になる。必要になったら別の依頼で。
+- **取得済みなら API を呼ばずに終わる処理**：2026-10-13 から `intraday.js`・`daytrade.js` に入っている（`daily.yml` の `--if-stale` と同じ考え方。§5）。
 - **やめるとき**：サービスの画面でそのジョブを無効にするだけでよい（リポジトリ側の変更は不要）。
+
+## 5. 同時実行の抑止と、取得のスキップ（2026-10-13 追記）
+
+**起きたこと**：2026-10-13 05:50 JST に、外部cron（05:50:23 起動）と GitHub の schedule（05:50:31 起動。定義は毎時 `:47` なので、約3分半遅れて届いたと見られる）が8秒差で重なり、Twelve Data を1分に57クレジット使った（上限は55）。データの更新自体は外部cron側の run が成功した。schedule 側は取得・ビルドの手順が成功し、**「Commit and push data」で失敗**した（同じ `data/` への push の衝突によるものと見られる。実行ログは取得できなかったので推定）。過去1週間（2026-10-06 02:20Z〜10-13 02:20Z）の Intraday Snapshot は 165 回（外部cron 119・schedule 22・workflow_run 24）で、同じ分に2本以上起動したのはこの1回だけだった。
+
+**対策**（`intraday.yml`・`intraday.js`・`daytrade.js`。`lib/recent-fetch.js`）：
+
+1. `concurrency`（グループ `intraday-snapshot`、走っている run は止めない）：同時に1本だけ動き、後から来た run は前の完了を待つ。待機できる run は1つで、待機中にさらに新しい run が来ると古い待機は取り消される（どれも同じ仕事で、次に動く run が下の判定をする）。止まった run が後続を塞がないよう、job に `timeout-minutes: 10` を付けた（通常は30秒前後）。
+2. 取得のスキップ：`intraday.js`（`data/intraday.json`）と `daytrade.js`（`data/h1-bars.json` と `data/daytrade-context.json` の古い方）は、**前回の取得（`as_of`）から5分未満**なら、Twelve Data（・Yahoo・カレンダー）を呼ばずに**終了コード 0 で終わる**。後続の手順と Daytrade Plan（workflow_run）は今までどおり動く。次の場合は**スキップしない**（これまでどおり取得する）：前回の取得が不完全（銘柄の欠け・`errors`。`intraday.js` は quote のバッチ失敗）／**日次レベル（`daily-levels.json`）の `as_of` が前回の取得より新しい**（Daily FX Data の完了直後の再取得で、新しい日次との突き合わせを更新するため）／ファイルが無い・壊れている・時刻が読めない。手動で必ず取得したいときは `--force`、または手動実行（workflow_dispatch）の `force` をオンにする。
+3. スキップしても `Build GPT feed` とコミットの手順は動く（`rates.yml` の更新をフィードへ反映するのも、この手順のため）。`build-feed.js` は `feed_generated_at`（現在時刻）をフィードに書くので、スキップした run でも、そのファイルだけが更新されてコミットされることがある。
+
+外部cron（:05・:23・:35・:50）と schedule（:02・:17・:32・:47）は3分ずれているので、schedule が定刻に届いた回は、外部cronの run が（5分未満で）スキップされる。外部cronの設定は変えなくてよい。

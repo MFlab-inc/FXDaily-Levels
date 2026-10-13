@@ -1,0 +1,37 @@
+name: Intraday Tests
+
+on:
+  pull_request:
+    paths:
+      - "intraday.js"
+      - "daytrade.js"
+      - "lib/**"
+      - "config/daytrade-rules.json"
+      - ".github/workflows/intraday.yml"
+      - ".github/workflows/intraday-tests.yml"
+  push:
+    branches: [main]
+    paths:
+      - "intraday.js"
+      - "daytrade.js"
+      - "lib/**"
+      - "config/daytrade-rules.json"
+      - ".github/workflows/intraday.yml"
+      - ".github/workflows/intraday-tests.yml"
+
+permissions:
+  contents: read
+
+# intraday.js・daytrade.js の『直前の取得から5分未満ならスキップ』（lib/recent-fetch.js）と、intraday.yml の concurrency の試験。
+# 一時フォルダに複製して動かし、fetch はブロックする（外部へは接続しない。secrets も使わない）。
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run intraday tests
+        run: node --test lib/test/*.test.js

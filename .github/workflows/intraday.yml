@@ -6,7 +6,13 @@ on:
     - cron: "2,17,32,47 * * * 1-5"
     # 月曜早朝カバー: 日曜UTC夜 = 月曜6:02〜8:47 JST
     - cron: "2,17,32,47 21-23 * * 0"
-  workflow_dispatch: {}  # 手動実行も可能
+  # 手動実行、および外部の定期実行サービスからのAPI起動（docs/intraday-external-cron.md。本文は {"ref":"main"} で、inputs は付けない）。
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "直前の取得から5分未満でも、必ず再取得する（手動で確実に更新したい時だけ。外部cronは指定しない）"
+        type: boolean
+        default: false
   # Daily FX Data（daily-levels.json生成）完了直後にも1回実行する。
   # dailyは通常8:30 JST頃だが遅延することがあり、そのタイミングでこのスケジュールの
   # 定期実行と交錯すると、h1-bars.jsonのconsistency_check.checked_against（照合時点の
@@ -21,12 +27,24 @@ on:
 permissions:
   contents: write
 
+# Intraday Snapshot を同時に2本動かさない。起動元は3つある（外部cron の毎時 :05・:23・:35・:50、GitHub の schedule の :02・:17・:32・:47
+# 〔遅れて届くことがある〕、Daily FX Data 完了時の workflow_run）。同じ分に重なると、Twelve Data のクレジット（1回あたり約31）が二重に使われて
+# 1分あたりの上限（55）を超え（2026-10-13 05:50 JST に1分57クレジット）、同じ data/ への push も衝突する（その回の schedule 側は
+# 「Commit and push data」で失敗した）。後から来た方は前の完了を待つ（cancel-in-progress: false）。
+# 待機できる run は1つだけで、待機中にさらに新しい run が来ると古い待機は取り消される。どれも同じ仕事なので問題ない
+# （次に動く run は、前の取得から5分未満なら intraday.js・daytrade.js が API を呼ばずに終わる）。
+concurrency:
+  group: intraday-snapshot
+  cancel-in-progress: false
+
 jobs:
   snapshot:
     # workflow_run経由はdailyが成功した時のみ（失敗直後に古いdailyへ再突合しても無意味なため）。
     # schedule/workflow_dispatch経由は従来通り常に実行する。
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    # 前の run を待つ仕組み（concurrency）なので、止まった run が後続を長く塞がないようにする。通常は30秒前後（直近1週間の最大 64秒）
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,7 +57,9 @@ jobs:
       - name: Fetch intraday quotes
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
-        run: node intraday.js
+        # 直前の取得から5分未満なら API を呼ばずに成功で終わる（--force または手動実行の force で必ず取得）。
+        # 終了コードは 0 のままなので、後続の手順と Daytrade Plan（workflow_run）は今までどおり動く
+        run: node intraday.js ${{ inputs.force && '--force' || '' }}
 
       # daytrade.js（h1-bars.json生成）はintraday.jsの出力に一切依存しない独立処理。
       # 以前はintraday.jsが例外で落ちると、GitHub Actionsの既定動作でここから下が
@@ -52,7 +72,8 @@ jobs:
         if: ${{ !cancelled() }}
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
-        run: node daytrade.js
+        # intraday.js と同じ。直前の取得から5分未満なら API を呼ばずに成功で終わる
+        run: node daytrade.js ${{ inputs.force && '--force' || '' }}
 
       - name: Build GPT feed
         if: ${{ !cancelled() }}

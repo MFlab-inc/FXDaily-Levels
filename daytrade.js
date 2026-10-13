@@ -11,6 +11,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { checkDaytrade } = require("./lib/recent-fetch");
 
 const API_KEY = process.env.TWELVE_DATA_API_KEY;
 if (!API_KEY) { console.error("ERROR: TWELVE_DATA_API_KEY 未設定"); process.exit(1); }
@@ -427,6 +428,19 @@ function buildGate(pairCode, events, now) {
 // ---- メイン ----
 async function main() {
   const now = new Date();
+
+  // 直前の取得から5分未満なら、Twelve Data（24リクエスト）を呼ばずに成功で終わる（lib/recent-fetch.js。intraday.js と同じ考え方）。
+  // 前回が不完全／日次レベルが前回より新しい（h1-bars.json の consistency_check を更新する必要がある）／読めないときは、これまでどおり取得する。
+  // --force で必ず取得。スキップしても終了コードは 0（intraday.yml は成功し、Daytrade Plan は workflow_run で今までどおり動く）
+  if (!process.argv.includes("--force")) {
+    const d = checkDaytrade({ dataDir, nowMs: now.getTime(), codes: PAIRS.map((p) => p.code) });
+    if (d.skip) {
+      console.log(`[daytrade] スキップ（API を呼びません）: ${d.reason}。必ず取得するときは --force`);
+      return;
+    }
+    console.log(`[daytrade] 取得します: ${d.reason}`);
+  }
+
   const nJst = jstNow(now);
   const events = loadTodayEvents();
   const fr = RULES.fractal || { left: 2, right: 2 };
