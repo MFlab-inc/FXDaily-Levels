@@ -89,7 +89,7 @@ gh api "repos/MFlab-inc/FXDaily-Levels/actions/workflows/intraday.yml/runs?per_p
 
 ## 5. 同時実行の抑止と、取得のスキップ（2026-10-13 追記）
 
-**起きたこと**：外部cron（`workflow_dispatch`）と GitHub の schedule が、同じ分に重なって起動した。過去1週間（2026-10-06 03:45Z〜10-13 03:45Z。Intraday Snapshot 173 回〔外部cron 125・schedule 23・workflow_run 25〕）で、**同じ分に2本以上起動したのは2回**。どちらも外部cronの run は成功し、schedule の run は失敗した。
+**起きたこと**：外部cron（`workflow_dispatch`）と GitHub の schedule が、同じ分に重なって起動した。過去1週間（2026-10-06 03:49Z〜10-13 03:49Z。Intraday Snapshot 173 回〔外部cron 125・schedule 23・workflow_run 25〕）で、**同じ分に2本以上起動したのは2回**。どちらも外部cronの run は成功し、schedule の run は失敗した。
 
 | 起動（JST） | 外部cron | schedule | 結果 |
 |---|---|---|---|
