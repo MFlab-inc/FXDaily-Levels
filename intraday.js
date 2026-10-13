@@ -10,6 +10,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { checkIntraday } = require("./lib/recent-fetch");
 
 const API_KEY = process.env.TWELVE_DATA_API_KEY;
 if (!API_KEY) {
@@ -276,9 +277,21 @@ function priceZone(price, lv) {
 
 async function main() {
   const now = new Date();
+  const dataDir = path.join(__dirname, "data");
+
+  // 直前の取得から5分未満なら、Twelve Data（・Yahoo・カレンダー）を呼ばずに成功で終わる（lib/recent-fetch.js）。
+  // 外部cron・schedule・workflow_run の起動が同じ時間帯に重なっても、1分あたりのクレジットを二重に使わない。
+  // 前回が不完全／日次レベルが前回より新しい／読めないときは、これまでどおり取得する。--force で必ず取得
+  if (!process.argv.includes("--force")) {
+    const d = checkIntraday({ dataDir, nowMs: now.getTime(), codes: PAIRS.map((p) => p.code) });
+    if (d.skip) {
+      console.log(`[intraday] スキップ（API を呼びません）: ${d.reason}。必ず取得するときは --force`);
+      return;
+    }
+    console.log(`[intraday] 取得します: ${d.reason}`);
+  }
 
   // 当日レベル（朝生成分）を読み込む
-  const dataDir = path.join(__dirname, "data");
   const levelsPath = path.join(dataDir, "daily-levels.json");
   if (!fs.existsSync(levelsPath)) {
     console.error("daily-levels.json がありません（朝のDaily FX Dataを先に実行してください）");

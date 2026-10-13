@@ -1,0 +1,46 @@
+name: Intraday Tests
+
+on:
+  pull_request:
+    paths:
+      - "intraday.js"
+      - "daytrade.js"
+      - "lib/**"
+      - "config/daytrade-rules.json"
+      - ".github/workflows/intraday.yml"
+      - ".github/workflows/daytrade.yml"
+      - ".github/workflows/intraday-tests.yml"
+  push:
+    branches: [main]
+    paths:
+      - "intraday.js"
+      - "daytrade.js"
+      - "lib/**"
+      - "config/daytrade-rules.json"
+      - ".github/workflows/intraday.yml"
+      - ".github/workflows/daytrade.yml"
+      - ".github/workflows/intraday-tests.yml"
+
+permissions:
+  contents: read
+
+# intraday.js・daytrade.js の『直前の取得から5分未満ならスキップ』（lib/recent-fetch.js）と、intraday.yml の concurrency の試験。
+# 一時フォルダに複製して動かし、fetch はブロックする（外部へは接続しない。secrets も使わない）。
+# 試験が読むファイル（intraday.yml・daytrade.yml・config/daytrade-rules.json など）を変える PR でも動くよう、paths に並べている。
+# 試験は YAML の文字列検査なので、構文の誤り（インデントなど）は別に ruby（ubuntu-latest に入っている）で読み込んで確かめる。
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Check workflow YAML syntax
+        # 1行の run に ` #` を書くと、YAML ではそこから先がコメントになりコマンドが途切れる。ブロック（|）で書き、# を使わない
+        run: |
+          ruby -ryaml -e 'ARGV.each { |f| YAML.load_file(f); puts "ok " + f }' \
+            .github/workflows/intraday.yml .github/workflows/intraday-tests.yml .github/workflows/daytrade.yml
+      - name: Run intraday tests
+        run: node --test lib/test/*.test.js
