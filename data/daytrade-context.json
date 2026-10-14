@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-14T20:50:39+09:00",
+  "as_of": "2026-10-14T21:05:25+09:00",
   "timezone": "Asia/Tokyo",
   "note": "事実データと機械判定のみ。売買推奨は含まない。gateはイベント時間ルール(config/daytrade-rules.json)による判定。",
   "rules_summary": {
@@ -24,9 +24,9 @@
   },
   "pairs": {
     "USDJPY": {
-      "price": 158.471,
-      "price_time_jst": "2026-10-14 20:45",
-      "bar_age_min": 1,
+      "price": 158.428,
+      "price_time_jst": "2026-10-14 21:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-14 06:00",
@@ -47,9 +47,9 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 158.452,
+          "low": 158.426,
+          "status": "open",
           "window_jst": "21:00-06:00"
         }
       },
@@ -75,17 +75,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-14 20:30",
-          "o": 158.473,
-          "h": 158.477,
-          "l": 158.439,
-          "c": 158.447,
+          "time_jst": "2026-10-14 20:45",
+          "o": 158.441,
+          "h": 158.476,
+          "l": 158.434,
+          "c": 158.448,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 20:30",
+          "time_jst": "2026-10-14 20:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -102,17 +102,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-10-14 19:00",
+          "time_jst": "2026-10-14 20:00",
           "o": 158.448,
-          "h": 158.476,
-          "l": 158.413,
-          "c": 158.451,
+          "h": 158.504,
+          "l": 158.432,
+          "c": 158.448,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 19:00",
+          "time_jst": "2026-10-14 20:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -128,24 +128,21 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "21:30 [USD] Core CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] Core CPI y/y（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI y/y（special: 前30分〜後30分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-14T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core CPI m/m",
-          "stop_from_jst": "21:00",
-          "stop_until_jst": "22:00"
-        }
+        "next_gated_event": null
       }
     },
     "EURUSD": {
-      "price": 1.11952,
-      "price_time_jst": "2026-10-14 20:45",
-      "bar_age_min": 1,
+      "price": 1.11963,
+      "price_time_jst": "2026-10-14 21:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-14 06:00",
@@ -166,9 +163,9 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 1.11964,
+          "low": 1.11916,
+          "status": "open",
           "window_jst": "21:00-06:00"
         }
       },
@@ -194,17 +191,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-14 20:30",
-          "o": 1.11925,
-          "h": 1.11958,
-          "l": 1.11894,
-          "c": 1.11958,
+          "time_jst": "2026-10-14 20:45",
+          "o": 1.11956,
+          "h": 1.11974,
+          "l": 1.11912,
+          "c": 1.11928,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 20:30",
+          "time_jst": "2026-10-14 20:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -221,17 +218,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-10-14 19:00",
-          "o": 1.11937,
-          "h": 1.11941,
-          "l": 1.1188,
-          "c": 1.11913,
+          "time_jst": "2026-10-14 20:00",
+          "o": 1.1191,
+          "h": 1.11974,
+          "l": 1.11886,
+          "c": 1.11928,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 19:00",
+          "time_jst": "2026-10-14 20:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -247,24 +244,21 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "21:30 [USD] Core CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] Core CPI y/y（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI y/y（special: 前30分〜後30分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-14T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core CPI m/m",
-          "stop_from_jst": "21:00",
-          "stop_until_jst": "22:00"
-        }
+        "next_gated_event": null
       }
     },
     "GBPUSD": {
-      "price": 1.32635,
-      "price_time_jst": "2026-10-14 20:45",
-      "bar_age_min": 1,
+      "price": 1.32699,
+      "price_time_jst": "2026-10-14 21:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-14 06:00",
@@ -279,15 +273,15 @@
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": 1.327,
+          "high": 1.32701,
           "low": 1.32571,
           "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 1.32701,
+          "low": 1.32645,
+          "status": "open",
           "window_jst": "21:00-06:00"
         }
       },
@@ -313,17 +307,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-14 20:30",
-          "o": 1.32626,
-          "h": 1.32638,
-          "l": 1.32586,
-          "c": 1.32637,
+          "time_jst": "2026-10-14 20:45",
+          "o": 1.32635,
+          "h": 1.32663,
+          "l": 1.32617,
+          "c": 1.3266,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 20:30",
+          "time_jst": "2026-10-14 20:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -340,17 +334,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-10-14 19:00",
-          "o": 1.32668,
-          "h": 1.32695,
-          "l": 1.3264,
-          "c": 1.32672,
+          "time_jst": "2026-10-14 20:00",
+          "o": 1.32665,
+          "h": 1.32665,
+          "l": 1.32586,
+          "c": 1.3266,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 19:00",
+          "time_jst": "2026-10-14 20:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -366,24 +360,21 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "21:30 [USD] Core CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] Core CPI y/y（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI y/y（special: 前30分〜後30分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-14T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core CPI m/m",
-          "stop_from_jst": "21:00",
-          "stop_until_jst": "22:00"
-        }
+        "next_gated_event": null
       }
     },
     "EURJPY": {
-      "price": 177.426,
-      "price_time_jst": "2026-10-14 20:45",
-      "bar_age_min": 1,
+      "price": 177.388,
+      "price_time_jst": "2026-10-14 21:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-14 06:00",
@@ -404,9 +395,9 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 177.392,
+          "low": 177.329,
+          "status": "open",
           "window_jst": "21:00-06:00"
         }
       },
@@ -432,17 +423,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-14 20:30",
-          "o": 177.37,
-          "h": 177.391,
-          "l": 177.305,
-          "c": 177.39,
+          "time_jst": "2026-10-14 20:45",
+          "o": 177.384,
+          "h": 177.43,
+          "l": 177.34,
+          "c": 177.343,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 20:30",
+          "time_jst": "2026-10-14 20:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -459,17 +450,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-10-14 19:00",
-          "o": 177.361,
-          "h": 177.376,
-          "l": 177.25,
-          "c": 177.324,
+          "time_jst": "2026-10-14 20:00",
+          "o": 177.319,
+          "h": 177.43,
+          "l": 177.271,
+          "c": 177.343,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 19:00",
+          "time_jst": "2026-10-14 20:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -492,9 +483,9 @@
       }
     },
     "AUDUSD": {
-      "price": 0.7008,
-      "price_time_jst": "2026-10-14 20:45",
-      "bar_age_min": 1,
+      "price": 0.70087,
+      "price_time_jst": "2026-10-14 21:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-14 06:00",
@@ -515,9 +506,9 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 0.70096,
+          "low": 0.70069,
+          "status": "open",
           "window_jst": "21:00-06:00"
         }
       },
@@ -543,17 +534,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-14 20:30",
-          "o": 0.70058,
-          "h": 0.70075,
-          "l": 0.70044,
-          "c": 0.70071,
+          "time_jst": "2026-10-14 20:45",
+          "o": 0.70068,
+          "h": 0.70082,
+          "l": 0.70056,
+          "c": 0.70078,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 20:30",
+          "time_jst": "2026-10-14 20:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -564,23 +555,23 @@
           "time_jst": "2026-10-14 19:15"
         },
         "swing_low": {
-          "price": 0.70072,
-          "time_jst": "2026-10-14 17:45"
+          "price": 0.70038,
+          "time_jst": "2026-10-14 20:15"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-10-14 19:00",
-          "o": 0.70109,
-          "h": 0.70131,
-          "l": 0.70058,
-          "c": 0.70072,
+          "time_jst": "2026-10-14 20:00",
+          "o": 0.7007,
+          "h": 0.70082,
+          "l": 0.70038,
+          "c": 0.70078,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 19:00",
+          "time_jst": "2026-10-14 20:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -596,24 +587,21 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "21:30 [USD] Core CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] Core CPI y/y（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI y/y（special: 前30分〜後30分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-14T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core CPI m/m",
-          "stop_from_jst": "21:00",
-          "stop_until_jst": "22:00"
-        }
+        "next_gated_event": null
       }
     },
     "EURGBP": {
-      "price": 0.84406,
-      "price_time_jst": "2026-10-14 20:45",
-      "bar_age_min": 1,
+      "price": 0.84376,
+      "price_time_jst": "2026-10-14 21:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-14 06:00",
@@ -634,9 +622,9 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 0.84381,
+          "low": 0.84361,
+          "status": "open",
           "window_jst": "21:00-06:00"
         }
       },
@@ -662,17 +650,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-14 20:30",
-          "o": 0.84391,
-          "h": 0.84414,
-          "l": 0.84377,
-          "c": 0.8441,
+          "time_jst": "2026-10-14 20:45",
+          "o": 0.84409,
+          "h": 0.84417,
+          "l": 0.84368,
+          "c": 0.8437,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 20:30",
+          "time_jst": "2026-10-14 20:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -689,17 +677,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-10-14 19:00",
-          "o": 0.84374,
-          "h": 0.8438,
-          "l": 0.84341,
-          "c": 0.84356,
+          "time_jst": "2026-10-14 20:00",
+          "o": 0.84355,
+          "h": 0.84417,
+          "l": 0.84352,
+          "c": 0.8437,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 19:00",
+          "time_jst": "2026-10-14 20:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -722,9 +710,9 @@
       }
     },
     "USDCAD": {
-      "price": 1.42172,
-      "price_time_jst": "2026-10-14 20:45",
-      "bar_age_min": 1,
+      "price": 1.4217,
+      "price_time_jst": "2026-10-14 21:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-14 06:00",
@@ -745,9 +733,9 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 1.42199,
+          "low": 1.42139,
+          "status": "open",
           "window_jst": "21:00-06:00"
         }
       },
@@ -773,17 +761,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-14 20:30",
-          "o": 1.42215,
-          "h": 1.42231,
-          "l": 1.4215,
-          "c": 1.42153,
+          "time_jst": "2026-10-14 20:45",
+          "o": 1.42151,
+          "h": 1.42205,
+          "l": 1.42131,
+          "c": 1.42189,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 20:30",
+          "time_jst": "2026-10-14 20:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -800,17 +788,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-10-14 19:00",
-          "o": 1.42124,
-          "h": 1.42151,
-          "l": 1.42089,
-          "c": 1.42138,
+          "time_jst": "2026-10-14 20:00",
+          "o": 1.42135,
+          "h": 1.42231,
+          "l": 1.42126,
+          "c": 1.42189,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 19:00",
+          "time_jst": "2026-10-14 20:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -826,24 +814,21 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "21:30 [USD] Core CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] Core CPI y/y（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI y/y（special: 前30分〜後30分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-14T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core CPI m/m",
-          "stop_from_jst": "21:00",
-          "stop_until_jst": "22:00"
-        }
+        "next_gated_event": null
       }
     },
     "USDCHF": {
-      "price": 0.83319,
-      "price_time_jst": "2026-10-14 20:45",
-      "bar_age_min": 1,
+      "price": 0.83308,
+      "price_time_jst": "2026-10-14 21:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-14 06:00",
@@ -864,9 +849,9 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 0.83321,
+          "low": 0.83305,
+          "status": "open",
           "window_jst": "21:00-06:00"
         }
       },
@@ -892,17 +877,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-14 20:30",
-          "o": 0.83346,
-          "h": 0.83356,
-          "l": 0.83315,
-          "c": 0.8332,
+          "time_jst": "2026-10-14 20:45",
+          "o": 0.83318,
+          "h": 0.83325,
+          "l": 0.83307,
+          "c": 0.83309,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 20:30",
+          "time_jst": "2026-10-14 20:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -919,17 +904,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-10-14 19:00",
-          "o": 0.83351,
-          "h": 0.83384,
-          "l": 0.83333,
-          "c": 0.83367,
+          "time_jst": "2026-10-14 20:00",
+          "o": 0.83365,
+          "h": 0.83379,
+          "l": 0.83307,
+          "c": 0.83309,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 19:00",
+          "time_jst": "2026-10-14 20:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -945,24 +930,21 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "21:30 [USD] Core CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] Core CPI y/y（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI y/y（special: 前30分〜後30分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-14T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core CPI m/m",
-          "stop_from_jst": "21:00",
-          "stop_until_jst": "22:00"
-        }
+        "next_gated_event": null
       }
     },
     "NZDUSD": {
-      "price": 0.56144,
-      "price_time_jst": "2026-10-14 20:45",
-      "bar_age_min": 1,
+      "price": 0.56153,
+      "price_time_jst": "2026-10-14 21:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-14 06:00",
@@ -983,9 +965,9 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 0.56161,
+          "low": 0.56136,
+          "status": "open",
           "window_jst": "21:00-06:00"
         }
       },
@@ -1011,17 +993,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-14 20:30",
-          "o": 0.56122,
-          "h": 0.5615,
-          "l": 0.56117,
-          "c": 0.56146,
+          "time_jst": "2026-10-14 20:45",
+          "o": 0.56146,
+          "h": 0.56154,
+          "l": 0.56124,
+          "c": 0.56143,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 20:30",
+          "time_jst": "2026-10-14 20:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1038,17 +1020,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-10-14 19:00",
-          "o": 0.56184,
-          "h": 0.56196,
-          "l": 0.56155,
-          "c": 0.56168,
+          "time_jst": "2026-10-14 20:00",
+          "o": 0.56166,
+          "h": 0.56175,
+          "l": 0.56117,
+          "c": 0.56143,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 19:00",
+          "time_jst": "2026-10-14 20:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -1064,24 +1046,21 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "21:30 [USD] Core CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] Core CPI y/y（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI y/y（special: 前30分〜後30分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-14T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core CPI m/m",
-          "stop_from_jst": "21:00",
-          "stop_until_jst": "22:00"
-        }
+        "next_gated_event": null
       }
     },
     "AUDNZD": {
-      "price": 1.24813,
-      "price_time_jst": "2026-10-14 20:45",
-      "bar_age_min": 1,
+      "price": 1.24819,
+      "price_time_jst": "2026-10-14 21:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-14 06:00",
@@ -1102,9 +1081,9 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 1.24828,
+          "low": 1.24799,
+          "status": "open",
           "window_jst": "21:00-06:00"
         }
       },
@@ -1130,17 +1109,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-14 20:30",
-          "o": 1.24831,
-          "h": 1.24843,
-          "l": 1.24783,
-          "c": 1.24801,
+          "time_jst": "2026-10-14 20:45",
+          "o": 1.24795,
+          "h": 1.24841,
+          "l": 1.24792,
+          "c": 1.24836,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 20:30",
+          "time_jst": "2026-10-14 20:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1157,17 +1136,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-10-14 19:00",
-          "o": 1.24784,
-          "h": 1.24821,
-          "l": 1.24743,
-          "c": 1.24757,
+          "time_jst": "2026-10-14 20:00",
+          "o": 1.24755,
+          "h": 1.24843,
+          "l": 1.24745,
+          "c": 1.24836,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 19:00",
+          "time_jst": "2026-10-14 20:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -1190,9 +1169,9 @@
       }
     },
     "XAUUSD": {
-      "price": 4138.31,
-      "price_time_jst": "2026-10-14 20:45",
-      "bar_age_min": 1,
+      "price": 4144.41,
+      "price_time_jst": "2026-10-14 21:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-14 06:00",
@@ -1213,9 +1192,9 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 4144.62,
+          "low": 4139.35,
+          "status": "open",
           "window_jst": "21:00-06:00"
         }
       },
@@ -1241,17 +1220,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-14 20:30",
-          "o": 4139.5,
-          "h": 4140.35,
-          "l": 4138.73,
-          "c": 4139.38,
+          "time_jst": "2026-10-14 20:45",
+          "o": 4139.26,
+          "h": 4141.64,
+          "l": 4137.21,
+          "c": 4141.29,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 20:30",
+          "time_jst": "2026-10-14 20:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1268,17 +1247,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-10-14 19:00",
-          "o": 4143.56,
-          "h": 4145.23,
-          "l": 4139.76,
-          "c": 4141.31,
+          "time_jst": "2026-10-14 20:00",
+          "o": 4140.63,
+          "h": 4142.92,
+          "l": 4136.33,
+          "c": 4141.29,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 19:00",
+          "time_jst": "2026-10-14 20:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -1294,24 +1273,21 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "21:30 [USD] Core CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] Core CPI y/y（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI y/y（special: 前30分〜後30分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-14T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core CPI m/m",
-          "stop_from_jst": "21:00",
-          "stop_until_jst": "22:00"
-        }
+        "next_gated_event": null
       }
     },
     "USOIL": {
-      "price": 95.92,
-      "price_time_jst": "2026-10-14 20:45",
-      "bar_age_min": 1,
+      "price": 95.72,
+      "price_time_jst": "2026-10-14 21:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-14 06:00",
@@ -1332,9 +1308,9 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": null,
-          "low": null,
-          "status": "not_started",
+          "high": 95.93,
+          "low": 95.5,
+          "status": "open",
           "window_jst": "21:00-06:00"
         }
       },
@@ -1360,17 +1336,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-14 20:30",
-          "o": 95.89,
-          "h": 95.98,
-          "l": 95.75,
-          "c": 95.84,
+          "time_jst": "2026-10-14 20:45",
+          "o": 95.79,
+          "h": 96.03,
+          "l": 95.74,
+          "c": 95.8,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 20:30",
+          "time_jst": "2026-10-14 20:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1387,17 +1363,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-10-14 19:00",
-          "o": 94.96,
-          "h": 95.51,
-          "l": 94.89,
-          "c": 95.37,
+          "time_jst": "2026-10-14 20:00",
+          "o": 95.43,
+          "h": 96.03,
+          "l": 95.3,
+          "c": 95.8,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-14 19:00",
+          "time_jst": "2026-10-14 20:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -1408,23 +1384,20 @@
           "time_jst": "2026-10-14 10:00"
         },
         "swing_low": {
-          "price": 91.65,
-          "time_jst": "2026-10-13 20:00"
+          "price": 93.99,
+          "time_jst": "2026-10-14 18:00"
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "21:30 [USD] Core CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] Core CPI y/y（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] CPI y/y（special: 前30分〜後30分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-14T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core CPI m/m",
-          "stop_from_jst": "21:00",
-          "stop_until_jst": "22:00"
-        }
+        "next_gated_event": null
       }
     }
   },
