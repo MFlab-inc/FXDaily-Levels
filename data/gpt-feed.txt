@@ -1,6 +1,6 @@
 FX Daily Levels - GPT Feed (plain text)
-feed_generated_at: 2026-10-14T09:50:28+09:00 / timezone: Asia/Tokyo
-daily as_of: 2026-10-14T06:20:21+09:00 | intraday as_of: 2026-10-14T09:49:56+09:00 | calendar as_of: 2026-10-14T09:49:56+09:00 | daytrade as_of: 2026-10-14T09:50:01+09:00 | rates as_of: 2026-10-13T10:05:45+09:00
+feed_generated_at: 2026-10-14T09:58:01+09:00 / timezone: Asia/Tokyo
+daily as_of: 2026-10-14T06:20:21+09:00 | intraday as_of: 2026-10-14T09:49:56+09:00 | calendar as_of: 2026-10-14T09:49:56+09:00 | daytrade as_of: 2026-10-14T09:50:01+09:00 | rates as_of: 2026-10-14T09:50:27+09:00
 注意: 事実データのみ。トレード判定は含まない。intradayは最大1時間前の値の場合がある。
 
 ===== サマリー =====
@@ -12,13 +12,13 @@ DXY: 102.16 (-0.41%) | US2Y: 4.8%[fred:DGS2(前営業日値)] (+0.05) | US10Y: 5
 
 株価指数(現物ベース): US30: 51670 (-0.35%) | US500: 7805.45 (-0.02%) | US100: 30569.48 (-0.31%)
 
-【JP-US 2Y Rates】(rates as_of: 2026-10-13T10:05:45+09:00 / 表示時点: 2026-10-14T09:50:28+09:00)
+【JP-US 2Y Rates】(rates as_of: 2026-10-14T09:50:27+09:00 / 表示時点: 2026-10-14T09:58:01+09:00)
 日米2年金利。「判定」は、金利差の5営業日差を機械的に分類した結果で、トレード判定ではありません。
-米2年: 4.80%（2026-10-09・米東部基準／米財務省 par yield／XML照合 一致（195日））［古い：期待 2026-10-13 に対し最新 2026-10-09］
-日2年: 1.911%（2026-10-09・東京基準／財務省、翌営業日午前9時30分頃公表）［古い：期待 2026-10-13 に対し最新 2026-10-09］
-金利差（米2年 − 日2年。両方に値がある直近日 2026-10-09）: +2.889%pt
-5営業日差: 米2年 -3.0bp（2026-10-02比）／日2年 -0.8bp（2026-10-02比）／金利差 -2.2bp（2026-10-02比）
-判定: 判定できません（理由: 米2年が最新の営業日（期待 2026-10-13）まで更新されていません（最新 2026-10-09）／日2年が最新の営業日（期待 2026-10-13）まで更新されていません（最新 2026-10-09）。しきい値 ±10bp、境界を含む。−10bp以下＝円高方向／+10bp以上＝円安方向／その間＝はっきりしない）
+米2年: 4.79%（2026-10-13・米東部基準／米財務省 par yield／XML照合 一致（196日））
+日2年: 1.928%（2026-10-13・東京基準／財務省、翌営業日午前9時30分頃公表）
+金利差（米2年 − 日2年。両方に値がある直近日 2026-10-13）: +2.862%pt
+5営業日差: 米2年 -5.0bp（2026-10-05比）／日2年 +1.9bp（2026-10-05比）／金利差 -6.9bp（2026-10-05比）
+判定: はっきりしない（金利差の5営業日差 -6.9bp、2026-10-05→2026-10-13。しきい値 ±10bp、境界を含む。−10bp以下＝円高方向／+10bp以上＝円安方向／その間＝はっきりしない）
 ※観測の時刻が違います（日本は東京、米国は米東部。約13時間ずれます）。
 出典：米財務省 Daily Treasury Par Yield Curve Rates（https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics）
 出典：財務省「国債金利情報」（https://www.mof.go.jp/jgbs/reference/interest_rate/index.htm）、PDL1.0（https://www.digital.go.jp/resources/open_data/public_data_license_v1.0）を加工して作成（5営業日の差と金利差の計算：MFlab-inc／FXDaily-Levels）
@@ -2414,42 +2414,42 @@ DXY: 102.16 (-0.41%) | US2Y: 4.8%[fred:DGS2(前営業日値)] (+0.05) | US10Y: 5
 ===== Raw: rates.json（表示時点の判定に直したもの） =====
 {
  "schema": "fxdaily-levels/rates/v1",
- "as_of": "2026-10-13T10:05:45+09:00",
+ "as_of": "2026-10-14T09:50:27+09:00",
  "timezone": "Asia/Tokyo",
  "us2y": {
-  "date": "2026-10-09",
-  "value": 4.8,
+  "date": "2026-10-13",
+  "value": 4.79,
   "unit": "%",
   "source": "treasury_csv",
   "source_url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_yield_curve&field_tdr_date_value=2026&page&_format=csv",
   "xml_check": {
    "status": "match",
-   "compared": 195,
+   "compared": 196,
    "mismatches": []
   },
-  "fetched_at": "2026-10-13T10:05:45+09:00",
+  "fetched_at": "2026-10-14T09:50:27+09:00",
   "stale": false,
   "expected_date": "2026-10-13",
   "required_date": "2026-10-13",
-  "fresh": false
+  "fresh": true
  },
  "jp2y": {
-  "date": "2026-10-09",
-  "value": 1.911,
+  "date": "2026-10-13",
+  "value": 1.928,
   "unit": "%",
   "source": "mof_jgbcm_csv",
   "source_url": "https://www.mof.go.jp/jgbs/reference/interest_rate/jgbcm.csv",
   "published_hint": "翌営業日午前9時30分頃（財務省FAQ）",
-  "last_modified": "Mon, 12 Oct 2026 23:30:10 GMT",
-  "fetched_at": "2026-10-13T10:05:45+09:00",
+  "last_modified": "Tue, 13 Oct 2026 23:30:48 GMT",
+  "fetched_at": "2026-10-14T09:50:27+09:00",
   "stale": false,
   "expected_date": "2026-10-13",
   "required_date": "2026-10-13",
-  "fresh": false
+  "fresh": true
  },
  "spread": {
-  "date": "2026-10-09",
-  "value": 2.889,
+  "date": "2026-10-13",
+  "value": 2.862,
   "unit": "%pt",
   "definition": "米2年 − 日2年（両方に値がある日だけ）"
  },
@@ -2457,34 +2457,39 @@ DXY: 102.16 (-0.41%) | US2Y: 4.8%[fred:DGS2(前営業日値)] (+0.05) | US10Y: 5
   "unit": "bp",
   "business_days": 5,
   "us": {
-   "value_bp": -3,
-   "date": "2026-10-09",
-   "base_date": "2026-10-02",
-   "value": 4.8,
-   "base_value": 4.83
+   "value_bp": -5,
+   "date": "2026-10-13",
+   "base_date": "2026-10-05",
+   "value": 4.79,
+   "base_value": 4.84
   },
   "jp": {
-   "value_bp": -0.8,
-   "date": "2026-10-09",
-   "base_date": "2026-10-02",
-   "value": 1.911,
-   "base_value": 1.919
+   "value_bp": 1.9,
+   "date": "2026-10-13",
+   "base_date": "2026-10-05",
+   "value": 1.928,
+   "base_value": 1.909
   },
   "spread": {
-   "value_bp": -2.2,
-   "date": "2026-10-09",
-   "base_date": "2026-10-02",
-   "value": 2.889,
-   "base_value": 2.911
+   "value_bp": -6.9,
+   "date": "2026-10-13",
+   "base_date": "2026-10-05",
+   "value": 2.862,
+   "base_value": 2.931
   }
  },
  "judgment": {
-  "available": false,
-  "label": "判定できません",
+  "available": true,
+  "label": "はっきりしない",
   "threshold_bp": 10,
   "rule": "金利差（米2年 − 日2年。両方に値がある日だけ）の5営業日差が −10bp 以下なら「円高方向」、+10bp 以上なら「円安方向」、その間は「はっきりしない」（境界を含む）。米・日のどちらかが最新でない／取得できていないときは「判定できません」",
-  "basis": null,
-  "reason": "米2年が最新の営業日（期待 2026-10-13）まで更新されていません（最新 2026-10-09）／日2年が最新の営業日（期待 2026-10-13）まで更新されていません（最新 2026-10-09）"
+  "basis": {
+   "metric": "金利差の5営業日差",
+   "value_bp": -6.9,
+   "date": "2026-10-13",
+   "base_date": "2026-10-05"
+  },
+  "reason": null
  },
  "generation": {
   "status": "ok",
@@ -2492,7 +2497,7 @@ DXY: 102.16 (-0.41%) | US2Y: 4.8%[fred:DGS2(前営業日値)] (+0.05) | US10Y: 5
   "errors": [],
   "retry_expected": false,
   "retry_note": "取得・照合の問題はなく、米・日とも最新。再試行は不要",
-  "run_url": "https://github.com/MFlab-inc/FXDaily-Levels/actions/runs/38330461362"
+  "run_url": "https://github.com/MFlab-inc/FXDaily-Levels/actions/runs/38492403241"
  },
  "calendar_source": "cao_live+bundled",
  "citations": {
@@ -2503,5 +2508,5 @@ DXY: 102.16 (-0.41%) | US2Y: 4.8%[fred:DGS2(前営業日値)] (+0.05) | US10Y: 5
   "観測の時刻が違う：日本は東京、米国は米東部（約13時間のずれ）。同じ暦日どうしを並べている。",
   "判定は金利差の5営業日差の機械的な分類で、トレード判定ではない。"
  ],
- "effective_at": "2026-10-14T09:50:28+09:00"
+ "effective_at": "2026-10-14T09:58:01+09:00"
 }
