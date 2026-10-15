@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-15T21:05:23+09:00",
+  "as_of": "2026-10-15T21:23:20+09:00",
   "timezone": "Asia/Tokyo",
   "note": "事実データと機械判定のみ。売買推奨は含まない。gateはイベント時間ルール(config/daytrade-rules.json)による判定。",
   "rules_summary": {
@@ -24,8 +24,8 @@
   },
   "pairs": {
     "USDJPY": {
-      "price": 157.955,
-      "price_time_jst": "2026-10-15 21:00",
+      "price": 158.001,
+      "price_time_jst": "2026-10-15 21:20",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -47,7 +47,7 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": 157.961,
+          "high": 158.01,
           "low": 157.895,
           "status": "open",
           "window_jst": "21:00-06:00"
@@ -75,17 +75,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-15 20:45",
-          "o": 157.926,
-          "h": 157.944,
-          "l": 157.889,
-          "c": 157.912,
+          "time_jst": "2026-10-15 21:00",
+          "o": 157.903,
+          "h": 158,
+          "l": 157.895,
+          "c": 157.992,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-15 20:45",
+          "time_jst": "2026-10-15 21:00",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -130,27 +130,21 @@
       "gate": {
         "state": "WAIT",
         "reasons": [
+          "21:30 [USD] Core PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Core Retail Sales m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Retail Sales m/m（special: 前30分〜後30分停止）"
         ],
         "warnings": [
           "21:30 [USD] Philly Fed Manufacturing Index（Medium・参考）",
           "21:30 [USD] Unemployment Claims（Medium・参考）"
         ],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-15T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core PPI m/m",
-          "stop_from_jst": "21:15",
-          "stop_until_jst": "21:45"
-        }
+        "next_gated_event": null
       }
     },
     "EURUSD": {
-      "price": 1.12086,
-      "price_time_jst": "2026-10-15 21:00",
+      "price": 1.12074,
+      "price_time_jst": "2026-10-15 21:20",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -172,8 +166,8 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": 1.12091,
-          "low": 1.1207,
+          "high": 1.12132,
+          "low": 1.12051,
           "status": "open",
           "window_jst": "21:00-06:00"
         }
@@ -200,17 +194,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-15 20:45",
-          "o": 1.12145,
-          "h": 1.12178,
-          "l": 1.12055,
-          "c": 1.12083,
+          "time_jst": "2026-10-15 21:00",
+          "o": 1.12078,
+          "h": 1.12132,
+          "l": 1.12052,
+          "c": 1.12053,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-15 20:45",
+          "time_jst": "2026-10-15 21:00",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -255,27 +249,21 @@
       "gate": {
         "state": "WAIT",
         "reasons": [
+          "21:30 [USD] Core PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Core Retail Sales m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Retail Sales m/m（special: 前30分〜後30分停止）"
         ],
         "warnings": [
           "21:30 [USD] Philly Fed Manufacturing Index（Medium・参考）",
           "21:30 [USD] Unemployment Claims（Medium・参考）"
         ],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-15T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core PPI m/m",
-          "stop_from_jst": "21:15",
-          "stop_until_jst": "21:45"
-        }
+        "next_gated_event": null
       }
     },
     "GBPUSD": {
-      "price": 1.32465,
-      "price_time_jst": "2026-10-15 21:00",
+      "price": 1.32495,
+      "price_time_jst": "2026-10-15 21:20",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -297,8 +285,8 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": 1.32484,
-          "low": 1.32459,
+          "high": 1.32518,
+          "low": 1.32445,
           "status": "open",
           "window_jst": "21:00-06:00"
         }
@@ -325,17 +313,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-15 20:45",
-          "o": 1.32586,
-          "h": 1.32586,
-          "l": 1.32466,
-          "c": 1.32487,
+          "time_jst": "2026-10-15 21:00",
+          "o": 1.32484,
+          "h": 1.32518,
+          "l": 1.32445,
+          "c": 1.32446,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-15 20:45",
+          "time_jst": "2026-10-15 21:00",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -380,27 +368,21 @@
       "gate": {
         "state": "WAIT",
         "reasons": [
+          "21:30 [USD] Core PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Core Retail Sales m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Retail Sales m/m（special: 前30分〜後30分停止）"
         ],
         "warnings": [
           "21:30 [USD] Philly Fed Manufacturing Index（Medium・参考）",
           "21:30 [USD] Unemployment Claims（Medium・参考）"
         ],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-15T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core PPI m/m",
-          "stop_from_jst": "21:15",
-          "stop_until_jst": "21:45"
-        }
+        "next_gated_event": null
       }
     },
     "EURJPY": {
-      "price": 177.046,
-      "price_time_jst": "2026-10-15 21:00",
+      "price": 177.052,
+      "price_time_jst": "2026-10-15 21:20",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -422,7 +404,7 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": 177.062,
+          "high": 177.128,
           "low": 176.973,
           "status": "open",
           "window_jst": "21:00-06:00"
@@ -450,17 +432,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-15 20:45",
-          "o": 177.106,
-          "h": 177.178,
-          "l": 176.928,
-          "c": 176.986,
+          "time_jst": "2026-10-15 21:00",
+          "o": 176.973,
+          "h": 177.128,
+          "l": 176.973,
+          "c": 177.033,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-15 20:45",
+          "time_jst": "2026-10-15 21:00",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -510,14 +492,14 @@
       }
     },
     "AUDUSD": {
-      "price": 0.69099,
-      "price_time_jst": "2026-10-15 21:00",
+      "price": 0.69113,
+      "price_time_jst": "2026-10-15 21:20",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-15 06:00",
         "high": 0.69797,
-        "low": 0.69098
+        "low": 0.69094
       },
       "sessions_today": {
         "tokyo": {
@@ -528,13 +510,13 @@
         },
         "london": {
           "high": 0.69442,
-          "low": 0.69098,
+          "low": 0.69094,
           "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": 0.69121,
-          "low": 0.69098,
+          "high": 0.69128,
+          "low": 0.69094,
           "status": "open",
           "window_jst": "21:00-06:00"
         }
@@ -561,17 +543,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-15 20:45",
-          "o": 0.69201,
-          "h": 0.69203,
-          "l": 0.69118,
-          "c": 0.6912,
+          "time_jst": "2026-10-15 21:00",
+          "o": 0.69121,
+          "h": 0.69128,
+          "l": 0.69097,
+          "c": 0.69099,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-15 20:45",
+          "time_jst": "2026-10-15 21:00",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -616,27 +598,21 @@
       "gate": {
         "state": "WAIT",
         "reasons": [
+          "21:30 [USD] Core PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Core Retail Sales m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Retail Sales m/m（special: 前30分〜後30分停止）"
         ],
         "warnings": [
           "21:30 [USD] Philly Fed Manufacturing Index（Medium・参考）",
           "21:30 [USD] Unemployment Claims（Medium・参考）"
         ],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-15T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core PPI m/m",
-          "stop_from_jst": "21:15",
-          "stop_until_jst": "21:45"
-        }
+        "next_gated_event": null
       }
     },
     "EURGBP": {
-      "price": 0.84615,
-      "price_time_jst": "2026-10-15 21:00",
+      "price": 0.84586,
+      "price_time_jst": "2026-10-15 21:20",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -658,8 +634,8 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": 0.84619,
-          "low": 0.84592,
+          "high": 0.8463,
+          "low": 0.84585,
           "status": "open",
           "window_jst": "21:00-06:00"
         }
@@ -686,17 +662,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-15 20:45",
-          "o": 0.84583,
-          "h": 0.84616,
-          "l": 0.84577,
-          "c": 0.84601,
+          "time_jst": "2026-10-15 21:00",
+          "o": 0.84597,
+          "h": 0.8463,
+          "l": 0.84592,
+          "c": 0.84604,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-15 20:45",
+          "time_jst": "2026-10-15 21:00",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -707,8 +683,8 @@
           "time_jst": "2026-10-15 20:00"
         },
         "swing_low": {
-          "price": 0.84604,
-          "time_jst": "2026-10-15 16:15"
+          "price": 0.84567,
+          "time_jst": "2026-10-15 20:30"
         }
       },
       "h1": {
@@ -746,8 +722,8 @@
       }
     },
     "USDCAD": {
-      "price": 1.42058,
-      "price_time_jst": "2026-10-15 21:00",
+      "price": 1.42094,
+      "price_time_jst": "2026-10-15 21:20",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -769,7 +745,7 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": 1.42079,
+          "high": 1.42121,
           "low": 1.42029,
           "status": "open",
           "window_jst": "21:00-06:00"
@@ -797,17 +773,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-15 20:45",
-          "o": 1.41951,
-          "h": 1.42059,
-          "l": 1.41939,
-          "c": 1.42044,
+          "time_jst": "2026-10-15 21:00",
+          "o": 1.42044,
+          "h": 1.42115,
+          "l": 1.42029,
+          "c": 1.42109,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-15 20:45",
+          "time_jst": "2026-10-15 21:00",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -852,27 +828,21 @@
       "gate": {
         "state": "WAIT",
         "reasons": [
+          "21:30 [USD] Core PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Core Retail Sales m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Retail Sales m/m（special: 前30分〜後30分停止）"
         ],
         "warnings": [
           "21:30 [USD] Philly Fed Manufacturing Index（Medium・参考）",
           "21:30 [USD] Unemployment Claims（Medium・参考）"
         ],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-15T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core PPI m/m",
-          "stop_from_jst": "21:15",
-          "stop_until_jst": "21:45"
-        }
+        "next_gated_event": null
       }
     },
     "USDCHF": {
-      "price": 0.83033,
-      "price_time_jst": "2026-10-15 21:00",
+      "price": 0.83014,
+      "price_time_jst": "2026-10-15 21:20",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -895,7 +865,7 @@
         },
         "ny": {
           "high": 0.83039,
-          "low": 0.83012,
+          "low": 0.8301,
           "status": "open",
           "window_jst": "21:00-06:00"
         }
@@ -922,17 +892,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-15 20:45",
-          "o": 0.83022,
-          "h": 0.83023,
-          "l": 0.8299,
-          "c": 0.83019,
+          "time_jst": "2026-10-15 21:00",
+          "o": 0.83015,
+          "h": 0.83039,
+          "l": 0.8301,
+          "c": 0.83037,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-15 20:45",
+          "time_jst": "2026-10-15 21:00",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -977,27 +947,21 @@
       "gate": {
         "state": "WAIT",
         "reasons": [
+          "21:30 [USD] Core PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Core Retail Sales m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Retail Sales m/m（special: 前30分〜後30分停止）"
         ],
         "warnings": [
           "21:30 [USD] Philly Fed Manufacturing Index（Medium・参考）",
           "21:30 [USD] Unemployment Claims（Medium・参考）"
         ],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-15T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core PPI m/m",
-          "stop_from_jst": "21:15",
-          "stop_until_jst": "21:45"
-        }
+        "next_gated_event": null
       }
     },
     "NZDUSD": {
-      "price": 0.56017,
-      "price_time_jst": "2026-10-15 21:00",
+      "price": 0.5603,
+      "price_time_jst": "2026-10-15 21:20",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -1014,13 +978,13 @@
         },
         "london": {
           "high": 0.56183,
-          "low": 0.56016,
+          "low": 0.55999,
           "status": "open",
           "window_jst": "16:00-01:00"
         },
         "ny": {
           "high": 0.56047,
-          "low": 0.56016,
+          "low": 0.55999,
           "status": "open",
           "window_jst": "21:00-06:00"
         }
@@ -1047,17 +1011,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-15 20:45",
-          "o": 0.56104,
-          "h": 0.56108,
-          "l": 0.56043,
-          "c": 0.56044,
+          "time_jst": "2026-10-15 21:00",
+          "o": 0.56047,
+          "h": 0.56047,
+          "l": 0.55999,
+          "c": 0.56009,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-15 20:45",
+          "time_jst": "2026-10-15 21:00",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1102,27 +1066,21 @@
       "gate": {
         "state": "WAIT",
         "reasons": [
+          "21:30 [USD] Core PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Core Retail Sales m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Retail Sales m/m（special: 前30分〜後30分停止）"
         ],
         "warnings": [
           "21:30 [USD] Philly Fed Manufacturing Index（Medium・参考）",
           "21:30 [USD] Unemployment Claims（Medium・参考）"
         ],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-15T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core PPI m/m",
-          "stop_from_jst": "21:15",
-          "stop_until_jst": "21:45"
-        }
+        "next_gated_event": null
       }
     },
     "AUDNZD": {
-      "price": 1.23361,
-      "price_time_jst": "2026-10-15 21:00",
+      "price": 1.23353,
+      "price_time_jst": "2026-10-15 21:20",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -1144,7 +1102,7 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": 1.23366,
+          "high": 1.23418,
           "low": 1.23323,
           "status": "open",
           "window_jst": "21:00-06:00"
@@ -1172,17 +1130,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-15 20:45",
-          "o": 1.23346,
-          "h": 1.23363,
-          "l": 1.23296,
-          "c": 1.23333,
+          "time_jst": "2026-10-15 21:00",
+          "o": 1.23328,
+          "h": 1.23418,
+          "l": 1.23323,
+          "c": 1.23372,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-15 20:45",
+          "time_jst": "2026-10-15 21:00",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1193,8 +1151,8 @@
           "time_jst": "2026-10-15 20:00"
         },
         "swing_low": {
-          "price": 1.23239,
-          "time_jst": "2026-10-15 19:00"
+          "price": 1.23295,
+          "time_jst": "2026-10-15 20:30"
         }
       },
       "h1": {
@@ -1232,8 +1190,8 @@
       }
     },
     "XAUUSD": {
-      "price": 4146.41,
-      "price_time_jst": "2026-10-15 21:00",
+      "price": 4154.43,
+      "price_time_jst": "2026-10-15 21:20",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -1255,7 +1213,7 @@
           "window_jst": "16:00-01:00"
         },
         "ny": {
-          "high": 4147.33,
+          "high": 4154.72,
           "low": 4144.39,
           "status": "open",
           "window_jst": "21:00-06:00"
@@ -1283,17 +1241,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-15 20:45",
-          "o": 4150.82,
-          "h": 4152.13,
-          "l": 4146.03,
-          "c": 4148.07,
+          "time_jst": "2026-10-15 21:00",
+          "o": 4147.33,
+          "h": 4149.89,
+          "l": 4144.39,
+          "c": 4149.85,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-15 20:45",
+          "time_jst": "2026-10-15 21:00",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1338,27 +1296,21 @@
       "gate": {
         "state": "WAIT",
         "reasons": [
+          "21:30 [USD] Core PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Core Retail Sales m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Retail Sales m/m（special: 前30分〜後30分停止）"
         ],
         "warnings": [
           "21:30 [USD] Philly Fed Manufacturing Index（Medium・参考）",
           "21:30 [USD] Unemployment Claims（Medium・参考）"
         ],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-15T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core PPI m/m",
-          "stop_from_jst": "21:15",
-          "stop_until_jst": "21:45"
-        }
+        "next_gated_event": null
       }
     },
     "USOIL": {
-      "price": 95.36,
-      "price_time_jst": "2026-10-15 21:00",
+      "price": 95.33,
+      "price_time_jst": "2026-10-15 21:20",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -1381,7 +1333,7 @@
         },
         "ny": {
           "high": 95.49,
-          "low": 95.29,
+          "low": 95.22,
           "status": "open",
           "window_jst": "21:00-06:00"
         }
@@ -1408,17 +1360,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-15 20:45",
-          "o": 95.28,
-          "h": 95.48,
-          "l": 95.1,
-          "c": 95.48,
+          "time_jst": "2026-10-15 21:00",
+          "o": 95.45,
+          "h": 95.49,
+          "l": 95.22,
+          "c": 95.31,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-15 20:45",
+          "time_jst": "2026-10-15 21:00",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1463,22 +1415,16 @@
       "gate": {
         "state": "WAIT",
         "reasons": [
+          "21:30 [USD] Core PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Core Retail Sales m/m（special: 前30分〜後30分停止）",
+          "21:30 [USD] PPI m/m（High: 前15分〜後15分停止）",
           "21:30 [USD] Retail Sales m/m（special: 前30分〜後30分停止）"
         ],
         "warnings": [
           "21:30 [USD] Philly Fed Manufacturing Index（Medium・参考）",
           "21:30 [USD] Unemployment Claims（Medium・参考）"
         ],
-        "next_gated_event": {
-          "time_jst": "21:30",
-          "datetime_jst": "2026-10-15T21:30:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "Core PPI m/m",
-          "stop_from_jst": "21:15",
-          "stop_until_jst": "21:45"
-        }
+        "next_gated_event": null
       }
     }
   },
