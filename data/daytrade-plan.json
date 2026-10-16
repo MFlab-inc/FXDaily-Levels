@@ -6,38 +6,38 @@
   },
   "plan_date": "2026-10-16",
   "run": "status",
-  "status_updated_at": "2026-10-17T00:06:04+09:00",
+  "status_updated_at": "2026-10-17T01:05:58+09:00",
   "expires_at": "2026-10-17T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-10-17T00:05:28+09:00",
+        "as_of": "2026-10-17T01:05:27+09:00",
         "age_min": 1,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-10-17T00:05:32+09:00",
-        "age_min": 1,
+        "as_of": "2026-10-17T01:05:32+09:00",
+        "age_min": 0,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-10-17T00:05:32+09:00",
-        "age_min": 1,
+        "as_of": "2026-10-17T01:05:32+09:00",
+        "age_min": 0,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-10-16 23:45",
-      "newest_last_closed": "2026-10-16 23:45",
+      "oldest_last_closed": "2026-10-17 00:45",
+      "newest_last_closed": "2026-10-17 00:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-10-16 23:00",
-      "newest": "2026-10-16 23:00"
+      "oldest": "2026-10-17 00:00",
+      "newest": "2026-10-17 00:00"
     },
     "stale": false,
     "daily": {
@@ -67,7 +67,7 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-10-17T00:05:28+09:00",
+    "as_of": "2026-10-17T01:05:27+09:00",
     "date": "2026-10-17",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
@@ -237,7 +237,7 @@
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-10-17T00:05:32+09:00",
+      "as_of": "2026-10-17T01:05:32+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "TRADE_OK",
@@ -256,7 +256,7 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-10-17T00:03:43+09:00",
+        "generated_intraday": "2026-10-17T01:03:43+09:00",
         "age_min": 2
       },
       "pairs": {
@@ -266,7 +266,7 @@
             "range_today": 0.504,
             "range_vs_adr": 0.485,
             "spike_flag": false,
-            "updated_at": "2026-10-17T00:03:43+09:00"
+            "updated_at": "2026-10-17T01:03:43+09:00"
           }
         },
         "EURUSD": {
@@ -275,7 +275,7 @@
             "range_today": 0.00615,
             "range_vs_adr": 0.928,
             "spike_flag": false,
-            "updated_at": "2026-10-17T00:03:43+09:00"
+            "updated_at": "2026-10-17T01:03:43+09:00"
           }
         },
         "GBPUSD": {
@@ -287,7 +287,7 @@
             "range_today": 0.00514,
             "range_vs_adr": 1.089,
             "spike_flag": false,
-            "updated_at": "2026-10-17T00:03:43+09:00"
+            "updated_at": "2026-10-17T01:03:43+09:00"
           }
         },
         "NZDUSD": {
@@ -299,7 +299,7 @@
             "range_today": 0.00664,
             "range_vs_adr": 1.076,
             "spike_flag": false,
-            "updated_at": "2026-10-17T00:03:43+09:00"
+            "updated_at": "2026-10-17T01:03:43+09:00"
           }
         },
         "USDCHF": {
@@ -314,16 +314,16 @@
             "range_today": 0.00379,
             "range_vs_adr": 1.325,
             "spike_flag": false,
-            "updated_at": "2026-10-17T00:03:43+09:00"
+            "updated_at": "2026-10-17T01:03:43+09:00"
           }
         },
         "XAUUSD": {
           "state": "ok",
           "items": {
-            "range_today": 51.38,
-            "range_vs_adr": 0.663,
+            "range_today": 51.23,
+            "range_vs_adr": 0.661,
             "spike_flag": false,
-            "updated_at": "2026-10-17T00:03:43+09:00"
+            "updated_at": "2026-10-17T01:03:43+09:00"
           }
         }
       }
@@ -425,8 +425,8 @@
         "high": 178.008
       },
       "worst_entry": 177.988,
-      "price": 177.679,
-      "distance_pips": 30.9,
+      "price": 177.421,
+      "distance_pips": 56.7,
       "atr_pips": 19.7,
       "adr_used_pct": 62.7,
       "adr_remaining_pips": 49.1,
@@ -521,7 +521,7 @@
       "entry_state": {
         "ok": false,
         "reasons": [
-          "土曜0:00以降"
+          "翌1:00以降"
         ]
       },
       "stops": [],
