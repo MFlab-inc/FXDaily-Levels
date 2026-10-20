@@ -6,38 +6,38 @@
   },
   "plan_date": "2026-10-20",
   "run": "status",
-  "status_updated_at": "2026-10-20T18:05:52+09:00",
+  "status_updated_at": "2026-10-20T19:05:45+09:00",
   "expires_at": "2026-10-21T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-10-20T18:05:19+09:00",
-        "age_min": 1,
+        "as_of": "2026-10-20T19:05:17+09:00",
+        "age_min": 0,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-10-20T18:05:23+09:00",
+        "as_of": "2026-10-20T19:05:21+09:00",
         "age_min": 0,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-10-20T18:05:23+09:00",
+        "as_of": "2026-10-20T19:05:21+09:00",
         "age_min": 0,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-10-20 17:45",
-      "newest_last_closed": "2026-10-20 17:45",
+      "oldest_last_closed": "2026-10-20 18:45",
+      "newest_last_closed": "2026-10-20 18:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-10-20 17:00",
-      "newest": "2026-10-20 17:00"
+      "oldest": "2026-10-20 18:00",
+      "newest": "2026-10-20 18:00"
     },
     "stale": false,
     "daily": {
@@ -67,7 +67,7 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-10-20T18:05:19+09:00",
+    "as_of": "2026-10-20T19:05:17+09:00",
     "date": "2026-10-20",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
@@ -237,7 +237,7 @@
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-10-20T18:05:23+09:00",
+      "as_of": "2026-10-20T19:05:21+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "TRADE_OK",
@@ -256,7 +256,7 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-10-20T18:03:45+09:00",
+        "generated_intraday": "2026-10-20T19:03:44+09:00",
         "age_min": 2
       },
       "pairs": {
@@ -266,16 +266,16 @@
             "range_today": 0.559,
             "range_vs_adr": 0.583,
             "spike_flag": false,
-            "updated_at": "2026-10-20T18:03:45+09:00"
+            "updated_at": "2026-10-20T19:03:44+09:00"
           }
         },
         "EURUSD": {
           "state": "ok",
           "items": {
-            "range_today": 0.0027,
-            "range_vs_adr": 0.386,
+            "range_today": 0.00314,
+            "range_vs_adr": 0.449,
             "spike_flag": false,
-            "updated_at": "2026-10-20T18:03:45+09:00"
+            "updated_at": "2026-10-20T19:03:44+09:00"
           }
         },
         "GBPUSD": {
@@ -287,7 +287,7 @@
             "range_today": 0.00278,
             "range_vs_adr": 0.566,
             "spike_flag": false,
-            "updated_at": "2026-10-20T18:03:45+09:00"
+            "updated_at": "2026-10-20T19:03:44+09:00"
           }
         },
         "NZDUSD": {
@@ -299,7 +299,7 @@
             "range_today": 0.00585,
             "range_vs_adr": 0.915,
             "spike_flag": false,
-            "updated_at": "2026-10-20T18:03:45+09:00"
+            "updated_at": "2026-10-20T19:03:44+09:00"
           }
         },
         "USDCHF": {
@@ -311,19 +311,19 @@
         "EURGBP": {
           "state": "ok",
           "items": {
-            "range_today": 0.0026,
-            "range_vs_adr": 0.82,
+            "range_today": 0.00314,
+            "range_vs_adr": 0.991,
             "spike_flag": false,
-            "updated_at": "2026-10-20T18:03:45+09:00"
+            "updated_at": "2026-10-20T19:03:44+09:00"
           }
         },
         "XAUUSD": {
           "state": "ok",
           "items": {
-            "range_today": 31.57,
-            "range_vs_adr": 0.413,
+            "range_today": 35.13,
+            "range_vs_adr": 0.46,
             "spike_flag": false,
-            "updated_at": "2026-10-20T18:03:45+09:00"
+            "updated_at": "2026-10-20T19:03:44+09:00"
           }
         }
       }
@@ -396,11 +396,171 @@
   "order_ok": true,
   "banners": [],
   "design_missing": false,
-  "candidates": [],
+  "candidates": [
+    {
+      "id": "2026-10-20:B:XAUUSD:sell",
+      "plan_date": "2026-10-20",
+      "setup": "B",
+      "symbol": "XAUUSD",
+      "side": "sell",
+      "strength": 3,
+      "alignment": "3/3 Down",
+      "dirs": [
+        "↓",
+        "↓",
+        "↓"
+      ],
+      "note": "過去の実績が悪い",
+      "ref": {
+        "label": "東京レンジ安値",
+        "price": 4115.57
+      },
+      "band": {
+        "low": 4115.57,
+        "high": 4116.78
+      },
+      "worst_entry": 4115.57,
+      "price": 4113.18,
+      "distance_pips": 23.9,
+      "atr_pips": 120.7,
+      "adr_used_pct": 46.2,
+      "adr_remaining_pips": 409.3,
+      "obstacle": {
+        "label": "S2",
+        "price": 4102.84
+      },
+      "pip_value_jpy": 1581,
+      "schemes": {
+        "A": {
+          "pass": true,
+          "reason": null,
+          "reason_text": null,
+          "k": 0.5,
+          "sl": 4121.65,
+          "sl_pips": 60.8,
+          "tp1": 4102.9,
+          "profit_pips": 126.7,
+          "rr": 2.08,
+          "cost_cap_pips": 14.2,
+          "cost_threshold_pips": 1.2,
+          "lots": {
+            "A": 0.03,
+            "B": 0.24
+          },
+          "commission_jpy": {
+            "A": 30,
+            "B": 243
+          }
+        },
+        "B": {
+          "pass": false,
+          "reason": "cost_low",
+          "reason_text": "コスト不足",
+          "k": 1,
+          "sl": 4127.65,
+          "sl_pips": 120.8,
+          "tp1": 4102.9,
+          "profit_pips": 126.7,
+          "rr": 1.05,
+          "cost_cap_pips": -21.8,
+          "cost_threshold_pips": 1.2,
+          "lots": {
+            "A": 0.01,
+            "B": 0.12
+          },
+          "commission_jpy": {
+            "A": 10,
+            "B": 122
+          }
+        }
+      },
+      "levels": {
+        "daily": {
+          "Pivot": 4155.96,
+          "R1": 4174.92,
+          "R2": 4209.09,
+          "S1": 4121.8,
+          "S2": 4102.84,
+          "前日高値": 4190.13,
+          "前日安値": 4137
+        },
+        "h1_high_groups": [
+          {
+            "min": 4126.26,
+            "max": 4127.48,
+            "count": 2
+          },
+          {
+            "min": 4136.16,
+            "max": 4147.14,
+            "count": 14
+          },
+          {
+            "min": 4149.57,
+            "max": 4151.59,
+            "count": 2
+          },
+          {
+            "min": 4174.18,
+            "max": 4176.41,
+            "count": 2
+          }
+        ],
+        "h1_low_groups": [
+          {
+            "min": 4115.57,
+            "max": 4118.65,
+            "count": 4
+          },
+          {
+            "min": 4129.84,
+            "max": 4131.77,
+            "count": 2
+          },
+          {
+            "min": 4136.33,
+            "max": 4143.53,
+            "count": 12
+          },
+          {
+            "min": 4161.09,
+            "max": 4162.97,
+            "count": 2
+          }
+        ],
+        "h1_window": 24,
+        "atr_pips": 120.7,
+        "tokyo": {
+          "high": 4147.14,
+          "low": 4115.57
+        }
+      },
+      "confirm": "帯に到達したあと、M15がレンジ安値（4115.57）より下で陰線確定",
+      "run": "design-b",
+      "added_by": "status",
+      "generated_at": "2026-10-20T19:05:45+09:00",
+      "design_slot": null,
+      "expires_at": "2026-10-21T03:00:00+09:00",
+      "entry_state": {
+        "ok": true,
+        "reasons": []
+      },
+      "stops": [],
+      "calendar_ok": true,
+      "state": {
+        "reached": "未到達",
+        "reached_at": null,
+        "expired": false,
+        "price_in_band": false
+      },
+      "same_direction_group": "",
+      "rank": 1
+    }
+  ],
   "summary": {
-    "candidate_rows": 0,
+    "candidate_rows": 1,
     "scheme_pass": {
-      "A": 0,
+      "A": 1,
       "B": 0
     },
     "rejections": {
@@ -1052,5 +1212,7 @@
     "no_basis": [],
     "not_formed": []
   },
-  "additions_b": []
+  "additions_b": [
+    "2026-10-20:B:XAUUSD:sell"
+  ]
 }
