@@ -1,8 +1,8 @@
 # MTF判定フィード
-generated_at: 2026-10-22T06:20:43+09:00
-data_base_date: 2026-10-21（最新の確定日足の日付。銘柄ごとに違うときは最も古い日付。この日付が前営業日でなければ古い）
-as_of: 2026-10-21（今回の更新で確定しているはずの日付）
-status: ok（10/10銘柄が基準日(2026-10-21)まで更新済み）
+generated_at: 2026-10-23T06:20:47+09:00
+data_base_date: 2026-10-22（最新の確定日足の日付。銘柄ごとに違うときは最も古い日付。この日付が前営業日でなければ古い）
+as_of: 2026-10-22（今回の更新で確定しているはずの日付）
+status: ok（10/10銘柄が基準日(2026-10-22)まで更新済み）
 version: MTF-1.0（Block② MTF_Structure_Module.xlsx の Methodology 準拠）
 daily_boundary: ニューヨーク時間17時
 excluded: 形成途中の足（WTD／MTD）は除外（確定した足だけで判定）
@@ -12,15 +12,14 @@ legend: 向き ↑上向き・↓下向き・→どちらでもない / Above・
 ## USDJPY
 source: twelvedata:USD/JPY
 price_type: NY17時区切り日足の終値（Twelve Data の1時間足を UTC で取得し、NY時間に換算して作成）
-updated_at: 2026-10-22T06:20:43+09:00
+updated_at: 2026-10-23T06:20:47+09:00
 status: ok
 MONTHLY: date=2026-09-30 direction=→ close=157.420 12MMA=157.4494 24MMA=153.3582 6M_HIGH=163.980 6M_LOW=152.908 6M_RANGE_POSITION=40.75 DATA_STATUS=OK bars_used=24 (保有27)
 WEEKLY: date=2026-10-16 direction=→ close=157.995 Tenkan=156.6563 Kijun=158.4440 SpanA=157.5502 SpanB=157.1231 Cloud_Top=157.5502 Cloud_Bottom=157.1231 CLOSE_vs_CLOUD=Above Cloud TENKAN_vs_KIJUN=Bearish TK 20W_HIGH=163.980 20W_LOW=152.908 bars_used=52 (保有120)
-DAILY: date=2026-10-21 direction=→ close=158.148 50DMA=157.6893 200DMA=158.5764 CLOSE_vs_50DMA=Above CLOSE_vs_200DMA=Below 20D_HIGH=159.029 20D_LOW=156.383 20D_RANGE_POSITION=66.68 bars_used=200 (保有603)
-ALIGNMENT_SCORE: 0/3
+DAILY: date=2026-10-22 direction=↓ close=156.768 50DMA=157.6342 200DMA=158.5671 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Below 20D_HIGH=158.962 20D_LOW=156.383 20D_RANGE_POSITION=14.92 bars_used=200 (保有604)
+ALIGNMENT_SCORE: 1/3 Down
 SWING_STATUS: No Swing / Excluded
 HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き / CLOSE_vs_50DMA）:
-  2026-10-08 / 157.908 / 157.6899 / 158.5407 / → / Above
   2026-10-09 / 158.320 / 157.7071 / 158.5481 / → / Above
   2026-10-12 / 158.645 / 157.7359 / 158.5592 / ↑ / Above
   2026-10-13 / 158.316 / 157.7476 / 158.5674 / → / Above
@@ -30,21 +29,21 @@ HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き
   2026-10-19 / 158.532 / 157.7376 / 158.5830 / → / Above
   2026-10-20 / 158.173 / 157.7150 / 158.5779 / → / Above
   2026-10-21 / 158.148 / 157.6893 / 158.5764 / → / Above
+  2026-10-22 / 156.768 / 157.6342 / 158.5671 / ↓ / Below
 MISSING_DATES（平日で日足が無い日）: なし
-SHORT_BAR_DAYS（直近200営業日 2026-01-15〜2026-10-21。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=1日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日5日・それ以外59日（日付の全期間の一覧は JSON）
+SHORT_BAR_DAYS（直近200営業日 2026-01-16〜2026-10-22。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=1日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日5日・それ以外59日（日付の全期間の一覧は JSON）
 
 ## EURUSD
 source: twelvedata:EUR/USD
 price_type: NY17時区切り日足の終値（Twelve Data の1時間足を UTC で取得し、NY時間に換算して作成）
-updated_at: 2026-10-22T06:20:43+09:00
+updated_at: 2026-10-23T06:20:47+09:00
 status: ok
 MONTHLY: date=2026-09-30 direction=↓ close=1.13300 12MMA=1.161712 24MMA=1.133770 6M_HIGH=1.18488 6M_LOW=1.13097 6M_RANGE_POSITION=3.77 DATA_STATUS=OK bars_used=24 (保有27)
 WEEKLY: date=2026-10-16 direction=↓ close=1.12393 Tenkan=1.141245 Kijun=1.145500 SpanA=1.143372 SpanB=1.158980 Cloud_Top=1.158980 Cloud_Bottom=1.143372 CLOSE_vs_CLOUD=Below Cloud TENKAN_vs_KIJUN=Bearish TK 20W_HIGH=1.17109 20W_LOW=1.11140 bars_used=52 (保有120)
-DAILY: date=2026-10-21 direction=↓ close=1.12328 50DMA=1.145051 200DMA=1.157815 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Below 20D_HIGH=1.14097 20D_LOW=1.11140 20D_RANGE_POSITION=40.18 bars_used=200 (保有601)
+DAILY: date=2026-10-22 direction=↓ close=1.12168 50DMA=1.144427 200DMA=1.157619 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Below 20D_HIGH=1.14097 20D_LOW=1.11140 20D_RANGE_POSITION=34.76 bars_used=200 (保有602)
 ALIGNMENT_SCORE: 3/3 Down
 SWING_STATUS: Swing Main Candidate
 HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き / CLOSE_vs_50DMA）:
-  2026-10-08 / 1.12110 / 1.150978 / 1.159915 / ↓ / Below
   2026-10-09 / 1.12025 / 1.150322 / 1.159656 / ↓ / Below
   2026-10-12 / 1.11555 / 1.149616 / 1.159373 / ↓ / Below
   2026-10-13 / 1.11993 / 1.148948 / 1.159128 / ↓ / Below
@@ -54,21 +53,21 @@ HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き
   2026-10-19 / 1.12125 / 1.146246 / 1.158224 / ↓ / Below
   2026-10-20 / 1.12376 / 1.145635 / 1.158022 / ↓ / Below
   2026-10-21 / 1.12328 / 1.145051 / 1.157815 / ↓ / Below
+  2026-10-22 / 1.12168 / 1.144427 / 1.157619 / ↓ / Below
 MISSING_DATES（平日で日足が無い日）: 2024-12-25, 2025-01-01
-SHORT_BAR_DAYS（直近200営業日 2026-01-15〜2026-10-21。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=0日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日5日・それ以外57日（日付の全期間の一覧は JSON）
+SHORT_BAR_DAYS（直近200営業日 2026-01-16〜2026-10-22。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=0日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日5日・それ以外57日（日付の全期間の一覧は JSON）
 
 ## GBPUSD
 source: twelvedata:GBP/USD
 price_type: NY17時区切り日足の終値（Twelve Data の1時間足を UTC で取得し、NY時間に換算して作成）
-updated_at: 2026-10-22T06:20:43+09:00
+updated_at: 2026-10-23T06:20:47+09:00
 status: ok
 MONTHLY: date=2026-09-30 direction=↓ close=1.32639 12MMA=1.340579 24MMA=1.323327 6M_HIGH=1.36752 6M_LOW=1.31416 6M_RANGE_POSITION=22.92 DATA_STATUS=OK bars_used=24 (保有27)
 WEEKLY: date=2026-10-16 direction=→ close=1.33306 Tenkan=1.340670 Kijun=1.340670 SpanA=1.340670 SpanB=1.343665 Cloud_Top=1.343665 Cloud_Bottom=1.340670 CLOSE_vs_CLOUD=Below Cloud TENKAN_vs_KIJUN=Neutral TK 20W_HIGH=1.36752 20W_LOW=1.31382 bars_used=52 (保有120)
-DAILY: date=2026-10-21 direction=↓ close=1.33943 50DMA=1.340959 200DMA=1.343334 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Below 20D_HIGH=1.34089 20D_LOW=1.31382 20D_RANGE_POSITION=94.61 bars_used=200 (保有603)
+DAILY: date=2026-10-22 direction=↓ close=1.34003 50DMA=1.340785 200DMA=1.343343 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Below 20D_HIGH=1.34198 20D_LOW=1.31382 20D_RANGE_POSITION=93.08 bars_used=200 (保有604)
 ALIGNMENT_SCORE: 2/3 Down
 SWING_STATUS: Conditional Swing Candidate
 HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き / CLOSE_vs_50DMA）:
-  2026-10-08 / 1.32292 / 1.344391 / 1.344114 / ↓ / Below
   2026-10-09 / 1.32348 / 1.343899 / 1.344001 / ↓ / Below
   2026-10-12 / 1.32088 / 1.343449 / 1.343835 / ↓ / Below
   2026-10-13 / 1.32555 / 1.343052 / 1.343711 / ↓ / Below
@@ -78,21 +77,21 @@ HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き
   2026-10-19 / 1.33040 / 1.341418 / 1.343381 / ↓ / Below
   2026-10-20 / 1.33800 / 1.341161 / 1.343360 / ↓ / Below
   2026-10-21 / 1.33943 / 1.340959 / 1.343334 / ↓ / Below
+  2026-10-22 / 1.34003 / 1.340785 / 1.343343 / ↓ / Below
 MISSING_DATES（平日で日足が無い日）: なし
-SHORT_BAR_DAYS（直近200営業日 2026-01-15〜2026-10-21。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=0日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日4日・それ以外56日（日付の全期間の一覧は JSON）
+SHORT_BAR_DAYS（直近200営業日 2026-01-16〜2026-10-22。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=0日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日4日・それ以外56日（日付の全期間の一覧は JSON）
 
 ## AUDUSD
 source: twelvedata:AUD/USD
 price_type: NY17時区切り日足の終値（Twelve Data の1時間足を UTC で取得し、NY時間に換算して作成）
-updated_at: 2026-10-22T06:20:43+09:00
+updated_at: 2026-10-23T06:20:47+09:00
 status: ok
 MONTHLY: date=2026-09-30 direction=→ close=0.69449 12MMA=0.693402 24MMA=0.667398 6M_HIGH=0.72804 6M_LOW=0.68607 6M_RANGE_POSITION=20.06 DATA_STATUS=OK bars_used=24 (保有27)
 WEEKLY: date=2026-10-16 direction=→ close=0.69462 Tenkan=0.706685 Kijun=0.707290 SpanA=0.706987 SpanB=0.685090 Cloud_Top=0.706987 Cloud_Bottom=0.685090 CLOSE_vs_CLOUD=In Cloud TENKAN_vs_KIJUN=Bearish TK 20W_HIGH=0.72381 20W_LOW=0.68654 bars_used=52 (保有120)
-DAILY: date=2026-10-21 direction=↓ close=0.70288 50DMA=0.707723 200DMA=0.704877 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Below 20D_HIGH=0.70456 20D_LOW=0.68956 20D_RANGE_POSITION=88.80 bars_used=200 (保有603)
+DAILY: date=2026-10-22 direction=↓ close=0.70195 50DMA=0.707642 200DMA=0.705037 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Below 20D_HIGH=0.70428 20D_LOW=0.68956 20D_RANGE_POSITION=84.17 bars_used=200 (保有604)
 ALIGNMENT_SCORE: 1/3 Down
 SWING_STATUS: No Swing / Excluded
 HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き / CLOSE_vs_50DMA）:
-  2026-10-08 / 0.69586 / 0.708987 / 0.703653 / ↓ / Below
   2026-10-09 / 0.69846 / 0.708901 / 0.703798 / ↓ / Below
   2026-10-12 / 0.69582 / 0.708815 / 0.703919 / ↓ / Below
   2026-10-13 / 0.69837 / 0.708689 / 0.704042 / ↓ / Below
@@ -102,21 +101,21 @@ HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き
   2026-10-19 / 0.69799 / 0.707908 / 0.704543 / ↓ / Below
   2026-10-20 / 0.70040 / 0.707792 / 0.704704 / ↓ / Below
   2026-10-21 / 0.70288 / 0.707723 / 0.704877 / ↓ / Below
+  2026-10-22 / 0.70195 / 0.707642 / 0.705037 / ↓ / Below
 MISSING_DATES（平日で日足が無い日）: なし
-SHORT_BAR_DAYS（直近200営業日 2026-01-15〜2026-10-21。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=1日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日4日・それ以外58日（日付の全期間の一覧は JSON）
+SHORT_BAR_DAYS（直近200営業日 2026-01-16〜2026-10-22。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=1日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日4日・それ以外58日（日付の全期間の一覧は JSON）
 
 ## EURJPY
 source: twelvedata:EUR/JPY
 price_type: NY17時区切り日足の終値（Twelve Data の1時間足を UTC で取得し、NY時間に換算して作成）
-updated_at: 2026-10-22T06:20:43+09:00
+updated_at: 2026-10-23T06:20:47+09:00
 status: ok
 MONTHLY: date=2026-09-30 direction=↓ close=178.356 12MMA=182.9038 24MMA=173.8984 6M_HIGH=187.958 6M_LOW=177.341 6M_RANGE_POSITION=9.56 DATA_STATUS=OK bars_used=24 (保有27)
 WEEKLY: date=2026-10-16 direction=↓ close=177.581 Tenkan=181.1151 Kijun=181.8788 SpanA=181.4970 SpanB=181.5978 Cloud_Top=181.5978 Cloud_Bottom=181.4970 CLOSE_vs_CLOUD=Below Cloud TENKAN_vs_KIJUN=Bearish TK 20W_HIGH=187.480 20W_LOW=176.201 bars_used=52 (保有120)
-DAILY: date=2026-10-21 direction=↓ close=177.637 50DMA=180.5554 200DMA=183.5778 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Below 20D_HIGH=180.890 20D_LOW=176.201 20D_RANGE_POSITION=30.62 bars_used=200 (保有603)
+DAILY: date=2026-10-22 direction=↓ close=175.854 50DMA=180.3943 200DMA=183.5363 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Below 20D_HIGH=180.890 20D_LOW=175.539 20D_RANGE_POSITION=5.88 bars_used=200 (保有604)
 ALIGNMENT_SCORE: 3/3 Down
 SWING_STATUS: Swing Main Candidate
 HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き / CLOSE_vs_50DMA）:
-  2026-10-08 / 177.035 / 181.4946 / 183.8684 / ↓ / Below
   2026-10-09 / 177.352 / 181.4103 / 183.8360 / ↓ / Below
   2026-10-12 / 176.971 / 181.3313 / 183.8041 / ↓ / Below
   2026-10-13 / 177.302 / 181.2391 / 183.7750 / ↓ / Below
@@ -126,21 +125,21 @@ HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き
   2026-10-19 / 177.748 / 180.8002 / 183.6501 / ↓ / Below
   2026-10-20 / 177.750 / 180.6775 / 183.6122 / ↓ / Below
   2026-10-21 / 177.637 / 180.5554 / 183.5778 / ↓ / Below
+  2026-10-22 / 175.854 / 180.3943 / 183.5363 / ↓ / Below
 MISSING_DATES（平日で日足が無い日）: なし
-SHORT_BAR_DAYS（直近200営業日 2026-01-15〜2026-10-21。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=1日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日4日・それ以外60日（日付の全期間の一覧は JSON）
+SHORT_BAR_DAYS（直近200営業日 2026-01-16〜2026-10-22。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=1日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日4日・それ以外60日（日付の全期間の一覧は JSON）
 
 ## EURGBP
 source: twelvedata:EUR/GBP
 price_type: NY17時区切り日足の終値（Twelve Data の1時間足を UTC で取得し、NY時間に換算して作成）
-updated_at: 2026-10-22T06:20:43+09:00
+updated_at: 2026-10-23T06:20:47+09:00
 status: ok
 MONTHLY: date=2026-09-30 direction=↓ close=0.85421 12MMA=0.866613 24MMA=0.856366 6M_HIGH=0.87429 6M_LOW=0.84536 6M_RANGE_POSITION=30.59 DATA_STATUS=OK bars_used=24 (保有27)
 WEEKLY: date=2026-10-16 direction=↓ close=0.84312 Tenkan=0.851540 Kijun=0.857295 SpanA=0.854417 SpanB=0.864010 Cloud_Top=0.864010 Cloud_Bottom=0.854417 CLOSE_vs_CLOUD=Below Cloud TENKAN_vs_KIJUN=Bearish TK 20W_HIGH=0.86983 20W_LOW=0.84151 bars_used=52 (保有120)
-DAILY: date=2026-10-21 direction=↓ close=0.83866 50DMA=0.853881 200DMA=0.861886 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Below 20D_HIGH=0.86125 20D_LOW=0.83714 20D_RANGE_POSITION=6.30 bars_used=200 (保有603)
+DAILY: date=2026-10-22 direction=↓ close=0.83711 50DMA=0.853526 200DMA=0.861734 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Below 20D_HIGH=0.86125 20D_LOW=0.83690 20D_RANGE_POSITION=0.86 bars_used=200 (保有604)
 ALIGNMENT_SCORE: 3/3 Down
 SWING_STATUS: Swing Main Candidate
 HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き / CLOSE_vs_50DMA）:
-  2026-10-08 / 0.84747 / 0.856126 / 0.862957 / ↓ / Below
   2026-10-09 / 0.84649 / 0.855946 / 0.862836 / ↓ / Below
   2026-10-12 / 0.84458 / 0.855704 / 0.862731 / ↓ / Below
   2026-10-13 / 0.84490 / 0.855458 / 0.862626 / ↓ / Below
@@ -150,21 +149,21 @@ HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き
   2026-10-19 / 0.84278 / 0.854479 / 0.862161 / ↓ / Below
   2026-10-20 / 0.83991 / 0.854187 / 0.862023 / ↓ / Below
   2026-10-21 / 0.83866 / 0.853881 / 0.861886 / ↓ / Below
+  2026-10-22 / 0.83711 / 0.853526 / 0.861734 / ↓ / Below
 MISSING_DATES（平日で日足が無い日）: なし
-SHORT_BAR_DAYS（直近200営業日 2026-01-15〜2026-10-21。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=1日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日4日・それ以外60日（日付の全期間の一覧は JSON）
+SHORT_BAR_DAYS（直近200営業日 2026-01-16〜2026-10-22。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=1日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日4日・それ以外60日（日付の全期間の一覧は JSON）
 
 ## USDCAD
 source: twelvedata:USD/CAD
 price_type: NY17時区切り日足の終値（Twelve Data の1時間足を UTC で取得し、NY時間に換算して作成）
-updated_at: 2026-10-22T06:20:43+09:00
+updated_at: 2026-10-23T06:20:47+09:00
 status: ok
 MONTHLY: date=2026-09-30 direction=↑ close=1.42327 12MMA=1.387765 24MMA=1.395336 6M_HIGH=1.42486 6M_LOW=1.35503 6M_RANGE_POSITION=97.72 DATA_STATUS=OK bars_used=24 (保有27)
 WEEKLY: date=2026-10-16 direction=↑ close=1.41389 Tenkan=1.401720 Kijun=1.392590 SpanA=1.397155 SpanB=1.389195 Cloud_Top=1.397155 Cloud_Bottom=1.389195 CLOSE_vs_CLOUD=Above Cloud TENKAN_vs_KIJUN=Bullish TK 20W_HIGH=1.43015 20W_LOW=1.37329 bars_used=52 (保有120)
-DAILY: date=2026-10-21 direction=↑ close=1.40486 50DMA=1.400865 200DMA=1.388230 CLOSE_vs_50DMA=Above CLOSE_vs_200DMA=Above 20D_HIGH=1.43015 20D_LOW=1.40330 20D_RANGE_POSITION=5.81 bars_used=200 (保有603)
-ALIGNMENT_SCORE: 3/3 Up
-SWING_STATUS: Swing Main Candidate
+DAILY: date=2026-10-22 direction=→ close=1.40091 50DMA=1.401021 200DMA=1.388287 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Above 20D_HIGH=1.43015 20D_LOW=1.40032 20D_RANGE_POSITION=1.98 bars_used=200 (保有604)
+ALIGNMENT_SCORE: 2/3 Up
+SWING_STATUS: Conditional Swing Candidate
 HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き / CLOSE_vs_50DMA）:
-  2026-10-08 / 1.42242 / 1.397588 / 1.386773 / ↑ / Above
   2026-10-09 / 1.42558 / 1.398072 / 1.387035 / ↑ / Above
   2026-10-12 / 1.42825 / 1.398546 / 1.387289 / ↑ / Above
   2026-10-13 / 1.42160 / 1.398855 / 1.387490 / ↑ / Above
@@ -174,21 +173,21 @@ HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き
   2026-10-19 / 1.41108 / 1.400381 / 1.388063 / ↑ / Above
   2026-10-20 / 1.40594 / 1.400648 / 1.388147 / ↑ / Above
   2026-10-21 / 1.40486 / 1.400865 / 1.388230 / ↑ / Above
+  2026-10-22 / 1.40091 / 1.401021 / 1.388287 / → / Below
 MISSING_DATES（平日で日足が無い日）: なし
-SHORT_BAR_DAYS（直近200営業日 2026-01-15〜2026-10-21。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=1日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日4日・それ以外60日（日付の全期間の一覧は JSON）
+SHORT_BAR_DAYS（直近200営業日 2026-01-16〜2026-10-22。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=1日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日4日・それ以外60日（日付の全期間の一覧は JSON）
 
 ## XAUUSD
 source: twelvedata:XAU/USD
 price_type: NY17時区切り日足の終値（Twelve Data の1時間足を UTC で取得し、NY時間に換算して作成）
-updated_at: 2026-10-22T06:20:43+09:00
+updated_at: 2026-10-23T06:20:47+09:00
 status: ok
 MONTHLY: date=2026-09-30 direction=↓ close=4156.46 12MMA=4430.152 24MMA=3769.506 6M_HIGH=4887.93 6M_LOW=3949.45 6M_RANGE_POSITION=22.06 DATA_STATUS=OK bars_used=24 (保有27)
 WEEKLY: date=2026-10-16 direction=↓ close=4165.63 Tenkan=4378.836 Kijun=4391.885 SpanA=4385.361 SpanB=4748.615 Cloud_Top=4748.615 Cloud_Bottom=4385.361 CLOSE_vs_CLOUD=Below Cloud TENKAN_vs_KIJUN=Bearish TK 20W_HIGH=4695.94 20W_LOW=3949.45 bars_used=52 (保有120)
-DAILY: date=2026-10-21 direction=↓ close=4141.17 50DMA=4316.223 200DMA=4516.246 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Below 20D_HIGH=4315.60 20D_LOW=4061.73 20D_RANGE_POSITION=31.29 bars_used=200 (保有599)
+DAILY: date=2026-10-22 direction=↓ close=4024.59 50DMA=4309.691 200DMA=4513.289 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Below 20D_HIGH=4315.60 20D_LOW=4020.47 20D_RANGE_POSITION=1.40 bars_used=200 (保有600)
 ALIGNMENT_SCORE: 3/3 Down
 SWING_STATUS: Swing Main Candidate
 HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き / CLOSE_vs_50DMA）:
-  2026-10-08 / 4133.58 / 4332.202 / 4531.990 / ↓ / Below
   2026-10-09 / 4194.48 / 4335.187 / 4531.334 / ↓ / Below
   2026-10-12 / 4171.73 / 4337.515 / 4529.947 / ↓ / Below
   2026-10-13 / 4160.85 / 4339.184 / 4528.277 / ↓ / Below
@@ -198,21 +197,21 @@ HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き
   2026-10-19 / 4140.75 / 4326.431 / 4520.981 / ↓ / Below
   2026-10-20 / 4125.21 / 4321.580 / 4518.675 / ↓ / Below
   2026-10-21 / 4141.17 / 4316.223 / 4516.246 / ↓ / Below
+  2026-10-22 / 4024.59 / 4309.691 / 4513.289 / ↓ / Below
 MISSING_DATES（平日で日足が無い日）: 2024-12-25, 2025-01-01, 2025-04-15, 2025-04-16
-SHORT_BAR_DAYS（直近200営業日 2026-01-15〜2026-10-21。足の本数の下限は23本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=0日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日8日・それ以外3日（日付の全期間の一覧は JSON）
+SHORT_BAR_DAYS（直近200営業日 2026-01-16〜2026-10-22。足の本数の下限は23本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=0日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日8日・それ以外3日（日付の全期間の一覧は JSON）
 
 ## USDCHF
 source: twelvedata:USD/CHF
 price_type: NY17時区切り日足の終値（Twelve Data の1時間足を UTC で取得し、NY時間に換算して作成）
-updated_at: 2026-10-22T06:20:43+09:00
+updated_at: 2026-10-23T06:20:47+09:00
 status: ok
 MONTHLY: date=2026-09-30 direction=↑ close=0.83581 12MMA=0.797006 24MMA=0.823381 6M_HIGH=0.83620 6M_LOW=0.77620 6M_RANGE_POSITION=99.35 DATA_STATUS=OK bars_used=24 (保有27)
 WEEKLY: date=2026-10-16 direction=↑ close=0.82398 Tenkan=0.817265 Kijun=0.807865 SpanA=0.812565 SpanB=0.800110 Cloud_Top=0.812565 Cloud_Bottom=0.800110 CLOSE_vs_CLOUD=Above Cloud TENKAN_vs_KIJUN=Bullish TK 20W_HIGH=0.83953 20W_LOW=0.78105 bars_used=52 (保有120)
-DAILY: date=2026-10-21 direction=↑ close=0.82445 50DMA=0.819252 200DMA=0.798237 CLOSE_vs_50DMA=Above CLOSE_vs_200DMA=Above 20D_HIGH=0.83953 20D_LOW=0.82166 20D_RANGE_POSITION=15.61 bars_used=200 (保有603)
+DAILY: date=2026-10-22 direction=↑ close=0.82050 50DMA=0.819379 200DMA=0.798323 CLOSE_vs_50DMA=Above CLOSE_vs_200DMA=Above 20D_HIGH=0.83953 20D_LOW=0.81928 20D_RANGE_POSITION=6.02 bars_used=200 (保有604)
 ALIGNMENT_SCORE: 3/3 Up
 SWING_STATUS: Swing Main Candidate
 HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き / CLOSE_vs_50DMA）:
-  2026-10-08 / 0.83175 / 0.815856 / 0.796825 / ↑ / Above
   2026-10-09 / 0.83019 / 0.816313 / 0.797014 / ↑ / Above
   2026-10-12 / 0.83474 / 0.816799 / 0.797230 / ↑ / Above
   2026-10-13 / 0.83263 / 0.817273 / 0.797414 / ↑ / Above
@@ -222,21 +221,21 @@ HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き
   2026-10-19 / 0.82669 / 0.818762 / 0.797997 / ↑ / Above
   2026-10-20 / 0.82464 / 0.819036 / 0.798115 / ↑ / Above
   2026-10-21 / 0.82445 / 0.819252 / 0.798237 / ↑ / Above
+  2026-10-22 / 0.82050 / 0.819379 / 0.798323 / ↑ / Above
 MISSING_DATES（平日で日足が無い日）: なし
-SHORT_BAR_DAYS（直近200営業日 2026-01-15〜2026-10-21。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=1日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日5日・それ以外59日（日付の全期間の一覧は JSON）
+SHORT_BAR_DAYS（直近200営業日 2026-01-16〜2026-10-22。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=1日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日5日・それ以外59日（日付の全期間の一覧は JSON）
 
 ## NZDUSD
 source: twelvedata:NZD/USD
 price_type: NY17時区切り日足の終値（Twelve Data の1時間足を UTC で取得し、NY時間に換算して作成）
-updated_at: 2026-10-22T06:20:43+09:00
+updated_at: 2026-10-23T06:20:47+09:00
 status: ok
 MONTHLY: date=2026-09-30 direction=↓ close=0.56333 12MMA=0.583398 24MMA=0.583391 6M_HIGH=0.59937 6M_LOW=0.56262 6M_RANGE_POSITION=1.93 DATA_STATUS=OK bars_used=24 (保有27)
 WEEKLY: date=2026-10-16 direction=↓ close=0.56532 Tenkan=0.577730 Kijun=0.577985 SpanA=0.577857 SpanB=0.582950 Cloud_Top=0.582950 Cloud_Bottom=0.577857 CLOSE_vs_CLOUD=Below Cloud TENKAN_vs_KIJUN=Bearish TK 20W_HIGH=0.59898 20W_LOW=0.55660 bars_used=52 (保有120)
-DAILY: date=2026-10-21 direction=↓ close=0.57007 50DMA=0.576382 200DMA=0.583763 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Below 20D_HIGH=0.57043 20D_LOW=0.55660 20D_RANGE_POSITION=97.40 bars_used=200 (保有603)
+DAILY: date=2026-10-22 direction=↓ close=0.56832 50DMA=0.576047 200DMA=0.583734 CLOSE_vs_50DMA=Below CLOSE_vs_200DMA=Below 20D_HIGH=0.57111 20D_LOW=0.55660 20D_RANGE_POSITION=80.77 bars_used=200 (保有604)
 ALIGNMENT_SCORE: 3/3 Down
 SWING_STATUS: Swing Main Candidate
 HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き / CLOSE_vs_50DMA）:
-  2026-10-08 / 0.56036 / 0.580780 / 0.584328 / ↓ / Below
   2026-10-09 / 0.56139 / 0.580231 / 0.584249 / ↓ / Below
   2026-10-12 / 0.55868 / 0.579663 / 0.584148 / ↓ / Below
   2026-10-13 / 0.56130 / 0.579098 / 0.584063 / ↓ / Below
@@ -246,5 +245,6 @@ HISTORY（直近10営業日。日付 / 終値 / 50DMA / 200DMA / 日足の向き
   2026-10-19 / 0.56627 / 0.577089 / 0.583813 / ↓ / Below
   2026-10-20 / 0.56844 / 0.576697 / 0.583787 / ↓ / Below
   2026-10-21 / 0.57007 / 0.576382 / 0.583763 / ↓ / Below
+  2026-10-22 / 0.56832 / 0.576047 / 0.583734 / ↓ / Below
 MISSING_DATES（平日で日足が無い日）: なし
-SHORT_BAR_DAYS（直近200営業日 2026-01-15〜2026-10-21。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=1日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日4日・それ以外60日（日付の全期間の一覧は JSON）
+SHORT_BAR_DAYS（直近200営業日 2026-01-16〜2026-10-22。足の本数の下限は24本）: 最後の1時間足がNY16時台でない日=なし / それ以外の本数の少ない日=1日（件数のみ。終値には影響しない） / 直近200営業日より前: 最後の足が16時台でない日4日・それ以外60日（日付の全期間の一覧は JSON）
