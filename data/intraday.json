@@ -1,10 +1,10 @@
 {
-  "as_of": "2026-10-23T00:35:27+09:00",
+  "as_of": "2026-10-23T00:50:34+09:00",
   "timezone": "Asia/Tokyo",
   "session_date": "2026-10-21",
   "note": "事実データのみ。トレード判定は含まない。ADRはdaily-levels.jsonのADR20基準。",
   "market_session": {
-    "as_of": "2026-10-23T00:35:27+09:00",
+    "as_of": "2026-10-23T00:50:34+09:00",
     "tokyo": "closed",
     "london": "open",
     "new_york": "open",
@@ -18,18 +18,18 @@
   "sentiment": {
     "DXY": {
       "label": "ドル指数",
-      "value": 101.8,
+      "value": 101.75,
       "prev": 101.78,
-      "change": 0.02,
-      "changePct": 0.02
+      "change": -0.03,
+      "changePct": -0.03
     },
     "US2Y": {
       "label": "米2年債利回り",
-      "value": 4.75,
-      "prev": 4.75,
-      "change": 0,
-      "changePct": 0,
-      "source": "yahoo:2YY=F"
+      "value": 4.79,
+      "prev": 4.77,
+      "change": 0.02,
+      "changePct": 0.42,
+      "source": "fred:DGS2(前営業日値)"
     },
     "US10Y": {
       "label": "米10年債利回り",
@@ -40,189 +40,189 @@
     },
     "VIX": {
       "label": "VIX",
-      "value": 18.84,
+      "value": 18.86,
       "prev": 16.68,
-      "change": 2.16,
-      "changePct": 12.95
+      "change": 2.18,
+      "changePct": 13.07
     },
     "US30": {
       "label": "ダウ平均・現物",
-      "value": 52752,
+      "value": 52767,
       "prev": 52856,
-      "change": -104,
-      "changePct": -0.2
+      "change": -89,
+      "changePct": -0.17
     },
     "US500": {
       "label": "S&P500・現物",
-      "value": 7661.19,
+      "value": 7664.04,
       "prev": 7757.17,
-      "change": -95.98,
-      "changePct": -1.24
+      "change": -93.13,
+      "changePct": -1.2
     },
     "US100": {
       "label": "ナスダック100・現物",
-      "value": 29120.6,
+      "value": 29119.48,
       "prev": 29822.52,
-      "change": -701.92,
-      "changePct": -2.35
+      "change": -703.04,
+      "changePct": -2.36
     }
   },
   "pairs": {
     "USDJPY": {
-      "price": 157.2,
+      "price": 157.092,
       "today_high": 158.25,
       "today_low": 156.674,
-      "change_from_prev_close": -0.948,
+      "change_from_prev_close": -1.056,
       "adr_used": 1.576,
       "adr_remaining": 0,
       "adr_used_pct": 171.7,
       "price_zone": "below_S2",
-      "dist_to_r1": 1.218,
-      "dist_to_s1": 0.65,
-      "dist_to_pivot": 0.92
+      "dist_to_r1": 1.326,
+      "dist_to_s1": 0.758,
+      "dist_to_pivot": 1.028
     },
     "EURUSD": {
-      "price": 1.12014,
+      "price": 1.12083,
       "today_high": 1.12551,
       "today_low": 1.11893,
-      "change_from_prev_close": -0.00314,
+      "change_from_prev_close": -0.00245,
       "adr_used": 0.00658,
       "adr_remaining": 0.00005,
       "adr_used_pct": 99.2,
-      "price_zone": "below_S2",
-      "dist_to_r1": 0.00431,
-      "dist_to_s1": 0.00163,
-      "dist_to_pivot": 0.00281
+      "price_zone": "S2_to_S1",
+      "dist_to_r1": 0.00362,
+      "dist_to_s1": 0.00094,
+      "dist_to_pivot": 0.00212
     },
     "GBPUSD": {
-      "price": 1.33677,
+      "price": 1.33757,
       "today_high": 1.34198,
       "today_low": 1.33548,
-      "change_from_prev_close": -0.00266,
+      "change_from_prev_close": -0.00186,
       "adr_used": 0.0065,
       "adr_remaining": 0.00083,
       "adr_used_pct": 88.7,
-      "price_zone": "S2_to_S1",
-      "dist_to_r1": 0.00429,
-      "dist_to_s1": 0.00039,
-      "dist_to_pivot": 0.00201
+      "price_zone": "S1_to_Pivot",
+      "dist_to_r1": 0.00349,
+      "dist_to_s1": -0.00041,
+      "dist_to_pivot": 0.00121
     },
     "EURJPY": {
-      "price": 176.082,
+      "price": 176.073,
       "today_high": 177.766,
       "today_low": 175.539,
-      "change_from_prev_close": -1.555,
+      "change_from_prev_close": -1.564,
       "adr_used": 2.226,
       "adr_remaining": 0,
       "adr_used_pct": 180.1,
       "price_zone": "below_S2",
-      "dist_to_r1": 1.815,
-      "dist_to_s1": 1.249,
-      "dist_to_pivot": 1.508
+      "dist_to_r1": 1.824,
+      "dist_to_s1": 1.258,
+      "dist_to_pivot": 1.517
     },
     "AUDUSD": {
-      "price": 0.70138,
+      "price": 0.70173,
       "today_high": 0.7037,
       "today_low": 0.69934,
-      "change_from_prev_close": -0.0015,
+      "change_from_prev_close": -0.00115,
       "adr_used": 0.00436,
       "adr_remaining": 0.00034,
       "adr_used_pct": 92.8,
       "price_zone": "S1_to_Pivot",
-      "dist_to_r1": 0.00299,
-      "dist_to_s1": -0.00074,
-      "dist_to_pivot": 0.00074
+      "dist_to_r1": 0.00264,
+      "dist_to_s1": -0.00109,
+      "dist_to_pivot": 0.00039
     },
     "EURGBP": {
-      "price": 0.83794,
+      "price": 0.83804,
       "today_high": 0.83957,
       "today_low": 0.83696,
-      "change_from_prev_close": -0.00072,
+      "change_from_prev_close": -0.00062,
       "adr_used": 0.00261,
       "adr_remaining": 0.00069,
       "adr_used_pct": 79.1,
       "price_zone": "S1_to_Pivot",
-      "dist_to_r1": 0.00231,
-      "dist_to_s1": -0.00084,
-      "dist_to_pivot": 0.00076
+      "dist_to_r1": 0.00221,
+      "dist_to_s1": -0.00094,
+      "dist_to_pivot": 0.00066
     },
     "USDCAD": {
-      "price": 1.40313,
+      "price": 1.4025,
       "today_high": 1.40509,
       "today_low": 1.40139,
-      "change_from_prev_close": -0.00173,
+      "change_from_prev_close": -0.00236,
       "adr_used": 0.0037,
       "adr_remaining": 0.00253,
       "adr_used_pct": 59.4,
-      "price_zone": "S1_to_Pivot",
-      "dist_to_r1": 0.00424,
-      "dist_to_s1": -0.00001,
-      "dist_to_pivot": 0.00251
+      "price_zone": "S2_to_S1",
+      "dist_to_r1": 0.00487,
+      "dist_to_s1": 0.00062,
+      "dist_to_pivot": 0.00314
     },
     "USDCHF": {
-      "price": 0.82339,
+      "price": 0.82263,
       "today_high": 0.82471,
       "today_low": 0.81928,
-      "change_from_prev_close": -0.00106,
+      "change_from_prev_close": -0.00182,
       "adr_used": 0.00543,
       "adr_remaining": 0,
       "adr_used_pct": 106.5,
-      "price_zone": "S1_to_Pivot",
-      "dist_to_r1": 0.00259,
-      "dist_to_s1": -0.00012,
-      "dist_to_pivot": 0.00142
+      "price_zone": "S2_to_S1",
+      "dist_to_r1": 0.00335,
+      "dist_to_s1": 0.00064,
+      "dist_to_pivot": 0.00218
     },
     "NZDUSD": {
-      "price": 0.56728,
+      "price": 0.56765,
       "today_high": 0.57111,
       "today_low": 0.5668,
-      "change_from_prev_close": -0.00279,
+      "change_from_prev_close": -0.00242,
       "adr_used": 0.00431,
       "adr_remaining": 0,
       "adr_used_pct": 106.4,
       "price_zone": "S2_to_S1",
-      "dist_to_r1": 0.00399,
-      "dist_to_s1": 0.00075,
-      "dist_to_pivot": 0.00195
+      "dist_to_r1": 0.00362,
+      "dist_to_s1": 0.00038,
+      "dist_to_pivot": 0.00158
     },
     "AUDNZD": {
-      "price": 1.23642,
+      "price": 1.23621,
       "today_high": 1.23687,
       "today_low": 1.23069,
-      "change_from_prev_close": 0.00344,
+      "change_from_prev_close": 0.00323,
       "adr_used": 0.00618,
       "adr_remaining": 0.00015,
       "adr_used_pct": 97.6,
-      "price_zone": "R1_to_R2",
-      "dist_to_r1": -0.00016,
-      "dist_to_s1": -0.00587,
-      "dist_to_pivot": -0.00259
+      "price_zone": "Pivot_to_R1",
+      "dist_to_r1": 0.00005,
+      "dist_to_s1": -0.00566,
+      "dist_to_pivot": -0.00238
     },
     "XAUUSD": {
-      "price": 4053.79,
+      "price": 4053.14,
       "today_high": 4142.67,
       "today_low": 4046.78,
-      "change_from_prev_close": -87.38,
+      "change_from_prev_close": -88.03,
       "adr_used": 95.89,
       "adr_remaining": 0,
       "adr_used_pct": 135.4,
       "price_zone": "below_S2",
-      "dist_to_r1": 99.51,
-      "dist_to_s1": 64.17,
-      "dist_to_pivot": 76.3
+      "dist_to_r1": 100.16,
+      "dist_to_s1": 64.82,
+      "dist_to_pivot": 76.95
     },
     "USOIL": {
-      "price": 98.03,
+      "price": 98.32,
       "today_high": 100.12,
       "today_low": 97.41,
-      "change_from_prev_close": 0.29,
+      "change_from_prev_close": 0.58,
       "adr_used": 2.71,
       "adr_remaining": 1.51,
       "adr_used_pct": 64.3,
-      "price_zone": "S1_to_Pivot",
-      "dist_to_r1": 1.91,
-      "dist_to_s1": -2.05,
-      "dist_to_pivot": 0.14
+      "price_zone": "Pivot_to_R1",
+      "dist_to_r1": 1.62,
+      "dist_to_s1": -2.34,
+      "dist_to_pivot": -0.15
     }
   },
   "errors": []
