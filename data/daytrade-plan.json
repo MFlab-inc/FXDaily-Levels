@@ -5,39 +5,39 @@
     "note": "未確定の判断はありません（確定した解釈は docs/daytrade-plan-spec.md 10節、経緯は docs/daytrade-plan-impl-notes.md）"
   },
   "plan_date": "2026-10-22",
-  "run": "design",
-  "status_updated_at": "2026-10-22T15:05:47+09:00",
+  "run": "status",
+  "status_updated_at": "2026-10-22T16:05:52+09:00",
   "expires_at": "2026-10-23T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-10-22T15:05:17+09:00",
+        "as_of": "2026-10-22T16:05:19+09:00",
         "age_min": 1,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-10-22T15:05:21+09:00",
+        "as_of": "2026-10-22T16:05:23+09:00",
         "age_min": 0,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-10-22T15:05:21+09:00",
+        "as_of": "2026-10-22T16:05:23+09:00",
         "age_min": 0,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-10-22 14:45",
-      "newest_last_closed": "2026-10-22 14:45",
+      "oldest_last_closed": "2026-10-22 15:45",
+      "newest_last_closed": "2026-10-22 15:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-10-22 14:00",
-      "newest": "2026-10-22 14:00"
+      "oldest": "2026-10-22 15:00",
+      "newest": "2026-10-22 15:00"
     },
     "stale": false,
     "daily": {
@@ -67,7 +67,7 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-10-22T15:05:17+09:00",
+    "as_of": "2026-10-22T16:05:19+09:00",
     "date": "2026-10-22",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
@@ -317,7 +317,7 @@
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-10-22T15:05:21+09:00",
+      "as_of": "2026-10-22T16:05:23+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "TRADE_OK",
@@ -336,17 +336,17 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-10-22T15:04:10+09:00",
+        "generated_intraday": "2026-10-22T16:04:10+09:00",
         "age_min": 2
       },
       "pairs": {
         "USDJPY": {
           "state": "ok",
           "items": {
-            "range_today": 0.947,
-            "range_vs_adr": 1.027,
+            "range_today": 1.209,
+            "range_vs_adr": 1.312,
             "spike_flag": false,
-            "updated_at": "2026-10-22T15:04:10+09:00"
+            "updated_at": "2026-10-22T16:04:10+09:00"
           }
         },
         "EURUSD": {
@@ -355,7 +355,7 @@
             "range_today": 0.00273,
             "range_vs_adr": 0.404,
             "spike_flag": false,
-            "updated_at": "2026-10-22T15:04:10+09:00"
+            "updated_at": "2026-10-22T16:04:10+09:00"
           }
         },
         "GBPUSD": {
@@ -367,7 +367,7 @@
             "range_today": 0.00292,
             "range_vs_adr": 0.621,
             "spike_flag": false,
-            "updated_at": "2026-10-22T15:04:10+09:00"
+            "updated_at": "2026-10-22T16:04:10+09:00"
           }
         },
         "NZDUSD": {
@@ -376,10 +376,10 @@
         "USDCAD": {
           "state": "ok",
           "items": {
-            "range_today": 0.00253,
-            "range_vs_adr": 0.393,
+            "range_today": 0.00327,
+            "range_vs_adr": 0.508,
             "spike_flag": false,
-            "updated_at": "2026-10-22T15:04:10+09:00"
+            "updated_at": "2026-10-22T16:04:10+09:00"
           }
         },
         "USDCHF": {
@@ -394,7 +394,7 @@
             "range_today": 0.00123,
             "range_vs_adr": 0.366,
             "spike_flag": false,
-            "updated_at": "2026-10-22T15:04:10+09:00"
+            "updated_at": "2026-10-22T16:04:10+09:00"
           }
         },
         "XAUUSD": {
@@ -403,7 +403,7 @@
             "range_today": 74.66,
             "range_vs_adr": 1.05,
             "spike_flag": false,
-            "updated_at": "2026-10-22T15:04:10+09:00"
+            "updated_at": "2026-10-22T16:04:10+09:00"
           }
         }
       }
@@ -1098,5 +1098,6 @@
     ],
     "no_basis": [],
     "not_formed": []
-  }
+  },
+  "additions_b": []
 }
