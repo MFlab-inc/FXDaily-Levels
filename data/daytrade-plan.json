@@ -5,39 +5,39 @@
     "note": "未確定の判断はありません（確定した解釈は docs/daytrade-plan-spec.md 10節、経緯は docs/daytrade-plan-impl-notes.md）"
   },
   "plan_date": "2026-10-27",
-  "run": "design",
-  "status_updated_at": "2026-10-27T15:05:46+09:00",
+  "run": "status",
+  "status_updated_at": "2026-10-27T16:05:50+09:00",
   "expires_at": "2026-10-28T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-10-27T15:05:17+09:00",
-        "age_min": 0,
+        "as_of": "2026-10-27T16:05:19+09:00",
+        "age_min": 1,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-10-27T15:05:21+09:00",
+        "as_of": "2026-10-27T16:05:24+09:00",
         "age_min": 0,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-10-27T15:05:21+09:00",
+        "as_of": "2026-10-27T16:05:24+09:00",
         "age_min": 0,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-10-27 14:45",
-      "newest_last_closed": "2026-10-27 14:45",
+      "oldest_last_closed": "2026-10-27 15:45",
+      "newest_last_closed": "2026-10-27 15:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-10-27 14:00",
-      "newest": "2026-10-27 14:00"
+      "oldest": "2026-10-27 15:00",
+      "newest": "2026-10-27 15:00"
     },
     "stale": false,
     "daily": {
@@ -67,7 +67,7 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-10-27T15:05:17+09:00",
+    "as_of": "2026-10-27T16:05:19+09:00",
     "date": "2026-10-27",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
@@ -298,7 +298,7 @@
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-10-27T15:05:21+09:00",
+      "as_of": "2026-10-27T16:05:24+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "TRADE_OK",
@@ -317,26 +317,26 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-10-27T15:04:12+09:00",
+        "generated_intraday": "2026-10-27T16:04:13+09:00",
         "age_min": 2
       },
       "pairs": {
         "USDJPY": {
           "state": "ok",
           "items": {
-            "range_today": 0.343,
-            "range_vs_adr": 0.391,
+            "range_today": 0.412,
+            "range_vs_adr": 0.47,
             "spike_flag": false,
-            "updated_at": "2026-10-27T15:04:12+09:00"
+            "updated_at": "2026-10-27T16:04:13+09:00"
           }
         },
         "EURUSD": {
           "state": "ok",
           "items": {
-            "range_today": 0.00165,
-            "range_vs_adr": 0.237,
+            "range_today": 0.00216,
+            "range_vs_adr": 0.311,
             "spike_flag": false,
-            "updated_at": "2026-10-27T15:04:12+09:00"
+            "updated_at": "2026-10-27T16:04:13+09:00"
           }
         },
         "GBPUSD": {
@@ -348,7 +348,7 @@
             "range_today": 0.00241,
             "range_vs_adr": 0.516,
             "spike_flag": false,
-            "updated_at": "2026-10-27T15:04:12+09:00"
+            "updated_at": "2026-10-27T16:04:13+09:00"
           }
         },
         "NZDUSD": {
@@ -360,7 +360,7 @@
             "range_today": 0.00153,
             "range_vs_adr": 0.231,
             "spike_flag": false,
-            "updated_at": "2026-10-27T15:04:12+09:00"
+            "updated_at": "2026-10-27T16:04:13+09:00"
           }
         },
         "USDCHF": {
@@ -375,16 +375,16 @@
             "range_today": 0.00078,
             "range_vs_adr": 0.233,
             "spike_flag": false,
-            "updated_at": "2026-10-27T15:04:12+09:00"
+            "updated_at": "2026-10-27T16:04:13+09:00"
           }
         },
         "XAUUSD": {
           "state": "ok",
           "items": {
-            "range_today": 24.95,
-            "range_vs_adr": 0.367,
+            "range_today": 27.19,
+            "range_vs_adr": 0.4,
             "spike_flag": false,
-            "updated_at": "2026-10-27T15:04:12+09:00"
+            "updated_at": "2026-10-27T16:04:13+09:00"
           }
         }
       }
@@ -472,11 +472,11 @@
         "high": 4009.5
       },
       "worst_entry": 4008.28,
-      "price": 4005.13,
-      "distance_pips": 31.5,
+      "price": 3999.26,
+      "distance_pips": 90.2,
       "atr_pips": 121.7,
-      "adr_used_pct": 36.9,
-      "adr_remaining_pips": 426.7,
+      "adr_used_pct": 40.2,
+      "adr_remaining_pips": 404.3,
       "obstacle": {
         "label": "H1安値群",
         "price": 3989.32
@@ -1237,5 +1237,6 @@
     ],
     "no_basis": [],
     "not_formed": []
-  }
+  },
+  "additions_b": []
 }
