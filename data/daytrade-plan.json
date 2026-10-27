@@ -5,39 +5,39 @@
     "note": "未確定の判断はありません（確定した解釈は docs/daytrade-plan-spec.md 10節、経緯は docs/daytrade-plan-impl-notes.md）"
   },
   "plan_date": "2026-10-28",
-  "run": "design",
-  "status_updated_at": "2026-10-28T06:22:01+09:00",
+  "run": "status",
+  "status_updated_at": "2026-10-28T07:05:53+09:00",
   "expires_at": "2026-10-29T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-10-28T06:21:27+09:00",
+        "as_of": "2026-10-28T07:05:20+09:00",
         "age_min": 1,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-10-28T06:21:31+09:00",
-        "age_min": 1,
+        "as_of": "2026-10-28T07:05:24+09:00",
+        "age_min": 0,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-10-28T06:21:31+09:00",
-        "age_min": 1,
+        "as_of": "2026-10-28T07:05:24+09:00",
+        "age_min": 0,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-10-28 06:00",
-      "newest_last_closed": "2026-10-28 06:00",
+      "oldest_last_closed": "2026-10-28 06:45",
+      "newest_last_closed": "2026-10-28 06:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-10-28 05:00",
-      "newest": "2026-10-28 05:00"
+      "oldest": "2026-10-28 06:00",
+      "newest": "2026-10-28 06:00"
     },
     "stale": false,
     "daily": {
@@ -67,7 +67,7 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-10-28T06:21:27+09:00",
+    "as_of": "2026-10-28T07:05:20+09:00",
     "date": "2026-10-28",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
@@ -489,7 +489,7 @@
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-10-28T06:21:31+09:00",
+      "as_of": "2026-10-28T07:05:24+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "TRADE_OK",
@@ -508,8 +508,8 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-10-28T06:07:13+09:00",
-        "age_min": 15
+        "generated_intraday": "2026-10-28T07:04:11+09:00",
+        "age_min": 2
       },
       "pairs": {
         "USDJPY": {
@@ -518,7 +518,7 @@
             "range_today": 0.087,
             "range_vs_adr": 0.099,
             "spike_flag": false,
-            "updated_at": "2026-10-28T06:07:13+09:00"
+            "updated_at": "2026-10-28T07:04:11+09:00"
           }
         },
         "EURUSD": {
@@ -527,7 +527,7 @@
             "range_today": 0.00143,
             "range_vs_adr": 0.206,
             "spike_flag": false,
-            "updated_at": "2026-10-28T06:07:13+09:00"
+            "updated_at": "2026-10-28T07:04:11+09:00"
           }
         },
         "GBPUSD": {
@@ -539,7 +539,7 @@
             "range_today": 0.00053,
             "range_vs_adr": 0.113,
             "spike_flag": false,
-            "updated_at": "2026-10-28T06:07:13+09:00"
+            "updated_at": "2026-10-28T07:04:11+09:00"
           }
         },
         "NZDUSD": {
@@ -548,10 +548,10 @@
         "USDCAD": {
           "state": "ok",
           "items": {
-            "range_today": 0.00055,
-            "range_vs_adr": 0.083,
+            "range_today": 0.0008,
+            "range_vs_adr": 0.121,
             "spike_flag": false,
-            "updated_at": "2026-10-28T06:07:13+09:00"
+            "updated_at": "2026-10-28T07:04:11+09:00"
           }
         },
         "USDCHF": {
@@ -563,19 +563,19 @@
         "EURGBP": {
           "state": "ok",
           "items": {
-            "range_today": 0.0005,
-            "range_vs_adr": 0.149,
+            "range_today": 0.00057,
+            "range_vs_adr": 0.17,
             "spike_flag": false,
-            "updated_at": "2026-10-28T06:07:13+09:00"
+            "updated_at": "2026-10-28T07:04:11+09:00"
           }
         },
         "XAUUSD": {
           "state": "ok",
           "items": {
-            "range_today": 3.79,
-            "range_vs_adr": 0.056,
+            "range_today": 10.08,
+            "range_vs_adr": 0.148,
             "spike_flag": false,
-            "updated_at": "2026-10-28T06:07:13+09:00"
+            "updated_at": "2026-10-28T07:04:11+09:00"
           }
         }
       }
@@ -1307,5 +1307,6 @@
     ],
     "no_basis": [],
     "not_formed": []
-  }
+  },
+  "additions_b": []
 }
