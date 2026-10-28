@@ -4,45 +4,45 @@
     "open_questions": [],
     "note": "未確定の判断はありません（確定した解釈は docs/daytrade-plan-spec.md 10節、経緯は docs/daytrade-plan-impl-notes.md）"
   },
-  "plan_date": "2026-10-28",
-  "run": "status",
-  "status_updated_at": "2026-10-29T02:06:03+09:00",
-  "expires_at": "2026-10-29T03:00:00+09:00",
+  "plan_date": "2026-10-29",
+  "run": "design",
+  "status_updated_at": "2026-10-29T06:06:13+09:00",
+  "expires_at": "2026-10-30T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-10-29T02:05:28+09:00",
+        "as_of": "2026-10-29T06:05:20+09:00",
         "age_min": 1,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-10-29T02:05:33+09:00",
+        "as_of": "2026-10-29T06:05:37+09:00",
         "age_min": 1,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-10-29T02:05:33+09:00",
+        "as_of": "2026-10-29T06:05:37+09:00",
         "age_min": 1,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-10-29 01:45",
-      "newest_last_closed": "2026-10-29 01:45",
+      "oldest_last_closed": "2026-10-29 05:45",
+      "newest_last_closed": "2026-10-29 05:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-10-29 01:00",
-      "newest": "2026-10-29 01:00"
+      "oldest": "2026-10-29 05:00",
+      "newest": "2026-10-29 05:00"
     },
     "stale": false,
     "daily": {
-      "ok": true,
-      "reason": null,
+      "ok": false,
+      "reason": "daily-levels.json の session_date（2026-10-27）が直近に確定した営業日（2026-10-28）ではありません",
       "session_date": "2026-10-27",
       "as_of": "2026-10-28T06:20:24+09:00"
     }
@@ -67,7 +67,7 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-10-29T02:05:28+09:00",
+    "as_of": "2026-10-29T06:05:20+09:00",
     "date": "2026-10-29",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
@@ -250,121 +250,73 @@
     }
   ],
   "mtf": {
-    "ok": true,
-    "reason": null,
+    "ok": false,
+    "reason": "mtf-feed の data_base_date（2026-10-27）が直近に確定した営業日（2026-10-28）ではありません",
     "status": "ok",
     "data_base_date": "2026-10-27",
     "generated_at": "2026-10-28T06:20:47+09:00",
-    "expected_session": "2026-10-27"
+    "expected_session": "2026-10-28"
   },
   "directions": {
     "USDJPY": {
-      "kind": "watch",
-      "reason": "監視のみ（1/3 Down）",
-      "alignment": "1/3 Down",
-      "dirs": [
-        "→",
-        "↓",
-        "→"
-      ]
+      "kind": "no_basis",
+      "reason": "mtf-feed の data_base_date（2026-10-27）が直近に確定した営業日（2026-10-28）ではありません",
+      "alignment": null,
+      "dirs": null
     },
     "EURUSD": {
-      "kind": "ok",
-      "side": "sell",
-      "strength": 3,
-      "alignment": "3/3 Down",
-      "dirs": [
-        "↓",
-        "↓",
-        "↓"
-      ]
+      "kind": "no_basis",
+      "reason": "mtf-feed の data_base_date（2026-10-27）が直近に確定した営業日（2026-10-28）ではありません",
+      "alignment": null,
+      "dirs": null
     },
     "GBPUSD": {
-      "kind": "ok",
-      "side": "sell",
-      "strength": 3,
-      "alignment": "3/3 Down",
-      "dirs": [
-        "↓",
-        "↓",
-        "↓"
-      ]
+      "kind": "no_basis",
+      "reason": "mtf-feed の data_base_date（2026-10-27）が直近に確定した営業日（2026-10-28）ではありません",
+      "alignment": null,
+      "dirs": null
     },
     "AUDUSD": {
-      "kind": "watch",
-      "reason": "監視のみ（1/3 Down）",
-      "alignment": "1/3 Down",
-      "dirs": [
-        "→",
-        "→",
-        "↓"
-      ]
+      "kind": "no_basis",
+      "reason": "mtf-feed の data_base_date（2026-10-27）が直近に確定した営業日（2026-10-28）ではありません",
+      "alignment": null,
+      "dirs": null
     },
     "NZDUSD": {
-      "kind": "ok",
-      "side": "sell",
-      "strength": 3,
-      "alignment": "3/3 Down",
-      "dirs": [
-        "↓",
-        "↓",
-        "↓"
-      ]
+      "kind": "no_basis",
+      "reason": "mtf-feed の data_base_date（2026-10-27）が直近に確定した営業日（2026-10-28）ではありません",
+      "alignment": null,
+      "dirs": null
     },
     "USDCAD": {
-      "kind": "ok",
-      "side": "buy",
-      "strength": 3,
-      "alignment": "3/3 Up",
-      "dirs": [
-        "↑",
-        "↑",
-        "↑"
-      ]
+      "kind": "no_basis",
+      "reason": "mtf-feed の data_base_date（2026-10-27）が直近に確定した営業日（2026-10-28）ではありません",
+      "alignment": null,
+      "dirs": null
     },
     "USDCHF": {
-      "kind": "ok",
-      "side": "buy",
-      "strength": 3,
-      "alignment": "3/3 Up",
-      "dirs": [
-        "↑",
-        "↑",
-        "↑"
-      ]
+      "kind": "no_basis",
+      "reason": "mtf-feed の data_base_date（2026-10-27）が直近に確定した営業日（2026-10-28）ではありません",
+      "alignment": null,
+      "dirs": null
     },
     "EURJPY": {
-      "kind": "ok",
-      "side": "sell",
-      "strength": 3,
-      "alignment": "3/3 Down",
-      "dirs": [
-        "↓",
-        "↓",
-        "↓"
-      ]
+      "kind": "no_basis",
+      "reason": "mtf-feed の data_base_date（2026-10-27）が直近に確定した営業日（2026-10-28）ではありません",
+      "alignment": null,
+      "dirs": null
     },
     "EURGBP": {
-      "kind": "ok",
-      "side": "sell",
-      "strength": 3,
-      "alignment": "3/3 Down",
-      "dirs": [
-        "↓",
-        "↓",
-        "↓"
-      ]
+      "kind": "no_basis",
+      "reason": "mtf-feed の data_base_date（2026-10-27）が直近に確定した営業日（2026-10-28）ではありません",
+      "alignment": null,
+      "dirs": null
     },
     "XAUUSD": {
-      "kind": "ok",
-      "side": "sell",
-      "strength": 3,
-      "alignment": "3/3 Down",
-      "dirs": [
-        "↓",
-        "↓",
-        "↓"
-      ]
+      "kind": "no_basis",
+      "reason": "mtf-feed の data_base_date（2026-10-27）が直近に確定した営業日（2026-10-28）ではありません",
+      "alignment": null,
+      "dirs": null
     }
   },
   "stop_windows": {
@@ -911,7 +863,7 @@
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-10-29T02:05:33+09:00",
+      "as_of": "2026-10-29T06:05:37+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "TRADE_OK",
@@ -930,26 +882,26 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-10-29T02:04:13+09:00",
+        "generated_intraday": "2026-10-29T06:04:11+09:00",
         "age_min": 2
       },
       "pairs": {
         "USDJPY": {
           "state": "ok",
           "items": {
-            "range_today": 0.598,
-            "range_vs_adr": 0.688,
+            "range_today": 0.248,
+            "range_vs_adr": 0.286,
             "spike_flag": false,
-            "updated_at": "2026-10-29T02:04:13+09:00"
+            "updated_at": "2026-10-29T06:04:11+09:00"
           }
         },
         "EURUSD": {
           "state": "ok",
           "items": {
-            "range_today": 0.0041,
-            "range_vs_adr": 0.598,
+            "range_today": 0.00134,
+            "range_vs_adr": 0.195,
             "spike_flag": false,
-            "updated_at": "2026-10-29T02:04:13+09:00"
+            "updated_at": "2026-10-29T06:04:11+09:00"
           }
         },
         "GBPUSD": {
@@ -958,10 +910,10 @@
         "AUDUSD": {
           "state": "ok",
           "items": {
-            "range_today": 0.0028,
-            "range_vs_adr": 0.622,
+            "range_today": 0.00133,
+            "range_vs_adr": 0.296,
             "spike_flag": false,
-            "updated_at": "2026-10-29T02:04:13+09:00"
+            "updated_at": "2026-10-29T06:04:11+09:00"
           }
         },
         "NZDUSD": {
@@ -970,10 +922,10 @@
         "USDCAD": {
           "state": "ok",
           "items": {
-            "range_today": 0.00443,
-            "range_vs_adr": 0.662,
+            "range_today": 0.00089,
+            "range_vs_adr": 0.133,
             "spike_flag": false,
-            "updated_at": "2026-10-29T02:04:13+09:00"
+            "updated_at": "2026-10-29T06:04:11+09:00"
           }
         },
         "USDCHF": {
@@ -985,34 +937,34 @@
         "EURGBP": {
           "state": "ok",
           "items": {
-            "range_today": 0.00211,
-            "range_vs_adr": 0.634,
+            "range_today": 0.00096,
+            "range_vs_adr": 0.288,
             "spike_flag": false,
-            "updated_at": "2026-10-29T02:04:13+09:00"
+            "updated_at": "2026-10-29T06:04:11+09:00"
           }
         },
         "XAUUSD": {
           "state": "ok",
           "items": {
-            "range_today": 42.16,
-            "range_vs_adr": 0.619,
+            "range_today": 25.83,
+            "range_vs_adr": 0.379,
             "spike_flag": false,
-            "updated_at": "2026-10-29T02:04:13+09:00"
+            "updated_at": "2026-10-29T06:04:11+09:00"
           }
         }
       }
     }
   },
   "previous_day": {
-    "plan_date": "2026-10-27",
-    "n": 4,
-    "reached": 1,
+    "plan_date": "2026-10-28",
+    "n": 1,
+    "reached": 0,
     "not_reached": 0,
     "after_expiry": 0,
-    "cancelled": 3,
+    "cancelled": 1,
     "unscored": 0,
     "a": {
-      "tp1": 1,
+      "tp1": 0,
       "sl": 0,
       "open": 0
     },
@@ -1024,65 +976,31 @@
     "items": [
       {
         "setup": "A",
-        "symbol": "EURJPY",
-        "side": "sell",
-        "reached": "取消(再設計)",
-        "reached_at": "2026-10-27T08:00:00+09:00",
-        "first_hit_a": null,
-        "first_hit_b": null
-      },
-      {
-        "setup": "A",
         "symbol": "XAUUSD",
         "side": "sell",
         "reached": "取消(再設計)",
-        "reached_at": "2026-10-27T19:00:00+09:00",
+        "reached_at": "2026-10-28T16:00:00+09:00",
         "first_hit_a": null,
-        "first_hit_b": null
-      },
-      {
-        "setup": "B",
-        "symbol": "XAUUSD",
-        "side": "sell",
-        "reached": "取消(再設計)",
-        "reached_at": "2026-10-27T18:00:00+09:00",
-        "first_hit_a": null,
-        "first_hit_b": null
-      },
-      {
-        "setup": "A",
-        "symbol": "EURJPY",
-        "side": "sell",
-        "reached": "到達",
-        "reached_at": "2026-10-27T23:00:00+09:00",
-        "first_hit_a": "TP1",
         "first_hit_b": null
       }
     ]
   },
   "inputs_problems": [],
-  "design_slot": 3,
-  "generated_at": "2026-10-28T21:05:54+09:00",
+  "design_slot": 1,
+  "generated_at": "2026-10-29T06:06:13+09:00",
   "designs": [
     {
       "slot": 1,
-      "generated_at": "2026-10-28T06:22:01+09:00",
-      "inputs_ok": true
-    },
-    {
-      "slot": 2,
-      "generated_at": "2026-10-28T15:05:54+09:00",
-      "inputs_ok": true
-    },
-    {
-      "slot": 3,
-      "generated_at": "2026-10-28T21:05:54+09:00",
-      "inputs_ok": true
+      "generated_at": "2026-10-29T06:06:13+09:00",
+      "inputs_ok": false
     }
   ],
-  "inputs_ok": true,
-  "order_ok": true,
-  "banners": [],
+  "inputs_ok": false,
+  "order_ok": false,
+  "banners": [
+    "日次レベル未更新: daily-levels.json の session_date（2026-10-27）が直近に確定した営業日（2026-10-28）ではありません",
+    "方向根拠なし: mtf-feed の data_base_date（2026-10-27）が直近に確定した営業日（2026-10-28）ではありません"
+  ],
   "design_missing": false,
   "candidates": [],
   "summary": {
@@ -1092,25 +1010,25 @@
       "B": 0
     },
     "rejections": {
-      "no_direction": 4,
-      "unreachable": 2,
-      "sl_narrow": 11,
-      "rr_low": 4,
-      "cost_low": 1,
+      "no_direction": 0,
+      "unreachable": 0,
+      "sl_narrow": 0,
+      "rr_low": 0,
+      "cost_low": 0,
       "adr_over": 0
     },
     "rejections_text": {
-      "方向根拠なし": 4,
-      "届かない": 2,
-      "SL幅不足": 11,
-      "RR不足": 4,
-      "コスト不足": 1,
+      "方向根拠なし": 0,
+      "届かない": 0,
+      "SL幅不足": 0,
+      "RR不足": 0,
+      "コスト不足": 0,
       "ADR消化超過": 0
     },
     "extra": {
       "基準水準なし": 0,
       "障害なし": 0,
-      "入力欠落": 0
+      "入力欠落": 20
     },
     "unit": "案（型×銘柄×A/B案）。1案につき最初に当たった理由1つ",
     "rejected_cases": [
@@ -1118,745 +1036,485 @@
         "symbol": "USDJPY",
         "setup": "A",
         "scheme": "A",
-        "reason": "no_direction",
-        "reason_text": "方向根拠なし",
-        "counted": true,
-        "detail": "監視のみ（1/3 Down）"
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
+        "detail": {
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
+        }
       },
       {
         "symbol": "USDJPY",
         "setup": "A",
         "scheme": "B",
-        "reason": "no_direction",
-        "reason_text": "方向根拠なし",
-        "counted": true,
-        "detail": "監視のみ（1/3 Down）"
-      },
-      {
-        "symbol": "EURUSD",
-        "setup": "A",
-        "scheme": "A",
-        "reason": "sl_narrow",
-        "reason_text": "SL幅不足",
-        "counted": true,
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
         "detail": {
-          "side": "sell",
-          "reference": {
-            "price": 1.11321,
-            "type": "H1高値群の上端"
-          },
-          "entry_band": {
-            "low": 1.11321,
-            "high": 1.11329
-          },
-          "h1_atr14_pips": 7.7,
-          "sl": {
-            "price": 1.1136,
-            "width_pips": 3.9
-          },
-          "first_obstacle": {
-            "price": 1.11274,
-            "type": "H1安値群"
-          },
-          "tp1": 1.1128,
-          "profit_pips": 4.1,
-          "rr": 1.05,
-          "cost_cap_pips": -0.7,
-          "cost_threshold_pips": 1.2,
-          "adr_remaining_pips": 43.4,
-          "distance_to_reference_pips": 0.4,
-          "adr_used_pct": 35.8
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
         }
       },
       {
         "symbol": "EURUSD",
         "setup": "A",
-        "scheme": "B",
-        "reason": "sl_narrow",
-        "reason_text": "SL幅不足",
-        "counted": true,
+        "scheme": "A",
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
         "detail": {
-          "side": "sell",
-          "reference": {
-            "price": 1.11321,
-            "type": "H1高値群の上端"
-          },
-          "entry_band": {
-            "low": 1.11321,
-            "high": 1.11329
-          },
-          "h1_atr14_pips": 7.7,
-          "sl": {
-            "price": 1.114,
-            "width_pips": 7.9
-          },
-          "first_obstacle": {
-            "price": 1.11274,
-            "type": "H1安値群"
-          },
-          "tp1": 1.1128,
-          "profit_pips": 4.1,
-          "rr": 0.52,
-          "cost_cap_pips": -3.1,
-          "cost_threshold_pips": 1.2,
-          "adr_remaining_pips": 43.4,
-          "distance_to_reference_pips": 0.4,
-          "adr_used_pct": 35.8
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
+        }
+      },
+      {
+        "symbol": "EURUSD",
+        "setup": "A",
+        "scheme": "B",
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
+        "detail": {
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
         }
       },
       {
         "symbol": "GBPUSD",
         "setup": "A",
         "scheme": "A",
-        "reason": "sl_narrow",
-        "reason_text": "SL幅不足",
-        "counted": true,
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
         "detail": {
-          "side": "sell",
-          "reference": {
-            "price": 1.32919,
-            "type": "H1高値群の上端"
-          },
-          "entry_band": {
-            "low": 1.32919,
-            "high": 1.3293
-          },
-          "h1_atr14_pips": 10.9,
-          "sl": {
-            "price": 1.32975,
-            "width_pips": 5.6
-          },
-          "first_obstacle": {
-            "price": 1.32907,
-            "type": "S1"
-          },
-          "tp1": 1.32915,
-          "profit_pips": 0.4,
-          "rr": 0.07,
-          "cost_cap_pips": -3.2,
-          "cost_threshold_pips": 1.2,
-          "adr_remaining_pips": 27.5,
-          "distance_to_reference_pips": 2.8,
-          "adr_used_pct": 62.3
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
         }
       },
       {
         "symbol": "GBPUSD",
         "setup": "A",
         "scheme": "B",
-        "reason": "rr_low",
-        "reason_text": "RR不足",
-        "counted": true,
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
         "detail": {
-          "side": "sell",
-          "reference": {
-            "price": 1.32919,
-            "type": "H1高値群の上端"
-          },
-          "entry_band": {
-            "low": 1.32919,
-            "high": 1.3293
-          },
-          "h1_atr14_pips": 10.9,
-          "sl": {
-            "price": 1.3303,
-            "width_pips": 11.1
-          },
-          "first_obstacle": {
-            "price": 1.32907,
-            "type": "S1"
-          },
-          "tp1": 1.32915,
-          "profit_pips": 0.4,
-          "rr": 0.04,
-          "cost_cap_pips": -6.5,
-          "cost_threshold_pips": 1.2,
-          "adr_remaining_pips": 27.5,
-          "distance_to_reference_pips": 2.8,
-          "adr_used_pct": 62.3
-        }
-      },
-      {
-        "symbol": "GBPUSD",
-        "setup": "B",
-        "scheme": "A",
-        "reason": "sl_narrow",
-        "reason_text": "SL幅不足",
-        "counted": true,
-        "detail": {
-          "side": "sell",
-          "reference": {
-            "price": 1.32885,
-            "type": "東京レンジ安値"
-          },
-          "entry_band": {
-            "low": 1.32885,
-            "high": 1.32896
-          },
-          "h1_atr14_pips": 10.9,
-          "sl": {
-            "price": 1.3294,
-            "width_pips": 5.5
-          },
-          "first_obstacle": {
-            "price": 1.32853,
-            "type": "H1安値群"
-          },
-          "tp1": 1.3286,
-          "profit_pips": 2.5,
-          "rr": 0.45,
-          "cost_cap_pips": -2.3,
-          "cost_threshold_pips": 1.2,
-          "adr_remaining_pips": 27.5,
-          "distance_to_reference_pips": 0.6,
-          "adr_used_pct": 62.3
-        }
-      },
-      {
-        "symbol": "GBPUSD",
-        "setup": "B",
-        "scheme": "B",
-        "reason": "rr_low",
-        "reason_text": "RR不足",
-        "counted": true,
-        "detail": {
-          "side": "sell",
-          "reference": {
-            "price": 1.32885,
-            "type": "東京レンジ安値"
-          },
-          "entry_band": {
-            "low": 1.32885,
-            "high": 1.32896
-          },
-          "h1_atr14_pips": 10.9,
-          "sl": {
-            "price": 1.32995,
-            "width_pips": 11
-          },
-          "first_obstacle": {
-            "price": 1.32853,
-            "type": "H1安値群"
-          },
-          "tp1": 1.3286,
-          "profit_pips": 2.5,
-          "rr": 0.23,
-          "cost_cap_pips": -5.6,
-          "cost_threshold_pips": 1.2,
-          "adr_remaining_pips": 27.5,
-          "distance_to_reference_pips": 0.6,
-          "adr_used_pct": 62.3
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
         }
       },
       {
         "symbol": "AUDUSD",
         "setup": "A",
         "scheme": "A",
-        "reason": "no_direction",
-        "reason_text": "方向根拠なし",
-        "counted": true,
-        "detail": "監視のみ（1/3 Down）"
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
+        "detail": {
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
+        }
       },
       {
         "symbol": "AUDUSD",
         "setup": "A",
         "scheme": "B",
-        "reason": "no_direction",
-        "reason_text": "方向根拠なし",
-        "counted": true,
-        "detail": "監視のみ（1/3 Down）"
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
+        "detail": {
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
+        }
       },
       {
         "symbol": "NZDUSD",
         "setup": "A",
         "scheme": "A",
-        "reason": "unreachable",
-        "reason_text": "届かない",
-        "counted": true,
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
         "detail": {
-          "side": "sell",
-          "reference": {
-            "price": 0.56178,
-            "type": "H1高値群の上端"
-          },
-          "entry_band": {
-            "low": 0.56178,
-            "high": 0.5619
-          },
-          "h1_atr14_pips": 11.6,
-          "sl": {
-            "price": 0.5624,
-            "width_pips": 6.2
-          },
-          "first_obstacle": {
-            "price": 0.56081,
-            "type": "H1安値群"
-          },
-          "tp1": 0.5609,
-          "profit_pips": 8.8,
-          "rr": 1.42,
-          "cost_cap_pips": -0.2,
-          "cost_threshold_pips": 1.2,
-          "adr_remaining_pips": 0,
-          "distance_to_reference_pips": 5.8,
-          "adr_used_pct": 258.7
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
         }
       },
       {
         "symbol": "NZDUSD",
         "setup": "A",
         "scheme": "B",
-        "reason": "unreachable",
-        "reason_text": "届かない",
-        "counted": true,
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
         "detail": {
-          "side": "sell",
-          "reference": {
-            "price": 0.56178,
-            "type": "H1高値群の上端"
-          },
-          "entry_band": {
-            "low": 0.56178,
-            "high": 0.5619
-          },
-          "h1_atr14_pips": 11.6,
-          "sl": {
-            "price": 0.56295,
-            "width_pips": 11.7
-          },
-          "first_obstacle": {
-            "price": 0.56081,
-            "type": "H1安値群"
-          },
-          "tp1": 0.5609,
-          "profit_pips": 8.8,
-          "rr": 0.75,
-          "cost_cap_pips": -3.5,
-          "cost_threshold_pips": 1.2,
-          "adr_remaining_pips": 0,
-          "distance_to_reference_pips": 5.8,
-          "adr_used_pct": 258.7
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
         }
       },
       {
         "symbol": "USDCAD",
         "setup": "A",
         "scheme": "A",
-        "reason": "sl_narrow",
-        "reason_text": "SL幅不足",
-        "counted": true,
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
         "detail": {
-          "side": "buy",
-          "reference": {
-            "price": 1.40221,
-            "type": "S1"
-          },
-          "entry_band": {
-            "low": 1.40212,
-            "high": 1.40221
-          },
-          "h1_atr14_pips": 8.7,
-          "sl": {
-            "price": 1.40175,
-            "width_pips": 4.6
-          },
-          "first_obstacle": {
-            "price": 1.40385,
-            "type": "Pivot"
-          },
-          "tp1": 1.4038,
-          "profit_pips": 15.9,
-          "rr": 3.46,
-          "cost_cap_pips": 3.6,
-          "cost_threshold_pips": 1.6,
-          "adr_remaining_pips": 27.2,
-          "distance_to_reference_pips": 13.7,
-          "adr_used_pct": 58.1
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
         }
       },
       {
         "symbol": "USDCAD",
         "setup": "A",
         "scheme": "B",
-        "reason": "sl_narrow",
-        "reason_text": "SL幅不足",
-        "counted": true,
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
         "detail": {
-          "side": "buy",
-          "reference": {
-            "price": 1.40221,
-            "type": "S1"
-          },
-          "entry_band": {
-            "low": 1.40212,
-            "high": 1.40221
-          },
-          "h1_atr14_pips": 8.7,
-          "sl": {
-            "price": 1.4013,
-            "width_pips": 9.1
-          },
-          "first_obstacle": {
-            "price": 1.40385,
-            "type": "Pivot"
-          },
-          "tp1": 1.4038,
-          "profit_pips": 15.9,
-          "rr": 1.75,
-          "cost_cap_pips": 0.9,
-          "cost_threshold_pips": 1.6,
-          "adr_remaining_pips": 27.2,
-          "distance_to_reference_pips": 13.7,
-          "adr_used_pct": 58.1
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
         }
       },
       {
         "symbol": "USDCHF",
         "setup": "A",
         "scheme": "A",
-        "reason": "sl_narrow",
-        "reason_text": "SL幅不足",
-        "counted": true,
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
         "detail": {
-          "side": "buy",
-          "reference": {
-            "price": 0.82949,
-            "type": "H1安値群の下端"
-          },
-          "entry_band": {
-            "low": 0.82942,
-            "high": 0.82949
-          },
-          "h1_atr14_pips": 7.1,
-          "sl": {
-            "price": 0.8291,
-            "width_pips": 3.9
-          },
-          "first_obstacle": {
-            "price": 0.82984,
-            "type": "H1安値群"
-          },
-          "tp1": 0.82975,
-          "profit_pips": 2.6,
-          "rr": 0.67,
-          "cost_cap_pips": -1.3,
-          "cost_threshold_pips": 1.6,
-          "adr_remaining_pips": 21.6,
-          "distance_to_reference_pips": 0.5,
-          "adr_used_pct": 57.9
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
         }
       },
       {
         "symbol": "USDCHF",
         "setup": "A",
         "scheme": "B",
-        "reason": "sl_narrow",
-        "reason_text": "SL幅不足",
-        "counted": true,
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
         "detail": {
-          "side": "buy",
-          "reference": {
-            "price": 0.82949,
-            "type": "H1安値群の下端"
-          },
-          "entry_band": {
-            "low": 0.82942,
-            "high": 0.82949
-          },
-          "h1_atr14_pips": 7.1,
-          "sl": {
-            "price": 0.82875,
-            "width_pips": 7.4
-          },
-          "first_obstacle": {
-            "price": 0.82984,
-            "type": "H1安値群"
-          },
-          "tp1": 0.82975,
-          "profit_pips": 2.6,
-          "rr": 0.35,
-          "cost_cap_pips": -3.4,
-          "cost_threshold_pips": 1.6,
-          "adr_remaining_pips": 21.6,
-          "distance_to_reference_pips": 0.5,
-          "adr_used_pct": 57.9
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
         }
       },
       {
         "symbol": "EURJPY",
         "setup": "A",
         "scheme": "A",
-        "reason": "sl_narrow",
-        "reason_text": "SL幅不足",
-        "counted": true,
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
         "detail": {
-          "side": "sell",
-          "reference": {
-            "price": 175.86,
-            "type": "Pivot"
-          },
-          "entry_band": {
-            "low": 175.86,
-            "high": 175.876
-          },
-          "h1_atr14_pips": 15.8,
-          "sl": {
-            "price": 175.94,
-            "width_pips": 8
-          },
-          "first_obstacle": {
-            "price": 175.775,
-            "type": "H1高値群"
-          },
-          "tp1": 175.785,
-          "profit_pips": 7.5,
-          "rr": 0.94,
-          "cost_cap_pips": -1.8,
-          "cost_threshold_pips": 1.6,
-          "adr_remaining_pips": 70.9,
-          "distance_to_reference_pips": 8.2,
-          "adr_used_pct": 39.6
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
         }
       },
       {
         "symbol": "EURJPY",
         "setup": "A",
         "scheme": "B",
-        "reason": "rr_low",
-        "reason_text": "RR不足",
-        "counted": true,
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
         "detail": {
-          "side": "sell",
-          "reference": {
-            "price": 175.86,
-            "type": "Pivot"
-          },
-          "entry_band": {
-            "low": 175.86,
-            "high": 175.876
-          },
-          "h1_atr14_pips": 15.8,
-          "sl": {
-            "price": 176.02,
-            "width_pips": 16
-          },
-          "first_obstacle": {
-            "price": 175.775,
-            "type": "H1高値群"
-          },
-          "tp1": 175.785,
-          "profit_pips": 7.5,
-          "rr": 0.47,
-          "cost_cap_pips": -6.6,
-          "cost_threshold_pips": 1.6,
-          "adr_remaining_pips": 70.9,
-          "distance_to_reference_pips": 8.2,
-          "adr_used_pct": 39.6
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
         }
       },
       {
         "symbol": "EURGBP",
         "setup": "A",
         "scheme": "A",
-        "reason": "sl_narrow",
-        "reason_text": "SL幅不足",
-        "counted": true,
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
         "detail": {
-          "side": "sell",
-          "reference": {
-            "price": 0.8378,
-            "type": "前日高値"
-          },
-          "entry_band": {
-            "low": 0.8378,
-            "high": 0.83785
-          },
-          "h1_atr14_pips": 5.4,
-          "sl": {
-            "price": 0.8381,
-            "width_pips": 3
-          },
-          "first_obstacle": {
-            "price": 0.83751,
-            "type": "H1高値群"
-          },
-          "tp1": 0.8376,
-          "profit_pips": 2,
-          "rr": 0.67,
-          "cost_cap_pips": -1,
-          "cost_threshold_pips": 1.6,
-          "adr_remaining_pips": 12.3,
-          "distance_to_reference_pips": 1.2,
-          "adr_used_pct": 62
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
         }
       },
       {
         "symbol": "EURGBP",
         "setup": "A",
         "scheme": "B",
-        "reason": "sl_narrow",
-        "reason_text": "SL幅不足",
-        "counted": true,
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
         "detail": {
-          "side": "sell",
-          "reference": {
-            "price": 0.8378,
-            "type": "前日高値"
-          },
-          "entry_band": {
-            "low": 0.8378,
-            "high": 0.83785
-          },
-          "h1_atr14_pips": 5.4,
-          "sl": {
-            "price": 0.83835,
-            "width_pips": 5.5
-          },
-          "first_obstacle": {
-            "price": 0.83751,
-            "type": "H1高値群"
-          },
-          "tp1": 0.8376,
-          "profit_pips": 2,
-          "rr": 0.36,
-          "cost_cap_pips": -2.5,
-          "cost_threshold_pips": 1.6,
-          "adr_remaining_pips": 12.3,
-          "distance_to_reference_pips": 1.2,
-          "adr_used_pct": 62
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
         }
       },
       {
         "symbol": "XAUUSD",
         "setup": "A",
         "scheme": "A",
-        "reason": "cost_low",
-        "reason_text": "コスト不足",
-        "counted": true,
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
         "detail": {
-          "side": "sell",
-          "reference": {
-            "price": 4051.48,
-            "type": "H1高値群の上端"
-          },
-          "entry_band": {
-            "low": 4051.48,
-            "high": 4052.48
-          },
-          "h1_atr14_pips": 99.7,
-          "sl": {
-            "price": 4056.5,
-            "width_pips": 50.2
-          },
-          "first_obstacle": {
-            "price": 4045.96,
-            "type": "H1安値群"
-          },
-          "tp1": 4046.05,
-          "profit_pips": 54.3,
-          "rr": 1.08,
-          "cost_cap_pips": -8.4,
-          "cost_threshold_pips": 1.2,
-          "adr_remaining_pips": 256.5,
-          "distance_to_reference_pips": 69.3,
-          "adr_used_pct": 62.2
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
         }
       },
       {
         "symbol": "XAUUSD",
         "setup": "A",
         "scheme": "B",
-        "reason": "rr_low",
-        "reason_text": "RR不足",
-        "counted": true,
+        "reason": "no_data",
+        "reason_text": "入力欠落",
+        "counted": false,
         "detail": {
-          "side": "sell",
-          "reference": {
-            "price": 4051.48,
-            "type": "H1高値群の上端"
-          },
-          "entry_band": {
-            "low": 4051.48,
-            "high": 4052.48
-          },
-          "h1_atr14_pips": 99.7,
-          "sl": {
-            "price": 4061.45,
-            "width_pips": 99.7
-          },
-          "first_obstacle": {
-            "price": 4045.96,
-            "type": "H1安値群"
-          },
-          "tp1": 4046.05,
-          "profit_pips": 54.3,
-          "rr": 0.54,
-          "cost_cap_pips": -38.1,
-          "cost_threshold_pips": 1.2,
-          "adr_remaining_pips": 256.5,
-          "distance_to_reference_pips": 69.3,
-          "adr_used_pct": 62.2
+          "side": null,
+          "reference": null,
+          "entry_band": null,
+          "h1_atr14_pips": null,
+          "sl": null,
+          "first_obstacle": null,
+          "tp1": null,
+          "profit_pips": null,
+          "rr": null,
+          "cost_cap_pips": null,
+          "cost_threshold_pips": null,
+          "adr_remaining_pips": null,
+          "distance_to_reference_pips": null,
+          "adr_used_pct": null
         }
       }
     ],
-    "watch_only": [
-      {
-        "symbol": "USDJPY",
-        "detail": "監視のみ（1/3 Down）"
-      },
-      {
-        "symbol": "AUDUSD",
-        "detail": "監視のみ（1/3 Down）"
-      }
-    ],
+    "watch_only": [],
     "no_basis": [],
-    "not_formed": [
-      {
-        "symbol": "USDJPY",
-        "setup": "B",
-        "detail": "MTFの向きなし（監視のみ（1/3 Down））"
-      },
-      {
-        "symbol": "EURUSD",
-        "setup": "B",
-        "detail": "ブレイク後に価格がレンジ内へ戻り済み"
-      },
-      {
-        "symbol": "AUDUSD",
-        "setup": "B",
-        "detail": "MTFの向きなし（監視のみ（1/3 Down））"
-      },
-      {
-        "symbol": "NZDUSD",
-        "setup": "B",
-        "detail": "ブレイク未成立（15:00開始以降のH1が終値でレンジ外に確定していない）"
-      },
-      {
-        "symbol": "USDCAD",
-        "setup": "B",
-        "detail": "ブレイク方向（下）がMTFの向きと不一致"
-      },
-      {
-        "symbol": "USDCHF",
-        "setup": "B",
-        "detail": "ブレイク後に価格がレンジ内へ戻り済み"
-      },
-      {
-        "symbol": "EURJPY",
-        "setup": "B",
-        "detail": "ブレイク未成立（15:00開始以降のH1が終値でレンジ外に確定していない）"
-      },
-      {
-        "symbol": "EURGBP",
-        "setup": "B",
-        "detail": "ブレイク方向（上）がMTFの向きと不一致"
-      },
-      {
-        "symbol": "XAUUSD",
-        "setup": "B",
-        "detail": "ブレイク未成立（15:00開始以降のH1が終値でレンジ外に確定していない）"
-      }
-    ]
-  },
-  "additions_b": []
+    "not_formed": []
+  }
 }
