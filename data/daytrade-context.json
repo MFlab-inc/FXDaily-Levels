@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-29T02:23:25+09:00",
+  "as_of": "2026-10-29T02:35:34+09:00",
   "timezone": "Asia/Tokyo",
   "note": "事実データと機械判定のみ。売買推奨は含まない。gateはイベント時間ルール(config/daytrade-rules.json)による判定。",
   "rules_summary": {
@@ -24,9 +24,9 @@
   },
   "pairs": {
     "USDJPY": {
-      "price": 158.194,
-      "price_time_jst": "2026-10-29 02:20",
-      "bar_age_min": 0,
+      "price": 158.222,
+      "price_time_jst": "2026-10-29 02:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-28 06:00",
@@ -75,17 +75,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-29 02:00",
-          "o": 158.156,
-          "h": 158.214,
-          "l": 158.156,
-          "c": 158.2,
+          "time_jst": "2026-10-29 02:15",
+          "o": 158.196,
+          "h": 158.226,
+          "l": 158.178,
+          "c": 158.222,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-29 02:00",
+          "time_jst": "2026-10-29 02:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -96,8 +96,8 @@
           "time_jst": "2026-10-29 01:15"
         },
         "swing_low": {
-          "price": 158.152,
-          "time_jst": "2026-10-28 23:45"
+          "price": 158.124,
+          "time_jst": "2026-10-29 01:45"
         }
       },
       "h1": {
@@ -128,24 +128,27 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "03:00 [USD] Federal Funds Rate（central_bank: 前30分〜後60分停止）",
+          "03:00 [USD] FOMC Statement（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
         "next_gated_event": {
-          "time_jst": "03:00",
-          "datetime_jst": "2026-10-29T03:00:00+09:00",
+          "time_jst": "03:30",
+          "datetime_jst": "2026-10-29T03:30:00+09:00",
           "currency": "USD",
           "impact": "High",
-          "event": "Federal Funds Rate",
-          "stop_from_jst": "02:30",
-          "stop_until_jst": "04:00"
+          "event": "FOMC Press Conference",
+          "stop_from_jst": "03:00",
+          "stop_until_jst": "04:30"
         }
       }
     },
     "EURUSD": {
-      "price": 1.11476,
-      "price_time_jst": "2026-10-29 02:20",
-      "bar_age_min": 0,
+      "price": 1.11438,
+      "price_time_jst": "2026-10-29 02:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-28 06:00",
@@ -194,25 +197,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-29 02:00",
-          "o": 1.11489,
-          "h": 1.11501,
-          "l": 1.11468,
-          "c": 1.11471,
+          "time_jst": "2026-10-29 02:15",
+          "o": 1.11475,
+          "h": 1.11481,
+          "l": 1.11432,
+          "c": 1.11434,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-29 02:00",
+          "time_jst": "2026-10-29 02:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.11368,
-          "time_jst": "2026-10-28 23:45"
+          "price": 1.11537,
+          "time_jst": "2026-10-29 01:45"
         },
         "swing_low": {
           "price": 1.11312,
@@ -247,24 +250,27 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "03:00 [USD] Federal Funds Rate（central_bank: 前30分〜後60分停止）",
+          "03:00 [USD] FOMC Statement（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
         "next_gated_event": {
-          "time_jst": "03:00",
-          "datetime_jst": "2026-10-29T03:00:00+09:00",
+          "time_jst": "03:30",
+          "datetime_jst": "2026-10-29T03:30:00+09:00",
           "currency": "USD",
           "impact": "High",
-          "event": "Federal Funds Rate",
-          "stop_from_jst": "02:30",
-          "stop_until_jst": "04:00"
+          "event": "FOMC Press Conference",
+          "stop_from_jst": "03:00",
+          "stop_until_jst": "04:30"
         }
       }
     },
     "GBPUSD": {
-      "price": 1.33115,
-      "price_time_jst": "2026-10-29 02:20",
-      "bar_age_min": 0,
+      "price": 1.33089,
+      "price_time_jst": "2026-10-29 02:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-28 06:00",
@@ -313,25 +319,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-29 02:00",
-          "o": 1.33172,
-          "h": 1.33179,
-          "l": 1.33129,
-          "c": 1.33131,
+          "time_jst": "2026-10-29 02:15",
+          "o": 1.33133,
+          "h": 1.33142,
+          "l": 1.33077,
+          "c": 1.3308,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-29 02:00",
+          "time_jst": "2026-10-29 02:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.33039,
-          "time_jst": "2026-10-28 22:30"
+          "price": 1.33228,
+          "time_jst": "2026-10-29 01:45"
         },
         "swing_low": {
           "price": 1.32963,
@@ -366,24 +372,27 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "03:00 [USD] Federal Funds Rate（central_bank: 前30分〜後60分停止）",
+          "03:00 [USD] FOMC Statement（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
         "next_gated_event": {
-          "time_jst": "03:00",
-          "datetime_jst": "2026-10-29T03:00:00+09:00",
+          "time_jst": "03:30",
+          "datetime_jst": "2026-10-29T03:30:00+09:00",
           "currency": "USD",
           "impact": "High",
-          "event": "Federal Funds Rate",
-          "stop_from_jst": "02:30",
-          "stop_until_jst": "04:00"
+          "event": "FOMC Press Conference",
+          "stop_from_jst": "03:00",
+          "stop_until_jst": "04:30"
         }
       }
     },
     "EURJPY": {
-      "price": 176.347,
-      "price_time_jst": "2026-10-29 02:20",
-      "bar_age_min": 0,
+      "price": 176.315,
+      "price_time_jst": "2026-10-29 02:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-28 06:00",
@@ -432,17 +441,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-29 02:00",
-          "o": 176.326,
-          "h": 176.376,
+          "time_jst": "2026-10-29 02:15",
+          "o": 176.349,
+          "h": 176.35,
           "l": 176.301,
-          "c": 176.339,
+          "c": 176.309,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-29 02:00",
+          "time_jst": "2026-10-29 02:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -453,8 +462,8 @@
           "time_jst": "2026-10-29 01:30"
         },
         "swing_low": {
-          "price": 176.001,
-          "time_jst": "2026-10-28 23:15"
+          "price": 176.293,
+          "time_jst": "2026-10-29 01:45"
         }
       },
       "h1": {
@@ -492,9 +501,9 @@
       }
     },
     "AUDUSD": {
-      "price": 0.70405,
-      "price_time_jst": "2026-10-29 02:20",
-      "bar_age_min": 0,
+      "price": 0.70387,
+      "price_time_jst": "2026-10-29 02:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-28 06:00",
@@ -543,25 +552,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-29 02:00",
-          "o": 0.70436,
-          "h": 0.70442,
-          "l": 0.70399,
-          "c": 0.70401,
+          "time_jst": "2026-10-29 02:15",
+          "o": 0.70402,
+          "h": 0.70413,
+          "l": 0.70379,
+          "c": 0.70381,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-29 02:00",
+          "time_jst": "2026-10-29 02:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 0.70422,
-          "time_jst": "2026-10-29 00:30"
+          "price": 0.70465,
+          "time_jst": "2026-10-29 01:45"
         },
         "swing_low": {
           "price": 0.70343,
@@ -596,24 +605,27 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "03:00 [USD] Federal Funds Rate（central_bank: 前30分〜後60分停止）",
+          "03:00 [USD] FOMC Statement（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
         "next_gated_event": {
-          "time_jst": "03:00",
-          "datetime_jst": "2026-10-29T03:00:00+09:00",
+          "time_jst": "03:30",
+          "datetime_jst": "2026-10-29T03:30:00+09:00",
           "currency": "USD",
           "impact": "High",
-          "event": "Federal Funds Rate",
-          "stop_from_jst": "02:30",
-          "stop_until_jst": "04:00"
+          "event": "FOMC Press Conference",
+          "stop_from_jst": "03:00",
+          "stop_until_jst": "04:30"
         }
       }
     },
     "EURGBP": {
-      "price": 0.83741,
-      "price_time_jst": "2026-10-29 02:20",
-      "bar_age_min": 0,
+      "price": 0.83733,
+      "price_time_jst": "2026-10-29 02:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-28 06:00",
@@ -662,29 +674,29 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-29 02:00",
-          "o": 0.83718,
-          "h": 0.83739,
-          "l": 0.83705,
-          "c": 0.83727,
+          "time_jst": "2026-10-29 02:15",
+          "o": 0.83732,
+          "h": 0.83742,
+          "l": 0.83722,
+          "c": 0.83737,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-29 02:00",
+          "time_jst": "2026-10-29 02:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 0.83752,
-          "time_jst": "2026-10-29 00:45"
+          "price": 0.83756,
+          "time_jst": "2026-10-29 01:45"
         },
         "swing_low": {
-          "price": 0.83711,
-          "time_jst": "2026-10-28 22:30"
+          "price": 0.83687,
+          "time_jst": "2026-10-29 01:45"
         }
       },
       "h1": {
@@ -722,9 +734,9 @@
       }
     },
     "USDCAD": {
-      "price": 1.40365,
-      "price_time_jst": "2026-10-29 02:20",
-      "bar_age_min": 0,
+      "price": 1.404,
+      "price_time_jst": "2026-10-29 02:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-28 06:00",
@@ -773,17 +785,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-29 02:00",
-          "o": 1.40332,
-          "h": 1.40393,
-          "l": 1.40328,
-          "c": 1.40378,
+          "time_jst": "2026-10-29 02:15",
+          "o": 1.40375,
+          "h": 1.40406,
+          "l": 1.40348,
+          "c": 1.40392,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-29 02:00",
+          "time_jst": "2026-10-29 02:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -794,8 +806,8 @@
           "time_jst": "2026-10-29 01:30"
         },
         "swing_low": {
-          "price": 1.40291,
-          "time_jst": "2026-10-29 00:45"
+          "price": 1.40323,
+          "time_jst": "2026-10-29 01:45"
         }
       },
       "h1": {
@@ -826,24 +838,27 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "03:00 [USD] Federal Funds Rate（central_bank: 前30分〜後60分停止）",
+          "03:00 [USD] FOMC Statement（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
         "next_gated_event": {
-          "time_jst": "03:00",
-          "datetime_jst": "2026-10-29T03:00:00+09:00",
+          "time_jst": "03:30",
+          "datetime_jst": "2026-10-29T03:30:00+09:00",
           "currency": "USD",
           "impact": "High",
-          "event": "Federal Funds Rate",
-          "stop_from_jst": "02:30",
-          "stop_until_jst": "04:00"
+          "event": "FOMC Press Conference",
+          "stop_from_jst": "03:00",
+          "stop_until_jst": "04:30"
         }
       }
     },
     "USDCHF": {
-      "price": 0.82892,
-      "price_time_jst": "2026-10-29 02:20",
-      "bar_age_min": 0,
+      "price": 0.82927,
+      "price_time_jst": "2026-10-29 02:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-28 06:00",
@@ -892,17 +907,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-29 02:00",
-          "o": 0.82897,
-          "h": 0.82939,
-          "l": 0.82894,
-          "c": 0.82918,
+          "time_jst": "2026-10-29 02:15",
+          "o": 0.82916,
+          "h": 0.82922,
+          "l": 0.82891,
+          "c": 0.82921,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-29 02:00",
+          "time_jst": "2026-10-29 02:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -913,8 +928,8 @@
           "time_jst": "2026-10-29 00:45"
         },
         "swing_low": {
-          "price": 0.82997,
-          "time_jst": "2026-10-28 23:45"
+          "price": 0.82881,
+          "time_jst": "2026-10-29 01:45"
         }
       },
       "h1": {
@@ -945,24 +960,27 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "03:00 [USD] Federal Funds Rate（central_bank: 前30分〜後60分停止）",
+          "03:00 [USD] FOMC Statement（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
         "next_gated_event": {
-          "time_jst": "03:00",
-          "datetime_jst": "2026-10-29T03:00:00+09:00",
+          "time_jst": "03:30",
+          "datetime_jst": "2026-10-29T03:30:00+09:00",
           "currency": "USD",
           "impact": "High",
-          "event": "Federal Funds Rate",
-          "stop_from_jst": "02:30",
-          "stop_until_jst": "04:00"
+          "event": "FOMC Press Conference",
+          "stop_from_jst": "03:00",
+          "stop_until_jst": "04:30"
         }
       }
     },
     "NZDUSD": {
-      "price": 0.56248,
-      "price_time_jst": "2026-10-29 02:20",
-      "bar_age_min": 0,
+      "price": 0.56236,
+      "price_time_jst": "2026-10-29 02:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-28 06:00",
@@ -1011,25 +1029,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-29 02:00",
-          "o": 0.56275,
-          "h": 0.56286,
-          "l": 0.56242,
-          "c": 0.56247,
+          "time_jst": "2026-10-29 02:15",
+          "o": 0.56248,
+          "h": 0.56257,
+          "l": 0.56229,
+          "c": 0.56241,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-29 02:00",
+          "time_jst": "2026-10-29 02:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 0.56196,
-          "time_jst": "2026-10-28 22:30"
+          "price": 0.56292,
+          "time_jst": "2026-10-29 01:45"
         },
         "swing_low": {
           "price": 0.56092,
@@ -1064,24 +1082,27 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "03:00 [USD] Federal Funds Rate（central_bank: 前30分〜後60分停止）",
+          "03:00 [USD] FOMC Statement（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
         "next_gated_event": {
-          "time_jst": "03:00",
-          "datetime_jst": "2026-10-29T03:00:00+09:00",
+          "time_jst": "03:30",
+          "datetime_jst": "2026-10-29T03:30:00+09:00",
           "currency": "USD",
           "impact": "High",
-          "event": "Federal Funds Rate",
-          "stop_from_jst": "02:30",
-          "stop_until_jst": "04:00"
+          "event": "FOMC Press Conference",
+          "stop_from_jst": "03:00",
+          "stop_until_jst": "04:30"
         }
       }
     },
     "AUDNZD": {
       "price": 1.25167,
-      "price_time_jst": "2026-10-29 02:20",
-      "bar_age_min": 0,
+      "price_time_jst": "2026-10-29 02:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-28 06:00",
@@ -1130,17 +1151,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-29 02:00",
-          "o": 1.25165,
-          "h": 1.25183,
-          "l": 1.25142,
-          "c": 1.25169,
+          "time_jst": "2026-10-29 02:15",
+          "o": 1.25162,
+          "h": 1.25191,
+          "l": 1.25146,
+          "c": 1.25157,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-29 02:00",
+          "time_jst": "2026-10-29 02:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1151,8 +1172,8 @@
           "time_jst": "2026-10-28 23:30"
         },
         "swing_low": {
-          "price": 1.25175,
-          "time_jst": "2026-10-29 01:00"
+          "price": 1.25132,
+          "time_jst": "2026-10-29 01:45"
         }
       },
       "h1": {
@@ -1190,9 +1211,9 @@
       }
     },
     "XAUUSD": {
-      "price": 4040.24,
-      "price_time_jst": "2026-10-29 02:20",
-      "bar_age_min": 0,
+      "price": 4041.74,
+      "price_time_jst": "2026-10-29 02:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-28 06:00",
@@ -1241,25 +1262,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-29 02:00",
-          "o": 4043.75,
-          "h": 4043.75,
-          "l": 4041.06,
-          "c": 4041.64,
+          "time_jst": "2026-10-29 02:15",
+          "o": 4041.97,
+          "h": 4042.31,
+          "l": 4038.61,
+          "c": 4038.99,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-29 02:00",
+          "time_jst": "2026-10-29 02:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 4047.19,
-          "time_jst": "2026-10-29 00:30"
+          "price": 4047.76,
+          "time_jst": "2026-10-29 01:45"
         },
         "swing_low": {
           "price": 4036.49,
@@ -1294,24 +1315,27 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "03:00 [USD] Federal Funds Rate（central_bank: 前30分〜後60分停止）",
+          "03:00 [USD] FOMC Statement（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
         "next_gated_event": {
-          "time_jst": "03:00",
-          "datetime_jst": "2026-10-29T03:00:00+09:00",
+          "time_jst": "03:30",
+          "datetime_jst": "2026-10-29T03:30:00+09:00",
           "currency": "USD",
           "impact": "High",
-          "event": "Federal Funds Rate",
-          "stop_from_jst": "02:30",
-          "stop_until_jst": "04:00"
+          "event": "FOMC Press Conference",
+          "stop_from_jst": "03:00",
+          "stop_until_jst": "04:30"
         }
       }
     },
     "USOIL": {
-      "price": 103.16,
-      "price_time_jst": "2026-10-29 02:20",
-      "bar_age_min": 0,
+      "price": 102.87,
+      "price_time_jst": "2026-10-29 02:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-10-28 06:00",
@@ -1360,17 +1384,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-10-29 02:00",
-          "o": 102.9,
-          "h": 103.09,
-          "l": 102.69,
-          "c": 102.9,
+          "time_jst": "2026-10-29 02:15",
+          "o": 102.86,
+          "h": 103.17,
+          "l": 102.78,
+          "c": 102.89,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-10-29 02:00",
+          "time_jst": "2026-10-29 02:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1381,8 +1405,8 @@
           "time_jst": "2026-10-29 01:00"
         },
         "swing_low": {
-          "price": 102.23,
-          "time_jst": "2026-10-29 00:15"
+          "price": 102.25,
+          "time_jst": "2026-10-29 01:45"
         }
       },
       "h1": {
@@ -1413,17 +1437,20 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "03:00 [USD] Federal Funds Rate（central_bank: 前30分〜後60分停止）",
+          "03:00 [USD] FOMC Statement（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
         "next_gated_event": {
-          "time_jst": "03:00",
-          "datetime_jst": "2026-10-29T03:00:00+09:00",
+          "time_jst": "03:30",
+          "datetime_jst": "2026-10-29T03:30:00+09:00",
           "currency": "USD",
           "impact": "High",
-          "event": "Federal Funds Rate",
-          "stop_from_jst": "02:30",
-          "stop_until_jst": "04:00"
+          "event": "FOMC Press Conference",
+          "stop_from_jst": "03:00",
+          "stop_until_jst": "04:30"
         }
       }
     }
