@@ -6,38 +6,38 @@
   },
   "plan_date": "2026-10-29",
   "run": "status",
-  "status_updated_at": "2026-10-29T18:05:51+09:00",
+  "status_updated_at": "2026-10-29T19:05:52+09:00",
   "expires_at": "2026-10-30T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-10-29T18:05:18+09:00",
+        "as_of": "2026-10-29T19:05:18+09:00",
         "age_min": 1,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-10-29T18:05:22+09:00",
+        "as_of": "2026-10-29T19:05:23+09:00",
         "age_min": 0,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-10-29T18:05:22+09:00",
+        "as_of": "2026-10-29T19:05:23+09:00",
         "age_min": 0,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-10-29 17:45",
-      "newest_last_closed": "2026-10-29 17:45",
+      "oldest_last_closed": "2026-10-29 18:45",
+      "newest_last_closed": "2026-10-29 18:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-10-29 17:00",
-      "newest": "2026-10-29 17:00"
+      "oldest": "2026-10-29 18:00",
+      "newest": "2026-10-29 18:00"
     },
     "stale": false,
     "daily": {
@@ -67,7 +67,7 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-10-29T18:05:18+09:00",
+    "as_of": "2026-10-29T19:05:18+09:00",
     "date": "2026-10-29",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
@@ -911,7 +911,7 @@
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-10-29T18:05:22+09:00",
+      "as_of": "2026-10-29T19:05:23+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "TRADE_OK",
@@ -930,7 +930,7 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-10-29T18:04:13+09:00",
+        "generated_intraday": "2026-10-29T19:04:13+09:00",
         "age_min": 2
       },
       "pairs": {
@@ -940,16 +940,16 @@
             "range_today": 0.444,
             "range_vs_adr": 0.526,
             "spike_flag": false,
-            "updated_at": "2026-10-29T18:04:13+09:00"
+            "updated_at": "2026-10-29T19:04:13+09:00"
           }
         },
         "EURUSD": {
           "state": "ok",
           "items": {
-            "range_today": 0.0034,
-            "range_vs_adr": 0.495,
+            "range_today": 0.00402,
+            "range_vs_adr": 0.585,
             "spike_flag": false,
-            "updated_at": "2026-10-29T18:04:13+09:00"
+            "updated_at": "2026-10-29T19:04:13+09:00"
           }
         },
         "GBPUSD": {
@@ -961,7 +961,7 @@
             "range_today": 0.00377,
             "range_vs_adr": 0.851,
             "spike_flag": false,
-            "updated_at": "2026-10-29T18:04:13+09:00"
+            "updated_at": "2026-10-29T19:04:13+09:00"
           }
         },
         "NZDUSD": {
@@ -973,7 +973,7 @@
             "range_today": 0.00308,
             "range_vs_adr": 0.462,
             "spike_flag": false,
-            "updated_at": "2026-10-29T18:04:13+09:00"
+            "updated_at": "2026-10-29T19:04:13+09:00"
           }
         },
         "USDCHF": {
@@ -988,7 +988,7 @@
             "range_today": 0.00157,
             "range_vs_adr": 0.485,
             "spike_flag": false,
-            "updated_at": "2026-10-29T18:04:13+09:00"
+            "updated_at": "2026-10-29T19:04:13+09:00"
           }
         },
         "XAUUSD": {
@@ -997,7 +997,7 @@
             "range_today": 66.06,
             "range_vs_adr": 0.992,
             "spike_flag": false,
-            "updated_at": "2026-10-29T18:04:13+09:00"
+            "updated_at": "2026-10-29T19:04:13+09:00"
           }
         }
       }
@@ -1052,12 +1052,209 @@
   "order_ok": true,
   "banners": [],
   "design_missing": false,
-  "candidates": [],
+  "candidates": [
+    {
+      "id": "2026-10-29:B:NZDUSD:sell",
+      "plan_date": "2026-10-29",
+      "setup": "B",
+      "symbol": "NZDUSD",
+      "side": "sell",
+      "strength": 3,
+      "alignment": "3/3 Down",
+      "dirs": [
+        "↓",
+        "↓",
+        "↓"
+      ],
+      "note": null,
+      "ref": {
+        "label": "東京レンジ安値",
+        "price": 0.56157
+      },
+      "band": {
+        "low": 0.56157,
+        "high": 0.56167
+      },
+      "worst_entry": 0.56157,
+      "price": 0.56087,
+      "distance_pips": 7,
+      "atr_pips": 10,
+      "adr_used_pct": 64.3,
+      "adr_remaining_pips": 15.3,
+      "obstacle": {
+        "label": "前日安値",
+        "price": 0.55839
+      },
+      "pip_value_jpy": 1580,
+      "schemes": {
+        "A": {
+          "pass": false,
+          "reason": "sl_narrow",
+          "reason_text": "SL幅不足",
+          "k": 0.5,
+          "sl": 0.5621,
+          "sl_pips": 5.3,
+          "tp1": 0.55845,
+          "profit_pips": 31.2,
+          "rr": 5.89,
+          "cost_cap_pips": 9.3,
+          "cost_threshold_pips": 1.2,
+          "lots": {
+            "A": 0.36,
+            "B": 2.79
+          },
+          "commission_jpy": {
+            "A": 365,
+            "B": 2826
+          }
+        },
+        "B": {
+          "pass": true,
+          "reason": null,
+          "reason_text": null,
+          "k": 1,
+          "sl": 0.5626,
+          "sl_pips": 10.3,
+          "tp1": 0.55845,
+          "profit_pips": 31.2,
+          "rr": 3.03,
+          "cost_cap_pips": 6.3,
+          "cost_threshold_pips": 1.2,
+          "lots": {
+            "A": 0.18,
+            "B": 1.39
+          },
+          "commission_jpy": {
+            "A": 182,
+            "B": 1408
+          }
+        }
+      },
+      "levels": {
+        "daily": {
+          "Pivot": 0.56313,
+          "R1": 0.56788,
+          "R2": 0.57327,
+          "S1": 0.55774,
+          "S2": 0.55299,
+          "前日高値": 0.56853,
+          "前日安値": 0.55839
+        },
+        "h1_high_groups": [
+          {
+            "min": 0.56194,
+            "max": 0.56245,
+            "count": 10
+          },
+          {
+            "min": 0.56277,
+            "max": 0.5633,
+            "count": 9
+          },
+          {
+            "min": 0.56362,
+            "max": 0.56382,
+            "count": 2
+          }
+        ],
+        "h1_low_groups": [
+          {
+            "min": 0.5609,
+            "max": 0.56239,
+            "count": 22
+          }
+        ],
+        "h1_window": 24,
+        "atr_pips": 10,
+        "tokyo": {
+          "high": 0.56362,
+          "low": 0.56157
+        }
+      },
+      "confirm": "帯に到達したあと、M15がレンジ安値（0.56157）より下で陰線確定",
+      "run": "design-b",
+      "added_by": "status",
+      "generated_at": "2026-10-29T19:05:52+09:00",
+      "design_slot": null,
+      "expires_at": "2026-10-30T03:00:00+09:00",
+      "entry_state": {
+        "ok": true,
+        "reasons": []
+      },
+      "stops": [
+        {
+          "time_jst": "03:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "Federal Funds Rate",
+          "start": "2026-10-29T02:45:00+09:00",
+          "end": "2026-10-29T03:30:00+09:00"
+        },
+        {
+          "time_jst": "03:00",
+          "currency": "USD",
+          "impact": "High",
+          "event": "FOMC Statement",
+          "start": "2026-10-29T02:45:00+09:00",
+          "end": "2026-10-29T03:30:00+09:00"
+        },
+        {
+          "time_jst": "03:30",
+          "currency": "USD",
+          "impact": "High",
+          "event": "FOMC Press Conference",
+          "start": "2026-10-29T03:15:00+09:00",
+          "end": "2026-10-29T04:00:00+09:00"
+        },
+        {
+          "time_jst": "21:30",
+          "currency": "USD",
+          "impact": "High",
+          "event": "Advance GDP q/q",
+          "start": "2026-10-29T21:15:00+09:00",
+          "end": "2026-10-29T22:00:00+09:00"
+        },
+        {
+          "time_jst": "21:30",
+          "currency": "USD",
+          "impact": "High",
+          "event": "Core PCE Price Index m/m",
+          "start": "2026-10-29T21:15:00+09:00",
+          "end": "2026-10-29T22:00:00+09:00"
+        },
+        {
+          "time_jst": "21:30",
+          "currency": "USD",
+          "impact": "Medium",
+          "event": "Advance GDP Price Index q/q",
+          "start": "2026-10-29T21:15:00+09:00",
+          "end": "2026-10-29T22:00:00+09:00"
+        },
+        {
+          "time_jst": "21:30",
+          "currency": "USD",
+          "impact": "Medium",
+          "event": "Unemployment Claims",
+          "start": "2026-10-29T21:15:00+09:00",
+          "end": "2026-10-29T22:00:00+09:00"
+        }
+      ],
+      "calendar_ok": true,
+      "state": {
+        "reached": "未到達",
+        "reached_at": null,
+        "expired": false,
+        "price_in_band": false
+      },
+      "same_direction_group": "",
+      "rank": 1
+    }
+  ],
   "summary": {
-    "candidate_rows": 0,
+    "candidate_rows": 1,
     "scheme_pass": {
       "A": 0,
-      "B": 0
+      "B": 1
     },
     "rejections": {
       "no_direction": 4,
@@ -1708,5 +1905,7 @@
     "no_basis": [],
     "not_formed": []
   },
-  "additions_b": []
+  "additions_b": [
+    "2026-10-29:B:NZDUSD:sell"
+  ]
 }
