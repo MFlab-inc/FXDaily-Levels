@@ -1,0 +1,57 @@
+name: Risk Tests
+
+on:
+  pull_request:
+    paths:
+      - "risk/**"
+      - "mtf/lib/ny-time.js"
+      - ".github/workflows/risk*.yml"
+      # risk.yml の workflow_run が参照する name: を確かめる試験（risk/test/workflows.test.js）が読むファイル
+      - ".github/workflows/intraday.yml"
+      - ".github/workflows/daily.yml"
+  push:
+    branches: [main]
+    paths:
+      - "risk/**"
+      - "mtf/lib/ny-time.js"
+      - ".github/workflows/risk*.yml"
+      - ".github/workflows/intraday.yml"
+      - ".github/workflows/daily.yml"
+
+permissions:
+  contents: read
+
+# 取引可否の指標（risk/）の試験。外部へは接続しない（VIX は試験用に作った値、予定表は risk/events.csv）。
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run risk tests
+        run: node --test risk/test/*.test.js
+
+  # 参考：PR の段階で、Cboe の実データを実際に取得できるか、順位がいくつになるかを見る（リポジトリには書かない）。
+  # 取得できなくても試験の合否には影響させない（相手のサイトの都合で PR が止まらないように）。
+  live-check:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Fetch live data into a temporary folder
+        run: |
+          node risk/run-daily.js --data-dir "$RUNNER_TEMP/risk"
+          node -e '
+            const d = require(process.env.RUNNER_TEMP + "/risk/risk.json");
+            const { history, ...v } = d.vix || {};
+            console.log(JSON.stringify({ vix: v, event: d.event, generation: d.generation }, null, 2));
+            for (const h of history || []) console.log(`${h.date} close=${h.close} rank=${h.rank_pct}`);
+          '
