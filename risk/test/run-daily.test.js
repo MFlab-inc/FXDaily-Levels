@@ -150,3 +150,29 @@ test("risk.json に書くのは data フォルダの risk.json だけ（他の�
   await go(dir, server(), "2026-10-30 10:00");
   assert.deepEqual(fs.readdirSync(dir), ["risk.json"]);
 });
+
+test("NYSE の休場日の行は使わない（Cboe のファイルには米国の祝日にも行がある。2026-10-30 の実データで確認）", async () => {
+  const open = H.syntheticRows("2024-06-03", "2026-10-29");
+  // 休場日の行を足す（実データで見つかった日の一部）。値は極端にして、混ざれば順位が変わるようにする
+  const holidays = ["2025-11-27", "2026-01-19", "2026-09-07"];
+  const all = [...open, ...holidays.map((date) => ({ date, close: 99 }))].sort((a, b) => (a.date < b.date ? -1 : 1));
+  const dir = tmp();
+  assert.equal(await go(dir, server({ body: H.toCboeCsv(all) }), "2026-10-30 10:00"), 0);
+  const r = readRisk(dir);
+  const closes = open.map((x) => x.close);
+  assert.equal(r.vix.rank_pct, H.naiveRank(closes, closes.length - 1, 252));
+  assert.equal(r.vix.window_start, open[open.length - 252].date);
+  assert.deepEqual(r.vix.excluded_closed_days, holidays);
+  assert.ok(!r.vix.history.some((h) => holidays.includes(h.date)));
+  assert.deepEqual(r.vix.warnings, []);
+  assert.equal(r.generation.status, "ok");
+});
+
+test("最新の行が休場日（労働者の日）なら、その前の営業日を最新とする", async () => {
+  const open = H.syntheticRows("2024-06-03", "2026-09-04");
+  const all = [...open, { date: "2026-09-07", close: 30 }];
+  const dir = tmp();
+  assert.equal(await go(dir, server({ body: H.toCboeCsv(all) }), "2026-09-08 10:00"), 0);
+  assert.equal(readRisk(dir).vix.date, "2026-09-04");
+  assert.equal(await go(dir, server(), "2026-09-08 10:05", ["--check-fresh"]), 0);
+});

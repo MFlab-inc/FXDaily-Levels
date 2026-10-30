@@ -54,21 +54,24 @@ async function fetchVix({ nowMs, fetchImpl, sleep, prevVix }) {
   } catch (e) {
     return { error: `VIX：Cboe の VIX_History.csv の形式が想定と違います: ${e.message}` };
   }
-  const snap = vixSnapshot(parsed.rows, cfg.VIX);
-  if (snap.error) return { error: `VIX：${snap.error}` };
   const nyToday = isoDate(nyWallMs(nowMs));
-  if (snap.date > nyToday) return { error: `VIX：最新の行の日付 ${snap.date} が、米東部の今日（${nyToday}）より先です` };
+  const lastRow = parsed.rows[parsed.rows.length - 1].date;
+  if (lastRow > nyToday) return { error: `VIX：最新の行の日付 ${lastRow} が、米東部の今日（${nyToday}）より先です` };
+  // NYSE の休場日の行は使わない。Cboe のファイルには、米国の祝日（感謝祭・労働者の日など）にも行がある（SPEC 3節）
+  const openRows = parsed.rows.filter((r) => isOpen(r.date, cfg.EXTRA_CLOSED_DATES));
+  const snap = vixSnapshot(openRows, cfg.VIX);
+  if (snap.error) return { error: `VIX：${snap.error}` };
 
   // 確認（止めはしないが、記録して気づけるようにする）
   const warnings = [];
   if (parsed.skipped.length) {
     warnings.push(`VIX：順位に使わない古い行のうち${parsed.skipped.length}行を、形式の問題で飛ばしました（最初の1件：${parsed.skipped[0]}）`);
   }
-  const windowDates = parsed.rows.slice(-cfg.VIX.window).map((r) => r.date);
+  const windowDates = openRows.slice(-cfg.VIX.window).map((r) => r.date);
   const gaps = missingOpenDays(windowDates, cfg.EXTRA_CLOSED_DATES);
   if (gaps.length) warnings.push(`VIX：順位の範囲（${snap.window_start}〜${snap.date}）に、開いているはずなのに行が無い日があります：${gaps.join("、")}`);
-  const onClosed = windowDates.filter((d) => !isOpen(d, cfg.EXTRA_CLOSED_DATES));
-  if (onClosed.length) warnings.push(`VIX：順位の範囲に、休場のはずの日の行があります：${onClosed.join("、")}`);
+  // 除いた休場日の行（順位の範囲の期間内）。想定どおりの動きなので警告にはしない
+  const excludedClosedDays = parsed.rows.filter((r) => !isOpen(r.date, cfg.EXTRA_CLOSED_DATES) && r.date >= snap.window_start).map((r) => r.date);
   if (prevVix && typeof prevVix.date === "string" && snap.date < prevVix.date) {
     warnings.push(`VIX：取得したファイルの最新日（${snap.date}）が、前回の risk.json（${prevVix.date}）より古くなっています`);
   }
@@ -76,6 +79,7 @@ async function fetchVix({ nowMs, fetchImpl, sleep, prevVix }) {
   return {
     vix: {
       ...rest,
+      excluded_closed_days: excludedClosedDays,
       warnings,
       source: { url: cfg.VIX.url, last_modified: fetched.lastModified, fetched_at: toJstIso(nowMs) },
       history,
