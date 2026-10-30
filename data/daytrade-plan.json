@@ -5,39 +5,39 @@
     "note": "未確定の判断はありません（確定した解釈は docs/daytrade-plan-spec.md 10節、経緯は docs/daytrade-plan-impl-notes.md）"
   },
   "plan_date": "2026-10-30",
-  "run": "design",
-  "status_updated_at": "2026-10-30T15:05:51+09:00",
+  "run": "status",
+  "status_updated_at": "2026-10-30T16:05:55+09:00",
   "expires_at": "2026-10-31T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-10-30T15:05:19+09:00",
+        "as_of": "2026-10-30T16:05:22+09:00",
         "age_min": 1,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-10-30T15:05:24+09:00",
+        "as_of": "2026-10-30T16:05:26+09:00",
         "age_min": 0,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-10-30T15:05:24+09:00",
+        "as_of": "2026-10-30T16:05:26+09:00",
         "age_min": 0,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-10-30 14:45",
-      "newest_last_closed": "2026-10-30 14:45",
+      "oldest_last_closed": "2026-10-30 15:45",
+      "newest_last_closed": "2026-10-30 15:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-10-30 14:00",
-      "newest": "2026-10-30 14:00"
+      "oldest": "2026-10-30 15:00",
+      "newest": "2026-10-30 15:00"
     },
     "stale": false,
     "daily": {
@@ -67,7 +67,7 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-10-30T15:05:19+09:00",
+    "as_of": "2026-10-30T16:05:22+09:00",
     "date": "2026-10-30",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
@@ -126,13 +126,13 @@
       ]
     },
     {
-      "time_jst": "14:30",
-      "datetime_jst": "2026-10-30T14:30:00+09:00",
+      "time_jst": "15:30",
+      "datetime_jst": "2026-10-30T15:30:00+09:00",
       "currency": "JPY",
       "impact": "High",
       "event": "BOJ Press Conference",
-      "start": "2026-10-30T14:15:00+09:00",
-      "end": "2026-10-30T15:00:00+09:00",
+      "start": "2026-10-30T15:15:00+09:00",
+      "end": "2026-10-30T16:00:00+09:00",
       "symbols": [
         "USDJPY",
         "EURJPY"
@@ -351,12 +351,12 @@
         "end": "2026-10-30T12:32:00+09:00"
       },
       {
-        "time_jst": "14:30",
+        "time_jst": "15:30",
         "currency": "JPY",
         "impact": "High",
         "event": "BOJ Press Conference",
-        "start": "2026-10-30T14:15:00+09:00",
-        "end": "2026-10-30T15:00:00+09:00"
+        "start": "2026-10-30T15:15:00+09:00",
+        "end": "2026-10-30T16:00:00+09:00"
       },
       {
         "time_jst": "21:30",
@@ -485,12 +485,12 @@
         "end": "2026-10-30T12:32:00+09:00"
       },
       {
-        "time_jst": "14:30",
+        "time_jst": "15:30",
         "currency": "JPY",
         "impact": "High",
         "event": "BOJ Press Conference",
-        "start": "2026-10-30T14:15:00+09:00",
-        "end": "2026-10-30T15:00:00+09:00"
+        "start": "2026-10-30T15:15:00+09:00",
+        "end": "2026-10-30T16:00:00+09:00"
       },
       {
         "time_jst": "16:29",
@@ -540,7 +540,7 @@
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-10-30T15:05:24+09:00",
+      "as_of": "2026-10-30T16:05:26+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "WAIT",
@@ -559,7 +559,7 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-10-30T15:04:12+09:00",
+        "generated_intraday": "2026-10-30T16:04:12+09:00",
         "age_min": 2
       },
       "pairs": {
@@ -569,7 +569,7 @@
             "range_today": 0.835,
             "range_vs_adr": 1.027,
             "spike_flag": false,
-            "updated_at": "2026-10-30T15:04:12+09:00"
+            "updated_at": "2026-10-30T16:04:12+09:00"
           }
         },
         "EURUSD": {
@@ -578,7 +578,7 @@
             "range_today": 0.00545,
             "range_vs_adr": 0.826,
             "spike_flag": false,
-            "updated_at": "2026-10-30T15:04:12+09:00"
+            "updated_at": "2026-10-30T16:04:12+09:00"
           }
         },
         "GBPUSD": {
@@ -590,7 +590,7 @@
             "range_today": 0.00249,
             "range_vs_adr": 0.562,
             "spike_flag": false,
-            "updated_at": "2026-10-30T15:04:12+09:00"
+            "updated_at": "2026-10-30T16:04:12+09:00"
           }
         },
         "NZDUSD": {
@@ -602,7 +602,7 @@
             "range_today": 0.00354,
             "range_vs_adr": 0.528,
             "spike_flag": false,
-            "updated_at": "2026-10-30T15:04:12+09:00"
+            "updated_at": "2026-10-30T16:04:12+09:00"
           }
         },
         "USDCHF": {
@@ -614,19 +614,19 @@
         "EURGBP": {
           "state": "ok",
           "items": {
-            "range_today": 0.00151,
-            "range_vs_adr": 0.473,
+            "range_today": 0.00198,
+            "range_vs_adr": 0.621,
             "spike_flag": false,
-            "updated_at": "2026-10-30T15:04:12+09:00"
+            "updated_at": "2026-10-30T16:04:12+09:00"
           }
         },
         "XAUUSD": {
           "state": "ok",
           "items": {
-            "range_today": 42.69,
-            "range_vs_adr": 0.63,
+            "range_today": 48.95,
+            "range_vs_adr": 0.723,
             "spike_flag": false,
-            "updated_at": "2026-10-30T15:04:12+09:00"
+            "updated_at": "2026-10-30T16:04:12+09:00"
           }
         }
       }
@@ -681,11 +681,175 @@
   "order_ok": true,
   "banners": [],
   "design_missing": false,
-  "candidates": [],
+  "candidates": [
+    {
+      "id": "2026-10-30:B:XAUUSD:sell",
+      "plan_date": "2026-10-30",
+      "setup": "B",
+      "symbol": "XAUUSD",
+      "side": "sell",
+      "strength": 3,
+      "alignment": "3/3 Down",
+      "dirs": [
+        "↓",
+        "↓",
+        "↓"
+      ],
+      "note": "過去の実績が悪い",
+      "ref": {
+        "label": "東京レンジ安値",
+        "price": 3988.1
+      },
+      "band": {
+        "low": 3988.1,
+        "high": 3989.5
+      },
+      "worst_entry": 3988.1,
+      "price": 3983.63,
+      "distance_pips": 44.7,
+      "atr_pips": 140.4,
+      "adr_used_pct": 72.6,
+      "adr_remaining_pips": 184.6,
+      "obstacle": {
+        "label": "S2",
+        "price": 3968.82
+      },
+      "pip_value_jpy": 1577,
+      "schemes": {
+        "A": {
+          "pass": true,
+          "reason": null,
+          "reason_text": null,
+          "k": 0.5,
+          "sl": 3995.15,
+          "sl_pips": 70.5,
+          "tp1": 3968.9,
+          "profit_pips": 192,
+          "rr": 2.72,
+          "cost_cap_pips": 34.5,
+          "cost_threshold_pips": 1.2,
+          "lots": {
+            "A": 0.02,
+            "B": 0.21
+          },
+          "commission_jpy": {
+            "A": 20,
+            "B": 213
+          }
+        },
+        "B": {
+          "pass": false,
+          "reason": "cost_low",
+          "reason_text": "コスト不足",
+          "k": 1,
+          "sl": 4002.15,
+          "sl_pips": 140.5,
+          "tp1": 3968.9,
+          "profit_pips": 192,
+          "rr": 1.37,
+          "cost_cap_pips": -7.5,
+          "cost_threshold_pips": 1.2,
+          "lots": {
+            "A": 0.01,
+            "B": 0.1
+          },
+          "commission_jpy": {
+            "A": 10,
+            "B": 101
+          }
+        }
+      },
+      "levels": {
+        "daily": {
+          "Pivot": 4032.56,
+          "R1": 4058.96,
+          "R2": 4096.29,
+          "S1": 3995.23,
+          "S2": 3968.82,
+          "前日高値": 4069.89,
+          "前日安値": 4006.15
+        },
+        "h1_high_groups": [
+          {
+            "min": 4009.62,
+            "max": 4013,
+            "count": 4
+          },
+          {
+            "min": 4019.75,
+            "max": 4027.66,
+            "count": 8
+          },
+          {
+            "min": 4030.8,
+            "max": 4040.54,
+            "count": 9
+          }
+        ],
+        "h1_low_groups": [
+          {
+            "min": 3988.1,
+            "max": 3990,
+            "count": 3
+          },
+          {
+            "min": 3996.48,
+            "max": 3997.2,
+            "count": 2
+          },
+          {
+            "min": 4003.38,
+            "max": 4011.07,
+            "count": 6
+          },
+          {
+            "min": 4015.9,
+            "max": 4024.9,
+            "count": 12
+          }
+        ],
+        "h1_window": 24,
+        "atr_pips": 140.4,
+        "tokyo": {
+          "high": 4019.75,
+          "low": 3988.1
+        }
+      },
+      "confirm": "帯に到達したあと、M15がレンジ安値（3988.10）より下で陰線確定",
+      "run": "design-b",
+      "added_by": "status",
+      "generated_at": "2026-10-30T16:05:55+09:00",
+      "design_slot": null,
+      "expires_at": "2026-10-31T03:00:00+09:00",
+      "entry_state": {
+        "ok": true,
+        "reasons": []
+      },
+      "stops": [
+        {
+          "time_jst": "21:30",
+          "currency": "USD",
+          "impact": "Medium",
+          "event": "Employment Cost Index q/q",
+          "start": "2026-10-30T21:15:00+09:00",
+          "end": "2026-10-30T22:00:00+09:00"
+        }
+      ],
+      "calendar_ok": true,
+      "state": {
+        "reached": "未到達",
+        "reached_at": null,
+        "expired": false,
+        "price_in_band": false
+      },
+      "same_direction_group": "",
+      "rank": 1
+    }
+  ],
   "summary": {
-    "candidate_rows": 0,
+    "candidate_rows": 1,
     "scheme_pass": {
-      "A": 0,
+      "A": 1,
       "B": 0
     },
     "rejections": {
@@ -1336,5 +1500,8 @@
     ],
     "no_basis": [],
     "not_formed": []
-  }
+  },
+  "additions_b": [
+    "2026-10-30:B:XAUUSD:sell"
+  ]
 }
