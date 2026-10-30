@@ -59,7 +59,8 @@ async function fetchVix({ nowMs, fetchImpl, sleep, prevVix }) {
   if (lastRow > nyToday) return { error: `VIX：最新の行の日付 ${lastRow} が、米東部の今日（${nyToday}）より先です` };
   // 期待する最新日（米東部18:00を過ぎた営業日）より新しい行は、取引時間中の途中の値かもしれないので使わない（SPEC 4節）
   const expected = expectedLatest(nowMs, { readyMin: cfg.READY_ET_MIN, extraClosed: cfg.EXTRA_CLOSED_DATES });
-  const unconfirmed = parsed.rows.filter((r) => r.date > expected).map((r) => r.date);
+  // 休場日の行は excluded_closed_days の方に載せる（同じ日を2つの欄に重ねない）
+  const unconfirmed = parsed.rows.filter((r) => r.date > expected && isOpen(r.date, cfg.EXTRA_CLOSED_DATES)).map((r) => r.date);
   // NYSE の休場日の行は使わない（SPEC 3節。順位は NYSE の営業日で数える定義。Cboe のファイルには米国の祝日にも行がある）
   const openRows = parsed.rows.filter((r) => r.date <= expected && isOpen(r.date, cfg.EXTRA_CLOSED_DATES));
   const snap = vixSnapshot(openRows, cfg.VIX);
@@ -67,7 +68,8 @@ async function fetchVix({ nowMs, fetchImpl, sleep, prevVix }) {
   // 配信元から古い版のファイルが返ることがある（2026-10-30、Last-Modified が 01:31→01:10 GMT に戻った）。
   // 前回より古い日付には戻さず、前回の値を残す（SPEC 4節）
   if (prevVix && typeof prevVix.date === "string" && snap.date < prevVix.date) {
-    return { keepPrev: `VIX：取得したファイルの最新日（${snap.date}）が前回（${prevVix.date}）より古いため、前回の値を残しました（配信元の古い版の可能性。Last-Modified：${fetched.lastModified ?? "なし"}）` };
+    // 文に Last-Modified を入れない（古い版が続くと文が毎回変わり、risk.json のコミットが増えるため）
+    return { keepPrev: `VIX：取得したファイルの最新日（${snap.date}）が前回（${prevVix.date}）より古いため、前回の値を残しました（配信元の古い版の可能性）` };
   }
 
   // 確認（止めはしないが、記録して気づけるようにする）

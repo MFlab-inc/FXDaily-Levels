@@ -257,3 +257,27 @@ test("イベント警戒が unknown（予定表が足りない）なら、--chec
   assert.equal(await go(dir, server(), "2027-11-29 10:05", ["--check-fresh"], logs), 1);
   assert.match(logs.join("\n"), /^STALE: イベント警戒：unknown/m);
 });
+
+test("感謝祭の夕方に取ると、その日の行は excluded_closed_days だけに載り、unconfirmed_rows_ignored には重ねない", async () => {
+  const open = H.syntheticRows("2024-06-03", "2026-11-25");
+  const all = [...open, { date: "2026-11-26", close: 30 }];
+  const dir = tmp();
+  // 11/27 06:00 JST＝米東部 11/26 16:00（感謝祭）。期待する最新日は 11/25
+  assert.equal(await go(dir, server({ body: H.toCboeCsv(all) }), "2026-11-27 06:00"), 0);
+  const r = readRisk(dir);
+  assert.equal(r.vix.date, "2026-11-25");
+  assert.ok(r.vix.excluded_closed_days.includes("2026-11-26"));
+  assert.deepEqual(r.vix.unconfirmed_rows_ignored, []);
+});
+
+test("古い版を続けて受け取っても、警告の文は同じ（Last-Modified を文に入れない＝コミットが増えない）", async () => {
+  const dir = tmp();
+  await go(dir, server({ to: "2026-10-30" }), "2026-10-31 10:00");
+  await go(dir, server({ to: "2026-10-27" }), "2026-10-31 10:30");
+  const before = fs.readFileSync(path.join(dir, "risk.json"), "utf8");
+  const srv = server({ to: "2026-10-27" });
+  const lm = srv.fetchImpl;
+  srv.fetchImpl = async (url) => { const res = await lm(url); return new Response(await res.text(), { status: 200, headers: { "last-modified": "Sat, 31 Oct 2026 01:00:00 GMT" } }); };
+  assert.equal(await go(dir, srv, "2026-10-31 10:45"), 0);
+  assert.equal(fs.readFileSync(path.join(dir, "risk.json"), "utf8"), before);
+});
