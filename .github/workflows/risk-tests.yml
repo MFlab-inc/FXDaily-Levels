@@ -46,12 +46,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+      # 結果は注釈（::notice）でも出す。ログ本文を読めない環境（作業用の Claude のセッションなど）からも、
+      # check-runs の annotations API で読めるようにするため。改行は入れない。
       - name: Fetch live data into a temporary folder
         run: |
-          node risk/run-daily.js --data-dir "$RUNNER_TEMP/risk"
+          set +e
+          node risk/run-daily.js --data-dir "$RUNNER_TEMP/risk" > "$RUNNER_TEMP/out.txt" 2>&1
+          code=$?
+          cat "$RUNNER_TEMP/out.txt"
+          while IFS= read -r line; do echo "::notice title=run-daily（終了コード ${code}）::${line}"; done < "$RUNNER_TEMP/out.txt"
+          [ -f "$RUNNER_TEMP/risk/risk.json" ] || exit 1
           node -e '
             const d = require(process.env.RUNNER_TEMP + "/risk/risk.json");
             const { history, ...v } = d.vix || {};
-            console.log(JSON.stringify({ vix: v, event: d.event, generation: d.generation }, null, 2));
-            for (const h of history || []) console.log(`${h.date} close=${h.close} rank=${h.rank_pct}`);
+            const src = v.source || {};
+            console.log("::notice title=VIX（実データ）::" + JSON.stringify({ date: v.date, close: v.close, rank_pct: v.rank_pct, count_le: v.count_le, window_start: v.window_start, last_modified: src.last_modified, warnings: v.warnings }));
+            console.log("::notice title=VIXの履歴（実データ、日付=終値/順位）::" + (history || []).map((h) => `${h.date}=${h.close}/${h.rank_pct}`).join(" "));
+            const e = d.event || {};
+            console.log("::notice title=イベント警戒::" + JSON.stringify({ level: e.level, base_jst: e.base_jst, count: e.count, items: (e.items || []).map((i) => `${i.kind}@${i.at_jst}`) }));
+            console.log("::notice title=generation::" + JSON.stringify(d.generation));
           '
+          exit $code
