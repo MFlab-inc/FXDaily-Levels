@@ -46,6 +46,8 @@ test("取得：10/30 10:00 に実行すると、VIX は 10/29 まで・順位は
   assert.deepEqual(r.generation.errors, []);
   assert.equal(srv.calls.length, 1);
   assert.ok(srv.calls.every((u) => !u.includes("stlouisfed")), "FRED は使わない");
+  // 公開リポジトリに Cboe の終値を置かない（順位と個数だけ。SPEC 6節）
+  assert.ok(!/"close"/.test(fs.readFileSync(path.join(dir, "risk.json"), "utf8")));
 });
 
 test("--if-stale：VIX が最新で、イベント警戒も今日の分なら、接続せず・書き換えない", async () => {

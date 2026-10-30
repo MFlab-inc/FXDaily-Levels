@@ -35,6 +35,7 @@ jobs:
         run: node --test risk/test/*.test.js
 
   # 参考：PR の段階で、Cboe の実データを実際に取得できるか、順位がいくつになるかを見る（リポジトリには書かない）。
+  # 公開リポジトリのため、終値そのものはログにも出さない（順位と個数だけ。SPEC 6節）。
   # 取得できなくても試験の合否には影響させない（相手のサイトの都合で PR が止まらないように）。
   live-check:
     if: ${{ github.event_name == 'pull_request' }}
@@ -60,8 +61,8 @@ jobs:
             const d = require(process.env.RUNNER_TEMP + "/risk/risk.json");
             const { history, ...v } = d.vix || {};
             const src = v.source || {};
-            console.log("::notice title=VIX（実データ）::" + JSON.stringify({ date: v.date, close: v.close, rank_pct: v.rank_pct, count_le: v.count_le, window_start: v.window_start, last_modified: src.last_modified, warnings: v.warnings }));
-            console.log("::notice title=VIXの履歴（実データ、日付=終値/順位）::" + (history || []).map((h) => `${h.date}=${h.close}/${h.rank_pct}`).join(" "));
+            console.log("::notice title=VIX（実データ）::" + JSON.stringify({ date: v.date, rank_pct: v.rank_pct, count_le: v.count_le, window_start: v.window_start, last_modified: src.last_modified, warnings: v.warnings }));
+            console.log("::notice title=VIXの履歴（実データ、日付=順位）::" + (history || []).map((h) => `${h.date}=${h.rank_pct}`).join(" "));
             const e = d.event || {};
             console.log("::notice title=イベント警戒::" + JSON.stringify({ level: e.level, base_jst: e.base_jst, count: e.count, items: (e.items || []).map((i) => `${i.kind}@${i.at_jst}`) }));
             console.log("::notice title=generation::" + JSON.stringify(d.generation));

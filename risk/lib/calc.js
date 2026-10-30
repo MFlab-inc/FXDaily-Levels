@@ -16,7 +16,8 @@ function rankAt(values, i, window) {
   return { count_le: countLe, rank_pct: Math.round((countLe * 1000) / window) / 10 };
 }
 
-// 古い順の行（{date, close}）から、最新日の順位と、直近 historyDays 日ぶんの日ごとの順位を作る
+// 古い順の行（{date, close}）から、最新日の順位と、直近 historyDays 日ぶんの日ごとの順位を作る。
+// 終値そのものは出さない（公開リポジトリに Cboe のデータを置かないため。SPEC 6節）
 function vixSnapshot(rows, { window, thresholdPct, historyDays }) {
   const closes = rows.map((r) => r.close);
   const last = rows.length - 1;
@@ -25,11 +26,10 @@ function vixSnapshot(rows, { window, thresholdPct, historyDays }) {
   const history = [];
   for (let i = Math.max(window - 1, rows.length - historyDays); i <= last; i++) {
     const r = rankAt(closes, i, window);
-    history.push({ date: rows[i].date, close: round2(rows[i].close), rank_pct: r.rank_pct });
+    history.push({ date: rows[i].date, rank_pct: r.rank_pct });
   }
   return {
     date: rows[last].date,
-    close: round2(rows[last].close),
     rank_pct: latest.rank_pct,
     count_le: latest.count_le,
     window,
@@ -39,7 +39,5 @@ function vixSnapshot(rows, { window, thresholdPct, historyDays }) {
     history,
   };
 }
-
-const round2 = (x) => Math.round(x * 100) / 100;
 
 module.exports = { rankAt, vixSnapshot };

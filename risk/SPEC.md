@@ -86,6 +86,7 @@
 ## 6. 出典・利用条件
 
 - VIX：Cboe「VIX Index Historical Data」。ページの注記は「furnished without responsibility for accuracy」。**Cboe の「Use of Cboe Content」（https://www.cboe.com/use-of-content）には「Cboe のロゴ・データ・画像などを使う前に Cboe の事前承認が必要」とある。公開記事に順位（派生した値）を載せることが該当するかは、確認できていない。** いまの記事も（友人資料経由で）同じ VIX の順位を載せており、同じ論点がある。記事を自前の値に切り替える前に、扱いを決める（9節）。
+- **このリポジトリは公開されている**（GitHub の public。`data/` は誰でも読める）。Cboe のデータをそのまま再配布しないよう、`risk.json` と試験のログ（`live-check`）には **VIX の終値を載せず、順位と個数だけ**を出す。終値は計算の途中でだけ使う。
 - 予定：各発表元の公式日程。
 - `risk.json` の `citations` に出典の文を持つ。
 
@@ -94,13 +95,13 @@
 | キー | 内容 |
 |---|---|
 | `as_of` | 作った時刻（日本時間） |
-| `vix.date` / `close` | 最新の米国営業日と終値（小数2桁） |
+| `vix.date` | 最新の米国営業日（終値そのものは載せない。6節） |
 | `vix.rank_pct` / `count_le` / `window` / `window_start` | 順位（%）、当日以下の日数、252、範囲の最初の日 |
 | `vix.threshold_pct` / `over_threshold` | 70、基準以上か |
 | `vix.excluded_closed_days` | 順位の範囲の期間内で、休場日として除いた Cboe の行の日付 |
 | `vix.warnings` | VIX の取得時の警告（穴・飛ばした古い行など） |
 | `vix.source` | 取得先 URL、`last_modified`、`fetched_at` |
-| `vix.history` | 直近60営業日の `{date, close, rank_pct}` |
+| `vix.history` | 直近60営業日の `{date, rank_pct}` |
 | `event.level` | `High`／`Normal`／`unknown` |
 | `event.base_jst` / `window_end_jst` | 窓の始まりと終わり |
 | `event.count` / `high_count` / `items` | 窓の中の件数、2、予定の一覧（日本時間・種類・名前・現地の日時） |
@@ -127,4 +128,4 @@
 
 | 版 | 日付 | 内容 |
 |---|---|---|
-| 1.0 | 2026-10-30 | 新設。VIX 順位（Cboe 公式 CSV、NYSE の252営業日）とイベント警戒（6つの中央銀行・米雇用統計・米CPI、日本時間の9:00から7日以内に2件以上で High）。PR の live-check で、Cboe のファイルに米国の祝日の行があると分かったため、休場日の行を除く形にした（除かないと、GPT の値と最大2.8ポイントずれた）。試験42件 |
+| 1.0 | 2026-10-30 | 新設。VIX 順位（Cboe 公式 CSV、NYSE の252営業日）とイベント警戒（6つの中央銀行・米雇用統計・米CPI、日本時間の9:00から7日以内に2件以上で High）。PR の live-check で、Cboe のファイルに米国の祝日の行があると分かったため、休場日の行を除く形にした（除かないと、GPT の値と最大2.8ポイントずれた）。公開リポジトリのため、VIX の終値は risk.json・ログに載せない（順位と個数だけ）。試験42件 |

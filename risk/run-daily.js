@@ -172,7 +172,7 @@ async function run({
   const tmp = `${riskPath}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(doc, null, 2) + "\n");
   fs.renameSync(tmp, riskPath);
-  log(`保存完了: ${riskPath}（VIX ${vix ? `${vix.date} 終値 ${vix.close}・順位 ${vix.rank_pct}%` : "なし"}、イベント警戒 ${event.level}（${event.count ?? "-"}件）、status=${doc.generation.status}）`);
+  log(`保存完了: ${riskPath}（VIX ${vix ? `${vix.date} 順位 ${vix.rank_pct}%` : "なし"}、イベント警戒 ${event.level}（${event.count ?? "-"}件）、status=${doc.generation.status}）`);
   for (const w of warnings) log(`::warning title=取引可否の指標の確認::${w}`);
   return errors.length ? 1 : 0;
 }
