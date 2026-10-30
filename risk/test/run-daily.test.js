@@ -178,3 +178,82 @@ test("最新の行が休場日（労働者の日）なら、その前の営業�
   assert.equal(readRisk(dir).vix.date, "2026-09-04");
   assert.equal(await go(dir, server(), "2026-09-08 10:05", ["--check-fresh"]), 0);
 });
+
+test("配信元から古い版が返っても、前回より古い日付には戻さない（前回の値を残し、警告に記録。終了コード0）", async () => {
+  const dir = tmp();
+  await go(dir, server({ to: "2026-10-30" }), "2026-10-31 10:00");
+  const logs = [];
+  assert.equal(await go(dir, server({ to: "2026-10-27" }), "2026-10-31 10:30", [], logs), 0);
+  const r = readRisk(dir);
+  assert.equal(r.vix.date, "2026-10-30");
+  assert.equal(r.generation.status, "warning");
+  assert.match(r.generation.warnings.join("\n"), /前回（2026-10-30）より古いため、前回の値を残しました/);
+});
+
+test("期待する最新日より新しい行（米国の取引時間中の途中の値かもしれない）は使わない。18:00 を過ぎたら取り直す", async () => {
+  const dir = tmp();
+  // 10/30 03:00 JST＝米東部 10/29 14:00。ファイルに 10/29 の行があっても、期待する最新日は 10/28
+  assert.equal(await go(dir, server({ to: "2026-10-29" }), "2026-10-30 03:00"), 0);
+  let r = readRisk(dir);
+  assert.equal(r.vix.date, "2026-10-28");
+  assert.deepEqual(r.vix.unconfirmed_rows_ignored, ["2026-10-29"]);
+  // 米東部 18:00 を過ぎた（10/30 07:00 JST）--if-stale は、10/29 が無いので取り直す
+  const srv = server({ to: "2026-10-29" });
+  assert.equal(await go(dir, srv, "2026-10-30 07:00", ["--if-stale"]), 0);
+  assert.equal(srv.calls.length, 1);
+  r = readRisk(dir);
+  assert.equal(r.vix.date, "2026-10-29");
+  assert.deepEqual(r.vix.unconfirmed_rows_ignored, []);
+});
+
+test("失敗の文に、CSV の行の中身や値を入れない（risk.json は公開される）", async () => {
+  const rows = H.syntheticRows("2024-01-02", "2026-10-29");
+  const lines = H.toCboeCsv(rows).trim().split("\n");
+  lines.splice(1, 0, "06/03/1990,20.123456,20.123456,20.123456,oops"); // 古い側の壊れた行 → 飛ばして警告
+  const dir = tmp();
+  assert.equal(await go(dir, server({ body: lines.join("\n") }), "2026-10-30 10:00"), 0);
+  let text = fs.readFileSync(path.join(dir, "risk.json"), "utf8");
+  assert.match(text, /形式の問題で飛ばしました/);
+  assert.ok(!text.includes("20.123456") && !text.includes("oops"));
+  // 新しい側の壊れた行 → 失敗の記録
+  const lines2 = H.toCboeCsv(rows).trim().split("\n");
+  lines2[lines2.length - 1] = "10/29/2026,17.654321,17.654321,17.654321,999.987654";
+  const dir2 = tmp();
+  assert.equal(await go(dir2, server({ body: lines2.join("\n") }), "2026-10-30 10:00"), 1);
+  text = fs.readFileSync(path.join(dir2, "risk.json"), "utf8");
+  assert.match(text, /想定の範囲/);
+  assert.ok(!text.includes("17.654321") && !text.includes("999.987654"));
+});
+
+test("失敗の記録が残っていれば、同じ日の --if-stale でもスキップせずに作り直し、記録を消す", async () => {
+  const dir = tmp();
+  await go(dir, server(), "2026-10-30 10:00");
+  assert.equal(await go(dir, server({ status: 403 }), "2026-10-30 10:30"), 1); // 手動の強制取得が失敗
+  assert.equal(readRisk(dir).generation.status, "error");
+  const srv = server();
+  assert.equal(await go(dir, srv, "2026-10-30 11:00", ["--if-stale"]), 0);
+  assert.equal(srv.calls.length, 0); // VIX は最新なので取りに行かない
+  const r = readRisk(dir);
+  assert.equal(r.generation.status, "ok");
+  assert.deepEqual(r.generation.errors, []);
+  assert.equal(r.vix.date, "2026-10-29");
+});
+
+test("順位の範囲に、営業日なのに行が無い日があれば警告する", async () => {
+  const rows = H.syntheticRows("2024-06-03", "2026-10-29").filter((r) => r.date !== "2026-10-14");
+  const dir = tmp();
+  assert.equal(await go(dir, server({ body: H.toCboeCsv(rows) }), "2026-10-30 10:00"), 0);
+  const r = readRisk(dir);
+  assert.equal(r.generation.status, "warning");
+  assert.match(r.vix.warnings.join("\n"), /行が無い日があります：2026-10-14/);
+});
+
+test("イベント警戒が unknown（予定表が足りない）なら、--check-fresh は STALE", async () => {
+  const dir = tmp();
+  assert.equal(await go(dir, server({ to: "2027-11-26" }), "2027-11-29 10:00"), 0);
+  const r = readRisk(dir);
+  assert.equal(r.event.level, "unknown");
+  const logs = [];
+  assert.equal(await go(dir, server(), "2027-11-29 10:05", ["--check-fresh"], logs), 1);
+  assert.match(logs.join("\n"), /^STALE: イベント警戒：unknown/m);
+});

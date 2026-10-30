@@ -48,7 +48,7 @@ function validDate(s) {
 
 // 予定表（# で始まる行は注記）を読む。想定外の行は黙って捨てず、行番号つきで失敗にする
 function parseEventsCsv(text) {
-  const lines = String(text).replace(/^﻿/, "").split(/\r?\n/);
+  const lines = String(text).replace(/^\uFEFF/, "").split(/\r?\n/);
   let header = null;
   const rows = [], seen = new Set();
   lines.forEach((raw, i) => {

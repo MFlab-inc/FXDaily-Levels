@@ -12,7 +12,7 @@ test("Cboe の形（DATE,OPEN,HIGH,LOW,CLOSE・MM/DD/YYYY・小数6桁）を読�
 });
 
 test("BOM・CRLF・末尾の空行を許す。並びが逆でも古い順に並べ直す", () => {
-  const text = "﻿DATE,OPEN,HIGH,LOW,CLOSE\r\n10/29/2026,1,1,1,17.120000\r\n10/28/2026,1,1,1,18.000000\r\n\r\n";
+  const text = "\uFEFFDATE,OPEN,HIGH,LOW,CLOSE\r\n10/29/2026,1,1,1,17.120000\r\n10/28/2026,1,1,1,18.000000\r\n\r\n";
   const { rows } = parseVixCsv(text);
   assert.deepEqual(rows.map((r) => r.date), ["2026-10-28", "2026-10-29"]);
 });

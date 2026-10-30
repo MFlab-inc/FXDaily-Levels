@@ -6,7 +6,7 @@
  *   ok      … 期待する最新日（米東部18:00を過ぎた営業日）まで入っている
  *   pending … 期待する日の値はまだ無いが、掲載のはずの時刻から STALE_AFTER_HOURS 以内（更新待ち）
  *   stale   … それより古い、または risk.json が無い・形式が違う・VIX が無い
- * イベント警戒：基準時刻（日本時間のその日の9:00）が「いま」の日のものなら ok、違えば stale。
+ * イベント警戒：基準時刻（日本時間のその日の9:00）が「いま」の日のもので、High か Normal なら ok。違う日のもの、unknown は stale。
  */
 const cfg = require("../config");
 const { expectedLatest } = require("./calendar");
@@ -38,6 +38,10 @@ function evaluateEvent(doc, nowMs) {
   const base = toJstIso(baseMsOf(nowMs));
   if (!docOk(doc) || !doc.event || doc.event.base_jst !== base) {
     return { state: "stale", reasons: [`イベント警戒：基準時刻 ${base} の集計がありません（${doc && doc.event ? doc.event.base_jst : "なし"}）`] };
+  }
+  // unknown（予定表を読めない・予定表が窓の終わりまで届かない）は、予定表を直すまで赤にする
+  if (doc.event.level !== "High" && doc.event.level !== "Normal") {
+    return { state: "stale", reasons: [`イベント警戒：${doc.event.level}（${doc.event.reason || "理由なし"}）`] };
   }
   return { state: "ok", reasons: [] };
 }
