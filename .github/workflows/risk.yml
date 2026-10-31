@@ -1,0 +1,76 @@
+name: Risk Metrics
+
+# 取引可否の指標（自前の定義。仕様は risk/SPEC.md）：VIX 順位（Cboe 公式の VIX_History.csv）と、
+# イベント警戒（risk/events.csv の公式日程から、日本時間のその日の9:00から7日以内の最重要の予定の数）。
+# data/risk.json だけを書く。フィード（gpt-feed.*）には、まだ載せない（GPT の値との照合の期間中）。
+
+on:
+  schedule:
+    # VIX は米東部16:15に確定し、米東部18:00以降に取りに行く（SPEC 4節）。日本時間の朝に何度か起動する。
+    # 22〜23時台のUTCは翌日のJSTなので、日〜金（0-5）がJSTの月〜土。00〜01時台のUTCは同じ日のJSTなので月〜土（1-6）。
+    # イベント警戒は日本時間の日ごとに数え直すため、月曜（VIXは金曜の値のまま）にも起動する。
+    - cron: "10,40 22-23 * * 0-5"   # JST 月〜土 07:10〜08:40
+    - cron: "10,40 0-1 * * 1-6"     # JST 月〜土 09:10〜10:40
+  # rates.yml と同じく、Intraday Snapshot・Daily FX Data の完了のたびにも起動する（--if-stale）。
+  # GitHub の schedule は届かないことがあるため。VIX が最新で、イベント警戒も今日の分なら、何もせず数秒で終わる。
+  # workflows: の名前は、各ワークフローの name: と完全に同じにすること（risk/test/workflows.test.js が確かめる）。
+  workflow_run:
+    workflows: ["Intraday Snapshot", "Daily FX Data"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      if_stale:
+        description: "最新なら取得せず終了する。手動で必ず取得したい時はオフのまま"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# 同じ data/risk.json へ同時にpushしない（rates.yml と同じ考え方）
+concurrency:
+  group: risk-data
+  cancel-in-progress: false
+
+jobs:
+  risk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # ref を明示する（待たされた run が、先行の run のコミットより前の risk.json を読まないように。rates.yml と同じ）
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # VIX の取得に失敗しても、イベント警戒の更新と失敗の記録は risk.json に書く（このステップは赤になる）。
+      # そのため、次のコミットのステップは失敗しても動かす（!cancelled()）。
+      - name: Update risk metrics
+        run: node risk/run-daily.js ${{ (github.event_name != 'workflow_dispatch' || inputs.if_stale) && '--if-stale' || '' }}
+
+      - name: Commit and push risk
+        if: ${{ !cancelled() }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/risk.json
+          git diff --cached --quiet && echo "変更なし" && exit 0
+          git commit -m "risk: $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
+          for i in 1 2 3; do
+            git push && exit 0
+            echo "push失敗（${i}回目）。rebaseして再試行"
+            git pull --rebase origin "${GITHUB_REF_NAME}" || exit 1
+          done
+          echo "::error::data/risk.json のpushに3回失敗しました。取引可否の指標が更新されていません"
+          exit 1
+
+      # VIX が「古い」（掲載のはずの時刻から16時間を過ぎても入っていない）か、イベント警戒が今日の分でないときに赤くする
+      - name: Assert risk freshness
+        if: ${{ !cancelled() }}
+        run: node risk/run-daily.js --check-fresh

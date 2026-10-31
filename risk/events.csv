@@ -1,0 +1,168 @@
+# 最重要の予定表（イベント警戒の計算に使う。仕様は risk/SPEC.md 5節）
+# 日付・時刻は発表元の現地のもの。日付はすべて発表元の公式サイトで確認した（2026-10-30）。
+# 時刻が空欄の予定は、公式の日程ページに時刻の記載が無いもの（計算では現地の正午とみなす。SPEC 5-2）。
+#
+# kind の意味と確認先（公式）：
+#   FOMC … 米連邦公開市場委員会の声明（会合2日目）。https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+#          時刻14:00（米東部）は声明の発表文「For release at 2:00 p.m. EDT」（2026-09-16 の発表）による。
+#          2027年の日付は、FRBのページの注記どおり「直前の会合で確定するまでは暫定」。
+#   ECB  … ECB理事会の金融政策の決定（会合2日目）。https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html
+#          時刻はECB「Monetary policy decisions」のページの「14:15 CET」（フランクフルトの現地時刻）。
+#   BOJ  … 日銀 金融政策決定会合の最終日（結果の公表）。https://www.boj.or.jp/mopo/mpmsche_minu/index.htm
+#          公表の時刻は決まっていない（会合終了後）。
+#   BOE  … 英中銀 金融政策委員会（MPC）の発表日。https://www.bankofengland.co.uk/monetary-policy/upcoming-mpc-dates
+#   RBA  … 豪中銀 金融政策委員会の決定（会合2日目、シドニーの14:30）。https://www.rba.gov.au/schedules-events/calendar/
+#   BOC  … カナダ中銀の政策金利の発表（米東部の9:45）。
+#          https://www.bankofcanada.ca/2025/08/bank-canada-publishes-2026-schedule-policy-interest-rate-announcements-other-major-publications/
+#          https://www.bankofcanada.ca/2026/07/bank-canada-publishes-2027-schedule-policy-interest-rate-announcements-other-major-publications/
+#   NFP  … 米雇用統計（Employment Situation、米東部の8:30）。https://www.bls.gov/schedule/news_release/empsit.htm
+#   CPI  … 米消費者物価指数（米東部の8:30）。https://www.bls.gov/schedule/news_release/cpi.htm
+#          2026年1月分は、2025〜2026年の予算失効のため、雇用統計が2/6→2/11、CPIが2/11→2/13に変更
+#          （https://www.bls.gov/bls/2025-lapse-revised-release-dates.htm）。この表は変更後の日付。
+#
+# 日程が変わったら（政府機関の閉鎖などで米国の統計が延期された等）、この表を直す。
+date,time,tz,kind
+2026-01-09,08:30,America/New_York,NFP
+2026-01-13,08:30,America/New_York,CPI
+2026-01-23,,Asia/Tokyo,BOJ
+2026-01-28,09:45,America/Toronto,BOC
+2026-01-28,14:00,America/New_York,FOMC
+2026-02-03,14:30,Australia/Sydney,RBA
+2026-02-05,,Europe/London,BOE
+2026-02-05,14:15,Europe/Berlin,ECB
+2026-02-11,08:30,America/New_York,NFP
+2026-02-13,08:30,America/New_York,CPI
+2026-03-06,08:30,America/New_York,NFP
+2026-03-11,08:30,America/New_York,CPI
+2026-03-17,14:30,Australia/Sydney,RBA
+2026-03-18,09:45,America/Toronto,BOC
+2026-03-18,14:00,America/New_York,FOMC
+2026-03-19,,Asia/Tokyo,BOJ
+2026-03-19,,Europe/London,BOE
+2026-03-19,14:15,Europe/Berlin,ECB
+2026-04-03,08:30,America/New_York,NFP
+2026-04-10,08:30,America/New_York,CPI
+2026-04-28,,Asia/Tokyo,BOJ
+2026-04-29,09:45,America/Toronto,BOC
+2026-04-29,14:00,America/New_York,FOMC
+2026-04-30,,Europe/London,BOE
+2026-04-30,14:15,Europe/Berlin,ECB
+2026-05-05,14:30,Australia/Sydney,RBA
+2026-05-08,08:30,America/New_York,NFP
+2026-05-12,08:30,America/New_York,CPI
+2026-06-05,08:30,America/New_York,NFP
+2026-06-10,08:30,America/New_York,CPI
+2026-06-10,09:45,America/Toronto,BOC
+2026-06-11,14:15,Europe/Berlin,ECB
+2026-06-16,,Asia/Tokyo,BOJ
+2026-06-16,14:30,Australia/Sydney,RBA
+2026-06-17,14:00,America/New_York,FOMC
+2026-06-18,,Europe/London,BOE
+2026-07-02,08:30,America/New_York,NFP
+2026-07-14,08:30,America/New_York,CPI
+2026-07-15,09:45,America/Toronto,BOC
+2026-07-23,14:15,Europe/Berlin,ECB
+2026-07-29,14:00,America/New_York,FOMC
+2026-07-30,,Europe/London,BOE
+2026-07-31,,Asia/Tokyo,BOJ
+2026-08-07,08:30,America/New_York,NFP
+2026-08-11,14:30,Australia/Sydney,RBA
+2026-08-12,08:30,America/New_York,CPI
+2026-09-02,09:45,America/Toronto,BOC
+2026-09-04,08:30,America/New_York,NFP
+2026-09-10,14:15,Europe/Berlin,ECB
+2026-09-11,08:30,America/New_York,CPI
+2026-09-16,14:00,America/New_York,FOMC
+2026-09-17,,Europe/London,BOE
+2026-09-18,,Asia/Tokyo,BOJ
+2026-09-29,14:30,Australia/Sydney,RBA
+2026-10-02,08:30,America/New_York,NFP
+2026-10-14,08:30,America/New_York,CPI
+2026-10-28,09:45,America/Toronto,BOC
+2026-10-28,14:00,America/New_York,FOMC
+2026-10-29,14:15,Europe/Berlin,ECB
+2026-10-30,,Asia/Tokyo,BOJ
+2026-11-03,14:30,Australia/Sydney,RBA
+2026-11-05,,Europe/London,BOE
+2026-11-06,08:30,America/New_York,NFP
+2026-11-10,08:30,America/New_York,CPI
+2026-12-04,08:30,America/New_York,NFP
+2026-12-08,14:30,Australia/Sydney,RBA
+2026-12-09,09:45,America/Toronto,BOC
+2026-12-09,14:00,America/New_York,FOMC
+2026-12-10,08:30,America/New_York,CPI
+2026-12-17,,Europe/London,BOE
+2026-12-17,14:15,Europe/Berlin,ECB
+2026-12-18,,Asia/Tokyo,BOJ
+2027-01-08,08:30,America/New_York,NFP
+2027-01-13,08:30,America/New_York,CPI
+2027-01-22,,Asia/Tokyo,BOJ
+2027-01-27,09:45,America/Toronto,BOC
+2027-01-27,14:00,America/New_York,FOMC
+2027-02-04,,Europe/London,BOE
+2027-02-04,14:15,Europe/Berlin,ECB
+2027-02-05,08:30,America/New_York,NFP
+2027-02-09,14:30,Australia/Sydney,RBA
+2027-02-11,08:30,America/New_York,CPI
+2027-03-03,09:45,America/Toronto,BOC
+2027-03-05,08:30,America/New_York,NFP
+2027-03-10,08:30,America/New_York,CPI
+2027-03-17,14:00,America/New_York,FOMC
+2027-03-18,,Asia/Tokyo,BOJ
+2027-03-18,,Europe/London,BOE
+2027-03-18,14:15,Europe/Berlin,ECB
+2027-03-23,14:30,Australia/Sydney,RBA
+2027-04-02,08:30,America/New_York,NFP
+2027-04-13,08:30,America/New_York,CPI
+2027-04-28,,Asia/Tokyo,BOJ
+2027-04-28,09:45,America/Toronto,BOC
+2027-04-28,14:00,America/New_York,FOMC
+2027-04-29,,Europe/London,BOE
+2027-04-29,14:15,Europe/Berlin,ECB
+2027-05-04,14:30,Australia/Sydney,RBA
+2027-05-07,08:30,America/New_York,NFP
+2027-05-12,08:30,America/New_York,CPI
+2027-06-02,09:45,America/Toronto,BOC
+2027-06-04,08:30,America/New_York,NFP
+2027-06-09,14:00,America/New_York,FOMC
+2027-06-10,08:30,America/New_York,CPI
+2027-06-10,14:15,Europe/Berlin,ECB
+2027-06-11,,Asia/Tokyo,BOJ
+2027-06-17,,Europe/London,BOE
+2027-06-22,14:30,Australia/Sydney,RBA
+2027-07-02,08:30,America/New_York,NFP
+2027-07-14,08:30,America/New_York,CPI
+2027-07-21,09:45,America/Toronto,BOC
+2027-07-22,,Asia/Tokyo,BOJ
+2027-07-22,14:15,Europe/Berlin,ECB
+2027-07-28,14:00,America/New_York,FOMC
+2027-07-29,,Europe/London,BOE
+2027-08-06,08:30,America/New_York,NFP
+2027-08-10,14:30,Australia/Sydney,RBA
+2027-08-11,08:30,America/New_York,CPI
+2027-09-03,08:30,America/New_York,NFP
+2027-09-08,09:45,America/Toronto,BOC
+2027-09-09,14:15,Europe/Berlin,ECB
+2027-09-14,08:30,America/New_York,CPI
+2027-09-15,14:00,America/New_York,FOMC
+2027-09-16,,Europe/London,BOE
+2027-09-22,,Asia/Tokyo,BOJ
+2027-09-28,14:30,Australia/Sydney,RBA
+2027-10-08,08:30,America/New_York,NFP
+2027-10-14,08:30,America/New_York,CPI
+2027-10-27,09:45,America/Toronto,BOC
+2027-10-27,14:00,America/New_York,FOMC
+2027-10-28,14:15,Europe/Berlin,ECB
+2027-10-29,,Asia/Tokyo,BOJ
+2027-11-02,14:30,Australia/Sydney,RBA
+2027-11-04,,Europe/London,BOE
+2027-11-05,08:30,America/New_York,NFP
+2027-11-10,08:30,America/New_York,CPI
+2027-12-03,08:30,America/New_York,NFP
+2027-12-08,09:45,America/Toronto,BOC
+2027-12-08,14:00,America/New_York,FOMC
+2027-12-10,08:30,America/New_York,CPI
+2027-12-14,14:30,Australia/Sydney,RBA
+2027-12-16,,Europe/London,BOE
+2027-12-16,14:15,Europe/Berlin,ECB
+2027-12-17,,Asia/Tokyo,BOJ
