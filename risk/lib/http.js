@@ -24,7 +24,8 @@ async function httpGet(url, {
         err = new Error(`HTTP ${res.status} (${label})`);
         err.retryable = isRetryableStatus(res.status);
       } else {
-        return { text: Buffer.from(await res.arrayBuffer()).toString("utf8"), lastModified: res.headers.get("last-modified") };
+        const bytes = Buffer.from(await res.arrayBuffer());
+        return { bytes, text: bytes.toString("utf8"), lastModified: res.headers.get("last-modified") };
       }
     } catch (e) {
       err = new Error(`${e.name === "TimeoutError" ? `タイムアウト（${timeoutMs / 1000}秒）` : e.message} (${label})`, { cause: e });

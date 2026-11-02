@@ -20,6 +20,9 @@ const { vixSnapshot } = require("./lib/calc");
 const { isOpen, missingOpenDays, expectedLatest } = require("./lib/calendar");
 const { httpGet } = require("./lib/http");
 const ev = require("./lib/events");
+const trialLib = require("./lib/trial");
+const ratesCfg = require("../rates/config");
+const ratesCal = require("../rates/lib/calendar");
 const view = require("./lib/view");
 const { toJstIso, nyWallMs, isoDate } = require("../mtf/lib/ny-time");
 
@@ -95,6 +98,85 @@ async function fetchVix({ nowMs, fetchImpl, sleep, prevVix }) {
   };
 }
 
+// ---- 試し運転の指標（SPEC 10節。記事にはまだ使わない）----
+const TRIAL_NOTE = "試し運転（記事にはまだ使わない）。MOVE・HY OAS の代わりの候補を、GPT経由の値と比べるために計算している。";
+
+function mergeByDate(...lists) {
+  const m = new Map();
+  for (const rows of lists) for (const r of rows) m.set(r.date, r);
+  return [...m.values()].sort((a, b) => (a.date < b.date ? -1 : 1));
+}
+
+async function fetchTrial({ nowMs, fetchImpl, sleep }) {
+  const T = cfg.TRIAL;
+  const get = (url, label, opts = {}) => httpGet(url, { label, fetchImpl, sleep, ...opts });
+  const out = { note: TRIAL_NOTE, fetched_at: toJstIso(nowMs), rates_vol: null, cp_spread: null, nfci_credit: null, warnings: [] };
+  const fail = (key, label, e) => {
+    const msg = `${label}：${e.message}`;
+    out[key] = { error: msg };
+    out.warnings.push(msg);
+  };
+
+  // ② MOVE の代わり：米国債の金利の実際の値動きの大きさ
+  try {
+    const R = T.ratesVol;
+    const need = R.lookback + R.window + R.historyN;
+    const nyYear = Number(isoDate(nyWallMs(nowMs)).slice(0, 4));
+    let rows = [];
+    for (let y = nyYear; y >= nyYear - 3; y--) {
+      const r = await get(R.csvUrl(y), `treasury:csv:${y}`);
+      rows = mergeByDate(trialLib.parseParYieldCsv(r.text, R.tenors, { allowEmpty: true }), rows);
+      if (rows.filter((x) => R.tenors.every((t) => Number.isInteger(x.bp[t]))).length > need) break;
+    }
+    const snap = trialLib.rankSnapshot(trialLib.realizedVolSeries(rows, R.tenors, R.lookback),
+      { window: R.window, thresholdPct: R.thresholdPct, historyN: R.historyN, keepValue: true });
+    if (snap.error) throw new Error(snap.error);
+    out.rates_vol = { ...snap, unit: "bp", lookback: R.lookback, tenors: R.tenors, source: R.pageUrl };
+  } catch (e) { fail("rates_vol", "米国債の値動き", e); }
+
+  // ③ HY OAS の代わり（候補1）：FRB の CP 金利差
+  try {
+    const C = T.cpSpread;
+    const r = await get(C.zipUrl, "frb:cp:xml.zip", { timeoutMs: 90000 });
+    const files = trialLib.readZip(r.bytes);
+    const xmlFiles = files.filter((f) => /\.xml$/i.test(f.name));
+    const dataFile = xmlFiles.find((f) => f.data.includes("SERIES_NAME")) || null;
+    if (!dataFile) throw new Error(`ZIPの中に系列の入ったXMLがありません（中身：${files.map((f) => f.name).join("・") || "なし"}）`);
+    const found = trialLib.parseCpXml(dataFile.data.toString("utf8"), [C.low, C.high]);
+    const snap = trialLib.rankSnapshot(trialLib.cpSpreadSeries(found, C.low, C.high),
+      { window: C.window, thresholdPct: C.thresholdPct, historyN: C.historyN, keepValue: true });
+    if (snap.error) throw new Error(snap.error);
+    out.cp_spread = { ...snap, unit: "bp", series: [C.low, C.high], source: C.pageUrl, last_modified: r.lastModified };
+  } catch (e) { fail("cp_spread", "CP金利差", e); }
+
+  // ③ HY OAS の代わり（候補2）：シカゴ連銀 NFCI の信用の部分（値そのものは載せず、順位だけ）
+  try {
+    const N = T.nfciCredit;
+    const r = await get(N.csvUrl, "chicagofed:nfci.csv");
+    const snap = trialLib.rankSnapshot(trialLib.parseNfciCsv(r.text, N.column),
+      { window: N.window, thresholdPct: N.thresholdPct, historyN: N.historyN, keepValue: false });
+    if (snap.error) throw new Error(snap.error);
+    out.nfci_credit = { ...snap, frequency: "weekly", source: N.pageUrl };
+  } catch (e) { fail("nfci_credit", "NFCIの信用の部分", e); }
+  return out;
+}
+
+// 試し運転の指標を取り直すか：その日（日本時間）にまだ取っていない／前回から60分以上たち、
+// 取得に失敗した指標がある、または米国債の値が公表されているはずなのに入っていない
+function trialNeedsRefresh(prevTrial, nowMs) {
+  if (!prevTrial || !prevTrial.fetched_at) return true;
+  const fetchedMs = Date.parse(prevTrial.fetched_at);
+  if (!Number.isFinite(fetchedMs) || ev.jstDate(fetchedMs) !== ev.jstDate(nowMs)) return true;
+  if (nowMs - fetchedMs < cfg.TRIAL.minRefetchMinutes * 60000) return false;
+  if (["rates_vol", "cp_spread", "nfci_credit"].some((k) => !prevTrial[k] || prevTrial[k].error)) return true;
+  const rv = prevTrial.rates_vol;
+  try {
+    const expected = ratesCal.expectedUsLatest(nowMs, new Set((rv.history || []).map((h) => h.date)),
+      { readyMin: ratesCfg.US_READY_ET_MIN, uncertainClosedAfterHours: ratesCfg.UNCERTAIN_US_CLOSED_AFTER_HOURS });
+    return rv.date < expected;
+  } catch { return false; }
+}
+
 // ---- イベント警戒（SPEC 5節。外部へは接続しない）----
 function computeEvent(nowMs, eventsText) {
   try {
@@ -130,13 +212,18 @@ async function run({
     const label = { ok: "OK", pending: "PENDING", stale: "STALE" };
     log(`${label[vixState.state]}: ${vixState.reasons.join("／") || `VIX は ${prev.vix.date} まで（最新）`}`);
     log(`${label[e.state]}: ${e.reasons.join("／") || `イベント警戒は ${prev.event.base_jst} 基準（今日の分）`}`);
+    const t = prev && prev.trial;
+    const tline = (k, nm) => (!t || !t[k] ? `${nm} なし` : t[k].error ? `${nm} 取得失敗` : `${nm} ${t[k].date} 順位${t[k].rank_pct}%`);
+    log(`TRIAL（試し運転・判定には使わない）: ${tline("rates_vol", "米国債の値動き")}／${tline("cp_spread", "CP金利差")}／${tline("nfci_credit", "NFCIの信用")}`);
     return vixState.state === "stale" || e.state === "stale" ? 1 : 0;
   }
 
   const { event, error: eventError } = computeEvent(nowMs, fs.readFileSync(eventsPath, "utf8"));
   // 前回の記録に失敗が残っているときは、スキップせずに作り直す（失敗の記録が、その日のうち残り続けないように）
   const prevErrors = prev && prev.generation && Array.isArray(prev.generation.errors) ? prev.generation.errors : [];
-  if (ifStale && vixState.state === "ok" && prevErrors.length === 0 && prev.event && JSON.stringify(prev.event) === JSON.stringify(event)) {
+  const prevTrial = prev && prev.schema === view.SCHEMA ? prev.trial ?? null : null;
+  const trialRefresh = !ifStale || trialNeedsRefresh(prevTrial, nowMs);
+  if (ifStale && vixState.state === "ok" && prevErrors.length === 0 && prev.event && JSON.stringify(prev.event) === JSON.stringify(event) && !trialRefresh) {
     log("VIX は最新、イベント警戒も今日の分のためスキップ。外部へは接続していません");
     return 0;
   }
@@ -151,6 +238,12 @@ async function run({
     else vix = r.vix;
   }
   if (eventError) { errors.push(eventError); log(`NG: ${eventError}`); }
+  // 試し運転の指標。失敗しても errors にはしない（記事に使っていないため、実行を赤くしない）
+  let trial = prevTrial;
+  if (trialRefresh) {
+    trial = await fetchTrial({ nowMs, fetchImpl, sleep });
+    for (const w of trial.warnings) log(`試し運転の指標を取得できませんでした: ${w}`);
+  }
   const warnings = [...(vix && vix.warnings ? vix.warnings : []), ...fetchNotes, ...event.warnings];
 
   const doc = {
@@ -159,6 +252,7 @@ async function run({
     timezone: "Asia/Tokyo",
     vix,
     event,
+    trial,
     generation: {
       status: errors.length ? "error" : warnings.length ? "warning" : "ok",
       errors,
@@ -188,7 +282,7 @@ async function run({
   return errors.length ? 1 : 0;
 }
 
-module.exports = { run, stable, computeEvent };
+module.exports = { run, stable, computeEvent, trialNeedsRefresh };
 
 if (require.main === module) {
   const argv = process.argv.slice(2);

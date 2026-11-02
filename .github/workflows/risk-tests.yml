@@ -5,6 +5,10 @@ on:
     paths:
       - "risk/**"
       - "mtf/lib/ny-time.js"
+      # 試し運転の指標（risk/lib/trial.js・run-daily.js）が読み込む rates/ の部品
+      - "rates/lib/parse.js"
+      - "rates/lib/calendar.js"
+      - "rates/config.js"
       - ".github/workflows/risk*.yml"
       # risk.yml の workflow_run が参照する name: を確かめる試験（risk/test/workflows.test.js）が読むファイル
       - ".github/workflows/intraday.yml"
@@ -14,6 +18,10 @@ on:
     paths:
       - "risk/**"
       - "mtf/lib/ny-time.js"
+      # 試し運転の指標（risk/lib/trial.js・run-daily.js）が読み込む rates/ の部品
+      - "rates/lib/parse.js"
+      - "rates/lib/calendar.js"
+      - "rates/config.js"
       - ".github/workflows/risk*.yml"
       - ".github/workflows/intraday.yml"
       - ".github/workflows/daily.yml"
@@ -66,5 +74,11 @@ jobs:
             const e = d.event || {};
             console.log("::notice title=イベント警戒::" + JSON.stringify({ level: e.level, base_jst: e.base_jst, count: e.count, items: (e.items || []).map((i) => `${i.kind}@${i.at_jst}`) }));
             console.log("::notice title=generation::" + JSON.stringify(d.generation));
+            const t = d.trial || {};
+            for (const k of ["rates_vol", "cp_spread", "nfci_credit"]) {
+              const x = t[k] || {};
+              console.log(`::notice title=試し運転 ${k}::` + JSON.stringify(x.error ? { error: x.error } : { date: x.date, value: x.value, rank_pct: x.rank_pct, count_le: x.count_le, window_start: x.window_start, last_modified: x.last_modified }));
+              console.log(`::notice title=試し運転 ${k} の履歴（日付=値/順位）::` + (x.history || []).map((h) => `${h.date}=${h.value ?? ""}/${h.rank_pct}`).join(" "));
+            }
           '
           exit $code

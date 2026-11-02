@@ -1,7 +1,7 @@
 # 取引可否の指標（自前の定義） 仕様書
 
-- 版：v1.0（2026-10-30）
-- 目的：swing-flow の記事の「全体の取引可否」（swing-flow `SPEC.md` 3-6）に使う5項目（VIX順位・MOVE順位・HY OAS順位・相場の見方の中立の数・イベント警戒）を、GPT への依頼をやめて自前で出せるようにする。**この版では VIX 順位とイベント警戒の2つ**を作り、`data/risk.json` に出す。
+- 版：v1.1（2026-11-02）
+- 目的：swing-flow の記事の「全体の取引可否」（swing-flow `SPEC.md` 3-6）に使う5項目（VIX順位・MOVE順位・HY OAS順位・相場の見方の中立の数・イベント警戒）を、GPT への依頼をやめて自前で出せるようにする。**VIX 順位とイベント警戒の2つ**を作り、`data/risk.json` に出す。v1.1 から、MOVE・HY OAS の代わりの候補3つを**試し運転**として計算する（10節。記事にはまだ使わない）。
 - 定義はすべて当方のもの（2026-10-30 ユーザー決定「自前の定義で」）。友人資料の定義の再現ではない。
 - 範囲：値・判定の材料・出典を出す。記事の取引可否（stop／reduce／ok）の判定は swing-flow 側（`history.classify_global_status()`）で行い、ここでは行わない。
 - GPT の値との照合が済むまでは、フィード（`gpt-feed.*`）に載せない。記事も、照合が済んで切り替えるまでは GPT の値を使う（9節）。
@@ -93,6 +93,7 @@
 - VIX：Cboe「VIX Index Historical Data」。ページの注記は「furnished without responsibility for accuracy」。**Cboe の「Use of Cboe Content」（https://www.cboe.com/use-of-content）には「Cboe のロゴ・データ・画像などを使う前に Cboe の事前承認が必要」とある。公開記事に順位（派生した値）を載せることが該当するかは、確認できていない。** いまの記事も（友人資料経由で）同じ VIX の順位を載せており、同じ論点がある。記事を自前の値に切り替える前に、扱いを決める（9節）。
 - **このリポジトリは公開されている**（GitHub の public。`data/` は誰でも読める）。Cboe のデータをそのまま再配布しないよう、`risk.json` と試験のログ（`live-check`）には **VIX の終値を載せず、順位と個数だけ**を出す。終値は計算の途中でだけ使う。
 - 予定：各発表元の公式日程。
+- 試し運転の指標（10節）：米財務省の金利表は、米国政府のデータカタログ（data.gov）で CC0（パブリックドメイン）。FRB（連邦準備制度理事会）の公表データは「public domain and may be copied and distributed without permission」（出典として FRB を示すよう求めている）。シカゴ連銀の NFCI は、同行の利用の注意に「商用目的の複製はシカゴ連銀への問い合わせが必要」とあるため、`risk.json` には値を載せず順位だけを出し、記事に使う前に許可を問い合わせる。
 - `risk.json` の `citations` に出典の文を持つ。
 
 ## 7. `data/risk.json` の形（`schema: fxdaily-levels/risk/v1`）
@@ -113,15 +114,16 @@
 | `event.count` / `high_count` / `items` | 窓の中の件数、2、予定の一覧（日本時間・種類・名前・現地の日時） |
 | `event.calendar` | 予定表の終わり、ファイルの SHA-256、行数 |
 | `event.reason` / `warnings` | `unknown` の理由、予定表の終わりが近い等の警告 |
-| `generation` | `status`（ok／warning／error）、`errors`、`warnings`（VIX の警告・古い版を受け取った記録・イベント警戒の警告）、`run_url` |
+| `trial` | 試し運転の指標（10節）。`rates_vol`・`cp_spread`・`nfci_credit` のそれぞれに、`date`・`rank_pct`・`count_le`・`window`・`window_start`・`threshold_pct`・`over_threshold`・`history`（失敗したときは `error` だけ）。`rates_vol`・`cp_spread` は `value`（bp）も持つ。`nfci_credit` は値を持たない（6節）。ほかに `fetched_at`・`warnings`・`note` |
+| `generation` | `status`（ok／warning／error）、`errors`、`warnings`（VIX の警告・古い版を受け取った記録・イベント警戒の警告）、`run_url`。試し運転の失敗はここに入れない（実行を赤くしない） |
 | `citations` / `notes` | 出典、定義の要約 |
 
-内容が前回と同じ（`as_of`・取得時刻・`run_url` だけの違い）なら書き換えず、コミットも作らない。
+内容が前回と同じ（`as_of`・取得時刻・`run_url` だけの違い）なら書き換えず、コミットも作らない。ただし試し運転の指標を取り直したときは `trial.fetched_at` が変わるため書き換える（取り直しは1日1回と、米国債の値の公表待ちの間の1時間に1回まで。10節）。
 
 ## 8. ワークフロー
 
 - `.github/workflows/risk.yml`（name: Risk Metrics）：日本時間の月〜土 7:10〜10:40（30分ごと）と、`Intraday Snapshot`・`Daily FX Data` の完了のたび（`workflow_run`）に `--if-stale` で起動。VIX が最新でイベント警戒も今日の分なら、外部へ接続せず数秒で終わる。書くのは `data/risk.json` だけ。取得に失敗しても、コミットと鮮度の確認（`--check-fresh`）は動かす。
-- `.github/workflows/risk-tests.yml`：PR と main への push で試験（外部へは接続しない）。PR のときだけ、参考として Cboe の実データを取得して順位を表示する（`live-check`。リポジトリには書かない。失敗しても PR は止めない）。
+- `.github/workflows/risk-tests.yml`：PR と main への push で試験（外部へは接続しない）。PR のときだけ、参考として実データ（Cboe・米財務省・FRB・シカゴ連銀）を取得して順位を表示する（`live-check`。リポジトリには書かない。失敗しても PR は止めない）。
 
 ## 9. GPT の値との照合と切り替え
 
@@ -129,10 +131,42 @@
    - 結果（2026-10-30、PR の live-check の実データ。休場日を除いた版）：21日のうち一致6日、差は最大 +3.2（10/23：GPT 75.4／自前 78.6）、他は ±1.2 以内。**70% をまたぐ食い違いは0日**。差の原因は確認できていない。
 2. イベント警戒：GPT の値は 9/22 以降すべて High（友人の定義）。自前の定義では週によって Normal になる（例：2026-11-09〜11-27 は Normal）。**記事の取引量が変わる**ため、切り替える日はユーザーが決める。
 3. 切り替えの前に決めること：Cboe の利用条件の扱い（6節）、記事の出典の書き方。
-4. 残りの3項目（MOVE・HY OAS・中立の数）を自前で作るまでは、GPT への依頼は続ける。
+4. 残りの3項目（MOVE・HY OAS・中立の数）を自前で作るまでは、GPT への依頼は続ける。MOVE・HY OAS の代わりの候補は試し運転中（10節）。
 
-## 10. 変更履歴
+## 10. 試し運転の指標（MOVE・HY OAS の代わりの候補。記事にはまだ使わない）
+
+2026-11-02 ユーザー決定：② MOVE は「米国債の金利の実際の値動きの大きさ」で作る。③ HY OAS は2つを試算して比べてから決める。どれも自前の定義で、GPT 経由の値（swing-flow の `samples/` の `risk:` 行）と並べて比べ、基準の高さを確かめてから切り替える。
+
+### 10-1. 米国債の値動き（`trial.rates_vol`。MOVE の代わり）
+
+- 元データ：米財務省 Daily Treasury Par Yield Curve Rates の年ごとの CSV（`rates/` と同じ取得先）。2・5・10・30年の利回り。
+- 計算：年限ごとに、1日の変化（bp）を直近20営業日分ならべた**二乗平均平方根**を出し、4つの年限で**単純平均**する（単位 bp）。4つの年限すべてに値がある日だけを使う。
+- 順位：VIX と同じ（当日を含む直近252個のうち、当日以下の割合）。基準は **80%以上**（MOVE の基準と同じ。試し運転で確かめる）。
+- 必要な日数は20＋252＋60（履歴）なので、今年と前の年（足りなければさらに前の年）の CSV を取る。
+- 弱点：MOVE は「これからの値動きの予想」（オプション価格から計算）、こちらは「これまでの値動き」。急な動きへの反応は数日遅れる。
+- 取り直し：1日（日本時間）1回。加えて、米国債の値が公表されているはずの日（`rates/lib/calendar.js` の `expectedUsLatest`。米東部18:30）の値がまだ無ければ、前回から60分たつごとに取り直す。
+
+### 10-2. CP の金利差（`trial.cp_spread`。HY OAS の代わりの候補1）
+
+- 元データ：FRB の Commercial Paper Rates の XML（`https://www.federalreserve.gov/releases/cp/data/FRB_CP_xml.zip`）。系列 `RIFSPPNA2P2D30_N.B`（A2/P2 格・非金融・30日物）と `RIFSPPNAAD30_N.B`（AA 格・非金融・30日物）。
+- 計算：金利差（bp）＝ A2/P2 − AA。両方に値がある日だけ（取引が少なく計算されない日〔n.a.〕は除く）。順位は直近252個で、基準は **70%以上**（HY OAS の基準と同じ）。
+- 性格：格付けの低い会社と高い会社の短期の借入金利の差。信用不安の目安になるが、平常時はあまり動かず、HY OAS（高利回り社債）との似方は弱め。
+- 公表：通常は翌営業日の米東部13:00ごろ（FRB は時刻を保証しない）。
+
+### 10-3. NFCI の信用の部分（`trial.nfci_credit`。HY OAS の代わりの候補2）
+
+- 元データ：シカゴ連銀 National Financial Conditions Index の CSV（`config.js` の `TRIAL.nfciCredit.csvUrl`）。列 `Credit`。
+- 計算：週1回の値。順位は直近52週で、基準は **70%以上**。
+- 公表：毎週水曜の米東部8:30（前の金曜までの値）。過去の値も毎週見直されることがある。
+- 利用条件：商用目的の複製はシカゴ連銀への問い合わせが必要（6節）。`risk.json` には順位だけを出し、値は載せない。
+
+### 10-4. 失敗したとき
+
+試し運転の指標の取得・形式の問題は、`trial.<指標>.error` と `trial.warnings` に書き、`generation.errors` には入れない（実行を赤くしない）。`--check-fresh` は試し運転の状態を1行表示するが、終了コードには影響しない。
+
+## 11. 変更履歴
 
 | 版 | 日付 | 内容 |
 |---|---|---|
 | 1.0 | 2026-10-30 | 新設。VIX 順位（Cboe 公式 CSV、NYSE の252営業日）とイベント警戒（6つの中央銀行・米雇用統計・米CPI、日本時間の9:00から7日以内に2件以上で High）。PR の live-check で、Cboe のファイルに米国の祝日の行があると分かり、NYSE の営業日だけで数える定義にした（GPT の値との近さは変わらなかった）。独立の点検の指摘を反映：途中の値を使わない、古い版に戻さない、失敗の文に CSV の値を入れない、失敗の記録が残っていれば作り直す、unknown を赤にする。公開リポジトリのため、VIX の終値は risk.json・ログに載せない。2回目の点検の任意の指摘（警告の文から Last-Modified を外す、休場日の行を2つの欄に重ねない）も反映。試験50件 |
+| 1.1 | 2026-11-02 | 試し運転の指標を追加（10節）：米国債の値動き（MOVE の代わり、米財務省の金利表）、CP の金利差（FRB）、NFCI の信用の部分（シカゴ連銀）。記事・判定には使わない。2026-11-02 のユーザー決定による |

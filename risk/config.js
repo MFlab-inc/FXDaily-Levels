@@ -2,7 +2,7 @@
 
 /**
  * 取引可否の指標（自前の定義）の設定値。仕様は risk/SPEC.md。
- * いまは VIX 順位とイベント警戒。MOVE・HY OAS・中立の数は、定義が決まってから足す。
+ * いまは VIX 順位とイベント警戒。MOVE・HY OAS の代わりは試し運転中（TRIAL）。中立の数は、定義が決まってから足す。
  */
 
 // ---- VIX（SPEC 2節・3節）----
@@ -46,6 +46,44 @@ const EVENT = {
   coverageWarnDays: 60,
 };
 
+// ---- 試し運転の指標（SPEC 10節。記事にはまだ使わない。2026-11-02 ユーザー決定）----
+const TRIAL = {
+  // ② MOVE の代わり：米国債の金利の実際の値動きの大きさ（自前の定義）
+  ratesVol: {
+    // 米財務省 Daily Treasury Par Yield Curve Rates の年ごとのCSV（rates/ と同じ取得先）
+    csvUrl: (year) =>
+      `https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/${year}/all` +
+      `?type=daily_treasury_yield_curve&field_tdr_date_value=${year}&page&_format=csv`,
+    pageUrl: "https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics",
+    tenors: ["2 Yr", "5 Yr", "10 Yr", "30 Yr"],
+    lookback: 20,      // 直近20営業日の1日の変化
+    window: 252,       // 順位を数える範囲
+    thresholdPct: 80,  // swing-flow SPEC 3-6 の MOVE の基準と同じ（切り替える前に試し運転で確かめる）
+    historyN: 60,
+  },
+  // ③ HY OAS の代わり（候補1）：FRB の短期社債（CP）の金利差。A2/P2 − AA、非金融・30日物
+  cpSpread: {
+    zipUrl: "https://www.federalreserve.gov/releases/cp/data/FRB_CP_xml.zip",
+    pageUrl: "https://www.federalreserve.gov/releases/cp/",
+    low: "RIFSPPNA2P2D30_N.B",   // 30-Day A2/P2 Nonfinancial（FRED では RIFSPPNA2P2D30NB）
+    high: "RIFSPPNAAD30_N.B",    // 30-Day AA Nonfinancial（FRED では RIFSPPNAAD30NB）
+    window: 252,
+    thresholdPct: 70,  // swing-flow SPEC 3-6 の HY OAS の基準と同じ
+    historyN: 60,
+  },
+  // ③ HY OAS の代わり（候補2）：シカゴ連銀 NFCI の信用の部分（週1回）。商用で使う前に許可の問い合わせが必要
+  nfciCredit: {
+    csvUrl: "https://www.chicagofed.org/-/media/publications/nfci/nfci-data-series-csv.csv",
+    pageUrl: "https://www.chicagofed.org/research/data/nfci/current-data",
+    column: "Credit",
+    window: 52,        // 週1回の値なので、過去1年＝52週
+    thresholdPct: 70,
+    historyN: 13,
+  },
+  // 1日の中で取り直す間隔の下限（分）。米国債の値の公表待ちのとき、起動のたびに取りに行かないように
+  minRefetchMinutes: 60,
+};
+
 // ---- 時刻（SPEC 4節）----
 // VIX の終値は米東部16:15に確定する。CSV がいつ更新されるかは未確認のため、米東部18:00を過ぎたら
 // その日の値があるはずとみなして取りに行き始める（--if-stale）。
@@ -73,4 +111,4 @@ const CITATIONS = {
     `（各URLは risk/events.csv）。件数の集計は${PROCESSOR_NAME}`,
 };
 
-module.exports = { VIX, EVENT, READY_ET_MIN, STALE_AFTER_HOURS, EXTRA_CLOSED_DATES, HTTP, PROCESSOR_NAME, CITATIONS };
+module.exports = { VIX, EVENT, TRIAL, READY_ET_MIN, STALE_AFTER_HOURS, EXTRA_CLOSED_DATES, HTTP, PROCESSOR_NAME, CITATIONS };
