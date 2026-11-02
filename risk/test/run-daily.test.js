@@ -10,8 +10,8 @@ const H = require("./helpers");
 const noSleep = async () => {};
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "risk-test-"));
 const readRisk = (dir) => JSON.parse(fs.readFileSync(path.join(dir, "risk.json"), "utf8"));
-// 取得の時刻（as_of・試し運転の fetched_at）を除いた中身
-const core = (dir) => { const d = readRisk(dir); delete d.as_of; if (d.trial) delete d.trial.fetched_at; if (d.vix && d.vix.source) { delete d.vix.source.fetched_at; delete d.vix.source.last_modified; } return JSON.stringify(d); };
+// 取得の時刻（as_of・試し運転の fetched_at と、その日に取りに行った回数 attempts）を除いた中身
+const core = (dir) => { const d = readRisk(dir); delete d.as_of; if (d.trial) { delete d.trial.fetched_at; delete d.trial.attempts; } if (d.vix && d.vix.source) { delete d.vix.source.fetched_at; delete d.vix.source.last_modified; } return JSON.stringify(d); };
 
 // Cboe・米財務省の URL に、試験用のデータを返す差し替えの fetch。
 // to＝VIX と米国債の最新日。trialFail に URL の断片 → HTTPステータスを入れると、その取得だけ失敗させる

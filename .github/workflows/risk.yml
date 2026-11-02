@@ -2,6 +2,7 @@ name: Risk Metrics
 
 # 取引可否の指標（自前の定義。仕様は risk/SPEC.md）：VIX 順位（Cboe 公式の VIX_History.csv）と、
 # イベント警戒（risk/events.csv の公式日程から、日本時間のその日の9:00から7日以内の最重要の予定の数）。
+# 試し運転（記事には未使用）として、米財務省の金利表から米国債の値動きの順位も計算する（SPEC 10節。1日3回まで取得）。
 # data/risk.json だけを書く。フィード（gpt-feed.*）には、まだ載せない（GPT の値との照合の期間中）。
 
 on:
@@ -12,7 +13,8 @@ on:
     - cron: "10,40 22-23 * * 0-5"   # JST 月〜土 07:10〜08:40
     - cron: "10,40 0-1 * * 1-6"     # JST 月〜土 09:10〜10:40
   # rates.yml と同じく、Intraday Snapshot・Daily FX Data の完了のたびにも起動する（--if-stale）。
-  # GitHub の schedule は届かないことがあるため。VIX が最新で、イベント警戒も今日の分なら、何もせず数秒で終わる。
+  # GitHub の schedule は届かないことがあるため。VIX が最新で、イベント警戒も今日の分で、試し運転の取り直しも
+  # 要らなければ、何もせず数秒で終わる。
   # workflows: の名前は、各ワークフローの name: と完全に同じにすること（risk/test/workflows.test.js が確かめる）。
   workflow_run:
     workflows: ["Intraday Snapshot", "Daily FX Data"]

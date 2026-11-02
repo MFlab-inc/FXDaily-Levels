@@ -9,6 +9,7 @@ on:
       - "rates/lib/parse.js"
       - "rates/lib/calendar.js"
       - "rates/config.js"
+      - "rates/test/fixtures/ust-2026-tail.csv"
       - ".github/workflows/risk*.yml"
       # risk.yml の workflow_run が参照する name: を確かめる試験（risk/test/workflows.test.js）が読むファイル
       - ".github/workflows/intraday.yml"
@@ -22,6 +23,7 @@ on:
       - "rates/lib/parse.js"
       - "rates/lib/calendar.js"
       - "rates/config.js"
+      - "rates/test/fixtures/ust-2026-tail.csv"
       - ".github/workflows/risk*.yml"
       - ".github/workflows/intraday.yml"
       - ".github/workflows/daily.yml"
@@ -48,7 +50,7 @@ jobs:
   live-check:
     if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4

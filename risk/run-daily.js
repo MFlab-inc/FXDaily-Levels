@@ -4,8 +4,9 @@
  * 取引可否の指標（自前の定義）の更新。仕様は risk/SPEC.md。いまは VIX 順位とイベント警戒。
  *
  *   node risk/run-daily.js               VIX を取得し、イベント警戒を数え直して data/risk.json を更新する（常に取得）
- *   node risk/run-daily.js --if-stale    VIX が最新で、イベント警戒も今日の分なら、何もせず終了（risk.yml の schedule・workflow_run 用）。
- *                                        VIX が最新なら取得せず、イベント警戒だけ数え直す（予定表は手元のファイルなので外部へ接続しない）
+ *   node risk/run-daily.js --if-stale    VIX が最新で、イベント警戒も今日の分で、試し運転の取り直しも要らなければ、何もせず終了
+ *                                        （risk.yml の schedule・workflow_run 用）。VIX が最新なら Cboe へは接続しない。
+ *                                        試し運転（米国債の値動き）は、新しい米国の営業日の値が出たはずの日に取る（1日3回まで。SPEC 10-1）
  *   node risk/run-daily.js --check-fresh 外部へ接続せず、risk.json が「いま」最新か確かめる（古ければ終了コード1）
  *   --data-dir <dir>                     risk.json を置く場所（既定は data/。PR の試験で実データを取得して見るときに使う）
  *
@@ -107,32 +108,37 @@ function mergeByDate(...lists) {
   return [...m.values()].sort((a, b) => (a.date < b.date ? -1 : 1));
 }
 
-async function fetchTrial({ nowMs, fetchImpl, sleep }) {
-  const T = cfg.TRIAL;
-  const get = (url, label, opts = {}) => httpGet(url, { label, fetchImpl, sleep, ...opts });
-  const out = { note: TRIAL_NOTE, fetched_at: toJstIso(nowMs), rates_vol: null, warnings: [] };
-  const fail = (key, label, e) => {
-    const msg = `${label}：${e.message}`;
-    out[key] = { error: msg };
-    out.warnings.push(msg);
-  };
+// 米国債の値動きの計算に必要な行の数：最初の値に lookback＋1行、順位に window 個、履歴に historyN−1 個を足す
+function ratesVolRowsNeeded(R) { return R.lookback + R.window + R.historyN - 1; }
 
-  // ② MOVE の代わり：米国債の金利の実際の値動きの大きさ
+// prevRatesVol：前回の正しい値。取得に失敗したときは、これを残して last_error を付ける（GPT の値との比較の記録を途切れさせない）
+async function fetchTrial({ nowMs, fetchImpl, sleep, attempts, prevRatesVol }) {
+  const T = cfg.TRIAL, R = T.ratesVol;
+  const out = { note: TRIAL_NOTE, fetched_at: toJstIso(nowMs), attempts, rates_vol: null, warnings: [] };
+
+  // ② MOVE の代わり：米国債の金利の実際の値動きの大きさ。今年から1年ずつさかのぼり、足りたら止める（最大4年分）
   try {
-    const R = T.ratesVol;
-    const need = R.lookback + R.window + R.historyN;
     const nyYear = Number(isoDate(nyWallMs(nowMs)).slice(0, 4));
     let rows = [];
     for (let y = nyYear; y >= nyYear - 3; y--) {
-      const r = await get(R.csvUrl(y), `treasury:csv:${y}`);
+      const r = await httpGet(R.csvUrl(y), { label: `treasury:csv:${y}`, fetchImpl, sleep, ...T.http });
       rows = mergeByDate(trialLib.parseParYieldCsv(r.text, R.tenors, { allowEmpty: true }), rows);
-      if (rows.filter((x) => R.tenors.every((t) => Number.isInteger(x.bp[t]))).length > need) break;
+      if (rows.filter((x) => R.tenors.every((t) => Number.isInteger(x.bp[t]))).length >= ratesVolRowsNeeded(R)) break;
     }
     const snap = trialLib.rankSnapshot(trialLib.realizedVolSeries(rows, R.tenors, R.lookback),
       { window: R.window, thresholdPct: R.thresholdPct, historyN: R.historyN, keepValue: true });
     if (snap.error) throw new Error(snap.error);
     out.rates_vol = { ...snap, unit: "bp", lookback: R.lookback, tenors: R.tenors, source: R.pageUrl };
-  } catch (e) { fail("rates_vol", "米国債の値動き", e); }
+  } catch (e) {
+    const msg = `米国債の値動き：${e.message}`;
+    out.warnings.push(msg);
+    if (prevRatesVol && !prevRatesVol.error && typeof prevRatesVol.date === "string") {
+      const { stale, last_error, ...keep } = prevRatesVol;
+      out.rates_vol = { ...keep, last_error: msg };
+    } else {
+      out.rates_vol = { error: msg };
+    }
+  }
 
   // 古さの確認（止めはしない）。取得先のファイルが更新されていないことに気づけるように
   const today = ev.jstDate(nowMs);
@@ -145,20 +151,35 @@ async function fetchTrial({ nowMs, fetchImpl, sleep }) {
   return out;
 }
 
-// 試し運転の指標を取り直すか：その日（日本時間）にまだ取っていない／前回から60分以上たち、
-// 前回の取得に失敗している、または米国債の値が公表されているはずなのに入っていない
+// その日（日本時間）に、試し運転の指標をすでに何回取りに行ったか
+function trialAttemptsToday(prevTrial, nowMs) {
+  if (!prevTrial || !prevTrial.fetched_at) return 0;
+  const fetchedMs = Date.parse(prevTrial.fetched_at);
+  if (!Number.isFinite(fetchedMs) || ev.jstDate(fetchedMs) !== ev.jstDate(nowMs)) return 0;
+  return Number.isInteger(prevTrial.attempts) && prevTrial.attempts > 0 ? prevTrial.attempts : 1;
+}
+
+// 試し運転の指標を取り直すか（SPEC 10-1）。
+//   まだ一度も取っていない → 取る
+//   その日（日本時間）に maxFetchesPerDay 回取った、または前回から60分たっていない → 取らない
+//   前回の取得に失敗した、または米国債の値が公表されているはずの日（米東部18:30を過ぎた営業日）の値が無い → 取る
+// 新しい値が出ない日（週末・米国の休日）は取りに行かない
 function trialNeedsRefresh(prevTrial, nowMs) {
   if (!prevTrial || !prevTrial.fetched_at) return true;
   const fetchedMs = Date.parse(prevTrial.fetched_at);
-  if (!Number.isFinite(fetchedMs) || ev.jstDate(fetchedMs) !== ev.jstDate(nowMs)) return true;
+  if (!Number.isFinite(fetchedMs)) return true;
+  if (trialAttemptsToday(prevTrial, nowMs) >= cfg.TRIAL.maxFetchesPerDay) return false;
   if (nowMs - fetchedMs < cfg.TRIAL.minRefetchMinutes * 60000) return false;
   const rv = prevTrial.rates_vol;
-  if (!rv || rv.error) return true;
+  if (!rv || rv.error || typeof rv.date !== "string") return true;
   try {
     const expected = ratesCal.expectedUsLatest(nowMs, new Set((rv.history || []).map((h) => h.date)),
       { readyMin: ratesCfg.US_READY_ET_MIN, uncertainClosedAfterHours: ratesCfg.UNCERTAIN_US_CLOSED_AFTER_HOURS });
     return rv.date < expected;
-  } catch { return false; }
+  } catch {
+    // 「公表されているはずの日」を決められないときは、1日1回だけ取る
+    return ev.jstDate(fetchedMs) !== ev.jstDate(nowMs);
+  }
 }
 
 // ---- イベント警戒（SPEC 5節。外部へは接続しない）----
@@ -197,7 +218,8 @@ async function run({
     log(`${label[vixState.state]}: ${vixState.reasons.join("／") || `VIX は ${prev.vix.date} まで（最新）`}`);
     log(`${label[e.state]}: ${e.reasons.join("／") || `イベント警戒は ${prev.event.base_jst} 基準（今日の分）`}`);
     const t = prev && prev.trial;
-    const tline = (k, nm) => (!t || !t[k] ? `${nm} なし` : t[k].error ? `${nm} 取得失敗` : `${nm} ${t[k].date} 順位${t[k].rank_pct}%`);
+    const tline = (k, nm) => (!t || !t[k] ? `${nm} なし` : t[k].error ? `${nm} 取得失敗`
+      : `${nm} ${t[k].date} 順位${t[k].rank_pct}%${t[k].last_error ? "（直近の取得は失敗。前回の値）" : ""}${t[k].stale ? "（古い）" : ""}`);
     log(`TRIAL（試し運転・判定には使わない）: ${tline("rates_vol", "米国債の値動き")}`);
     return vixState.state === "stale" || e.state === "stale" ? 1 : 0;
   }
@@ -225,8 +247,8 @@ async function run({
   // 試し運転の指標。失敗しても errors にはしない（記事に使っていないため、実行を赤くしない）
   let trial = prevTrial;
   if (trialRefresh) {
-    trial = await fetchTrial({ nowMs, fetchImpl, sleep });
-    for (const w of trial.warnings) log(`試し運転の指標を取得できませんでした: ${w}`);
+    trial = await fetchTrial({ nowMs, fetchImpl, sleep, attempts: trialAttemptsToday(prevTrial, nowMs) + 1, prevRatesVol: prevTrial && prevTrial.rates_vol });
+    for (const w of trial.warnings) log(`::warning title=試し運転の指標（記事には未使用）::${w}`);
   }
   const warnings = [...(vix && vix.warnings ? vix.warnings : []), ...fetchNotes, ...event.warnings];
 
@@ -266,7 +288,7 @@ async function run({
   return errors.length ? 1 : 0;
 }
 
-module.exports = { run, stable, computeEvent, trialNeedsRefresh };
+module.exports = { run, stable, computeEvent, trialNeedsRefresh, trialAttemptsToday, ratesVolRowsNeeded };
 
 if (require.main === module) {
   const argv = process.argv.slice(2);
