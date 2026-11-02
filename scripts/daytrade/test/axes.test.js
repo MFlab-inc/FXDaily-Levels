@@ -31,7 +31,18 @@ test("ライブの生成器（設計①②③・状態更新・型B追加）は 
     const st = buildStatus({ inputs: inputsOf(s17), riskFeed: noFeed, nowMs: s17.nowMs, prevPlan: d2.plan, logRows: d2.logAppend }); // 型B追加
     assert.ok(calls.length >= 10, `evaluate の呼び出しが少なすぎる: ${calls.length}`);
     assert.ok(calls.some((c) => c[1] === "A") && calls.some((c) => c[1] === "B"), "型A・型B の両方が呼ばれる");
-    for (const c of calls) assert.equal(c.length, 2, `evaluate は (ctx, setup) の2引数だけで呼ばれる: ${c.length}`);
+    // ライブの評価は (ctx, setup) の2引数だけ。並行記録（■4）の評価は、直前のライブの評価と同じ (ctx, setup) に、SL下限 (b) だけを指定した3引数で呼ばれる（障害の定義は指定しない）
+    const live = calls.filter((c) => c.length === 2);
+    const shadow = calls.filter((c) => c.length === 3);
+    assert.ok(live.length >= 10 && shadow.length >= 10, `ライブ ${live.length}・並行記録 ${shadow.length}`);
+    assert.equal(live.length + shadow.length, calls.length);
+    calls.forEach((c, i) => {
+      if (c.length === 2) return;
+      assert.deepEqual(c[2], { slFloor: "widen" }, "並行記録は SL下限 (b) だけを指定する");
+      assert.equal(c[0], calls[i - 1][0], "直前のライブの評価と同じ ctx");
+      assert.equal(calls[i - 1].length, 2, "直前はライブの評価");
+      assert.equal(c[1], calls[i - 1][1]);
+    });
     // 出力にも比較軸の印は出ない
     for (const x of [d2, d3, st]) {
       const text = JSON.stringify(x.plan);
@@ -46,11 +57,16 @@ test("ライブの生成器（設計①②③・状態更新・型B追加）は 
 
 test("ライブの生成器のソースに、障害の定義・SL下限方式の指定が無い（バックテストだけが指定する）", () => {
   const root = path.join(__dirname, "..", "..");
-  const live = ["daytrade-plan.js", "daytrade-score.js", "daytrade/plan.js", "daytrade/render.js", "daytrade/schedule.js", "daytrade/typeb.js"];
+  const live = ["daytrade-plan.js", "daytrade-score.js", "daytrade/plan.js", "daytrade/render.js", "daytrade/schedule.js", "daytrade/typeb.js", "daytrade/score.js", "daytrade/versions.js", "daytrade/log.js"];
   for (const f of live) {
     const src = fs.readFileSync(path.join(root, f), "utf8");
     assert.ok(!/slFloor|obstacle\s*:\s*["']|obstacle\s*=\s*["']|'forward'|"forward"|'widen'|"widen"/.test(src), `${f} に比較軸の指定がある`);
   }
+  // 並行記録（参考の案。発注の対象外）の評価だけは SL下限 (b) を指定する。指定してよいのは shadow.js の1か所で、障害の定義は指定しない
+  const shadow = fs.readFileSync(path.join(root, "daytrade/shadow.js"), "utf8");
+  assert.equal((shadow.match(/slFloor/g) || []).length >= 1, true);
+  assert.ok(/slFloor: "widen"/.test(shadow));
+  assert.ok(!/obstacle|forward/.test(shadow.replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "")), "shadow.js は障害の定義を指定しない");
 });
 
 test("判断の台帳（decisions.js）: すべて確定済み。出力の『暫定』の行は出さず、JSON は『未確定の判断なし』と書く", () => {

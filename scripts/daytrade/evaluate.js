@@ -41,6 +41,7 @@ const REASONS = {
   no_direction: "方向根拠なし", unreachable: "届かない", sl_narrow: "SL幅不足",
   rr_low: "RR不足", cost_low: "コスト不足", adr_over: "ADR消化超過",
   no_reference: "基準水準なし", no_obstacle: "障害なし", no_data: "入力欠落",
+  level_reached: "同じ水準は到達済み", // evaluate() は返さない。生成器（plan.js）が、同じ計画日・型・銘柄・向きで同じ基準水準の版がすでに到達していると判断した案に付ける [Q79]
 };
 const COUNTED = ["no_direction", "unreachable", "sl_narrow", "rr_low", "cost_low", "adr_over"];
 

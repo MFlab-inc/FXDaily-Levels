@@ -7,6 +7,7 @@ const { planDateOf } = require("../windows");
 const { parseH1 } = require("../inputs");
 const { pairOf } = require("../pairs");
 const { designRowOf, entryGapPips } = require("../gap");
+
 const { jstIso } = require("../jst");
 const L = require("../log");
 
@@ -94,7 +95,7 @@ async function runNotify({ dataDir, nowMs, client, failure = null, repoUrl = nul
 
   // 2) 採点の結果（採点から72時間以内の結果だけ。閉じた Issue にも書く。Issue が無い計画日には作らない）
   if (logRows) {
-    const recent = logRows.filter((r) => r.run === "status" && D.SCORED.has(r.reached) && nowMs - Date.parse(r.generated_at) <= D.SCORE_WINDOW_HOURS * 3600000);
+    const recent = logRows.filter((r) => D.isScoredRow(r) && nowMs - Date.parse(r.generated_at) <= D.SCORE_WINDOW_HOURS * 3600000);
     for (const date of [...new Set(recent.map((r) => r.plan_date))].sort()) {
       const issue = byTitle.get(F.issueTitle(date));
       if (!issue) continue;
@@ -122,7 +123,9 @@ async function runNotify({ dataDir, nowMs, client, failure = null, repoUrl = nul
     if (!issue) return;
     if (probe.active && mk.includes(D.K.pending(planDate)) && !mk.includes(D.K.design(planDate))) await post(issue, F.designResultComment({ plan }));
     const ev = D.candidateEvents({ nowMs, plan, intraday, markers: mk });
-    if (ev.cancelled.length) await post(issue, F.cancelComment({ cancelled: ev.cancelled, newCands: ev.newCands, nowMs }));
+    // 到達してから取消された版（log.csv の最後の行が 取消(到達後)）には、保有中の人に向けた一言を添える
+    const reachedKeys = new Set(logRows ? [...L.latestByKey(logRows).entries()].filter(([, r]) => r.run === "status" && r.reached === D.CANCELLED_REACHED).map(([k]) => k) : []);
+    if (ev.cancelled.length) await post(issue, F.cancelComment({ cancelled: ev.cancelled, newCands: ev.newCands, nowMs, reachedKeys }));
     if (ev.newCands.length) await post(issue, F.newCandidatesComment({ cands: ev.newCands, plan }));
     if (ev.near.length) await post(issue, F.nearComment({ events: ev.near, nowMs }));
   });

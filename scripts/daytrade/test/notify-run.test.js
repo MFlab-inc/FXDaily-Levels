@@ -543,3 +543,36 @@ test("帯の近く → 帯に到達: 別々のコメントで1回ずつ（近く
     assert.match(done.ops[0].body, /帯への到達・接近のお知らせ: 3件/);
   } finally { w.cleanup(); }
 });
+
+test("■1 取消の通知: log.csv の最後の行が 取消(到達後) の版にだけ『到達済み。保有中なら元の SL・TP1 のまま』を添える。採点の通知にも 取消(到達後) が入る", async () => {
+  const w = world();
+  try {
+    const p2 = withDesign(2, "2026-10-08T15:30:00+09:00", sel(ALL, "AUDUSD", "EURUSD"), { prev: [D1] });
+    await w.run("2026-10-08T15:35:00+09:00", { plan: p2 });
+    // 設計③: AUDUSD・EURUSD とも消える。EURUSD は H1 で到達してからの取消（ログの最後の行が 取消(到達後)）、AUDUSD は未到達の取消
+    const d = (x) => candRow(x, "design", x.generated_at);
+    const eu = by(ALL, "EURUSD"), au = by(ALL, "AUDUSD");
+    const cancelAt = "2026-10-08T21:30:00+09:00";
+    w.setLog([
+      { ...d(eu), generated_at: "2026-10-08T15:30:00+09:00" }, { ...d(au), generated_at: "2026-10-08T15:30:00+09:00" },
+      { ...d(eu), run: "status", generated_at: cancelAt, reached: "取消(到達後)", reached_at: "2026-10-08T17:00:00+09:00" },
+      { ...d(au), run: "status", generated_at: cancelAt, reached: "取消(再設計)" },
+    ]);
+    const p3 = withDesign(3, cancelAt, [by(ALL, "GBPUSD")], { prev: [D1, { slot: 2, generated_at: "2026-10-08T15:30:00+09:00", inputs_ok: true }] });
+    const r = await w.run("2026-10-08T21:35:00+09:00", { plan: p3 });
+    const cancel = r.ops.find((o) => /案を取消しました/.test(o.body));
+    assert.ok(cancel);
+    assert.match(cancel.body, /EURUSD 売り 型A（Entry 1\.10400〜1\.10420） → 該当する案なし ／ 到達済み。保有中なら元の SL・TP1 のまま/);
+    assert.ok(!/AUDUSD[^\n]*到達済み/.test(cancel.body));
+    // 翌朝の採点（先着まで追った 取消(到達後)）が、採点の結果として1回出る
+    w.setLog([
+      ...w.logRows,
+      { ...d(eu), run: "status", generated_at: "2026-10-09T06:20:00+09:00", reached: "取消(到達後)", reached_at: "2026-10-08T17:00:00+09:00", first_hit_a: "SL", first_hit_b: "SL", exit_a: "1.10500", pips_a: "-10.0", r_a: "-1.00" },
+    ]);
+    const next = await w.run("2026-10-09T06:35:00+09:00", { plan: withDesign(1, "2026-10-09T06:30:00+09:00", [], {}) });
+    const score = next.ops.find((o) => /採点の結果/.test(o.body));
+    assert.ok(score);
+    assert.match(score.body, /EURUSD 売り 型A[^\n]*取消\(到達後\)[^\n]*A案 SL先、B案 SL先/);
+    assert.equal((await w.run("2026-10-09T06:50:00+09:00", { plan: withDesign(1, "2026-10-09T06:30:00+09:00", [], {}) })).ops.filter((o) => /採点の結果/.test(o.body)).length, 0, "もう一度は出さない");
+  } finally { w.cleanup(); }
+});

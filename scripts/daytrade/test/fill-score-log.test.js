@@ -105,10 +105,13 @@ const row = (o = {}) => ({
   same_direction_group: "", entry_low: "1.10400", entry_high: "1.10420", sl_a: "1.10500", tp_a: "1.09900", sl_b: "1.10600", tp_b: "1.09900",
   rr_a: "5.0", rr_b: "2.5", cost_cap_a: "9.2", lot_cap_a_A: "0.20", lot_cap_b_A: "0.10", lot_cap_a_B: "1.56", lot_cap_b_B: "0.78",
   expires_at: "2026-10-09T03:00:00+09:00", reached: "", reached_at: "", first_hit_a: "", first_hit_b: "", filled_ticket_A: "", filled_ticket_B: "",
+  exit_a: "", exit_b: "", pips_a: "", pips_b: "", r_a: "", r_b: "",
   ...o,
 });
-test("log: 列は仕様どおり27列。往復できる。引用符・カンマを含む値も壊れない", () => {
-  assert.equal(L.COLUMNS.length, 27);
+test("log: 列は仕様の27列＋採点の損益の6列（exit・pips・r の A／B）。往復できる。引用符・カンマを含む値も壊れない", () => {
+  assert.equal(L.COLUMNS.length, 33);
+  assert.deepEqual(L.COLUMNS.slice(27), ["exit_a", "exit_b", "pips_a", "pips_b", "r_a", "r_b"]);
+  assert.deepEqual(L.COLUMNS.slice(0, 27), L.LEGACY_COLUMNS);
   const rows = [row(), row({ symbol: "USDJPY", same_direction_group: 'USD売り,"x"' })];
   const text = L.appendedText("", rows);
   assert.equal(text.split("\n")[0], L.COLUMNS.join(","));

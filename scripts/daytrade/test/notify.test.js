@@ -566,3 +566,52 @@ test("帯の近く／帯に到達は別々の出来事: 版ごとにそれぞれ
   assert.deepEqual(F.nearComment({ events: evs(1.1038), nowMs: now }).keys, [NEAR]);
   assert.deepEqual(F.nearComment({ events: evs(1.1041), nowMs: now }).keys, [BAND]);
 });
+
+// ---- ■1 到達してから取消された版（取消(到達後)）----
+test("■1 採点の通知: 先着まで追った 取消(到達後) は採点として1回出す。採点がまだ（先着が空）の 取消(到達後) は取消の扱い。移行で足した古い計画日の採点は出さない", () => {
+  const c = by(BASE, "EURUSD"), a = by(BASE, "AUDUSD"), g = by(BASE, "GBPUSD");
+  const d = (x) => candRow(x, "design", x.generated_at);
+  const st = (x, o) => ({ ...d(x), run: "status", generated_at: "2026-10-09T06:20:00+09:00", ...o });
+  const rows = [
+    d(c), d(a), d(g),
+    st(c, { reached: "取消(到達後)", reached_at: "2026-10-08T17:00:00+09:00", first_hit_a: "SL", first_hit_b: "TP1" }), // 先着まで追った
+    st(a, { reached: "取消(到達後)", reached_at: "2026-10-08T17:00:00+09:00", generated_at: "2026-10-08T21:05:00+09:00" }), // 採点はこれから
+    st(g, { reached: "取消(再設計)", generated_at: "2026-10-08T21:05:00+09:00" }),
+  ];
+  assert.equal(D.isScoredRow(rows[3]), true);
+  assert.equal(D.isScoredRow(rows[4]), false);
+  assert.equal(D.isScoredRow(rows[5]), false);
+  assert.equal(D.isScoredRow({ ...rows[3], run: "design" }), false);
+  const now = iso("2026-10-09T06:30:00+09:00");
+  const r = D.scoreEvents({ logRows: rows, planDate: "2026-10-08", markers: [], nowMs: now });
+  assert.deepEqual(r.due.map((x) => x.row.symbol), ["EURUSD"]);
+  assert.deepEqual(r.all.map((x) => x.state).sort(), ["cancelled", "cancelled", "scored"]);
+  // 移行の行（有効期限から72時間より後に書かれた 取消(到達後)）は通知しない。通常の 取消(到達後) の採点（翌朝）は出す
+  const late = rows.map((x) => (x === rows[3] ? { ...x, generated_at: "2026-11-02T17:30:00+09:00" } : x));
+  assert.deepEqual(D.scoreEvents({ logRows: late, planDate: "2026-10-08", markers: [], nowMs: iso("2026-11-02T17:35:00+09:00") }).due, []);
+  // まとめ: 取消は両方のラベルを数え、採点済みは先着まで追った 取消(到達後) も数える
+  const s = D.daySummary({ logRows: rows, planDate: "2026-10-08", markers: [] });
+  assert.deepEqual(s, { versions: 3, cancelled: 3, scored: 1, valid_at_expiry: 0, near_notified: 0, new_notified: 0 });
+});
+
+test("■1 文面: 採点の結果に 取消(到達後) の先着を載せる。取消の通知は、到達済みの版にだけ『到達済み。保有中なら元の SL・TP1 のまま』を添える", () => {
+  const c = by(BASE, "EURUSD"), a = by(BASE, "AUDUSD");
+  const d = (x) => candRow(x, "design", x.generated_at);
+  const rows = [
+    d(c), d(a),
+    { ...d(c), run: "status", generated_at: "2026-10-09T06:20:00+09:00", reached: "取消(到達後)", reached_at: "2026-10-08T17:00:00+09:00", first_hit_a: "SL", first_hit_b: "TP1" },
+    { ...d(a), run: "status", generated_at: "2026-10-08T21:05:00+09:00", reached: "取消(到達後)", reached_at: "2026-10-08T17:00:00+09:00" },
+  ];
+  const sc = D.scoreEvents({ logRows: rows, planDate: "2026-10-08", markers: [], nowMs: iso("2026-10-09T06:30:00+09:00") });
+  const s = F.scoreComment({ planDate: "2026-10-08", due: sc.due, all: sc.all, gaps: new Map() });
+  assert.match(s.body, /- EURUSD 売り 型A（Entry 1\.10400〜1\.10420）: 取消\(到達後\)（10-08 17:00の足で到達してから取消） ／ A案 SL先、B案 TP1先/);
+  assert.match(s.body, /- AUDUSD 買い 型A（Entry 0\.65580〜0\.65600）: 取消\(到達後\)（10-08 17:00の足で到達。採点はこれから）/);
+  assert.equal(s.keys.length, 1);
+  const cv = (x) => ({ v: D.versionKey(x), info: D.parseVersionKey(D.versionKey(x)) });
+  const k = F.cancelComment({ cancelled: [cv(c), cv(a)], newCands: [], nowMs: iso("2026-10-08T21:35:00+09:00"), reachedKeys: new Set([D.versionKey(c)]) });
+  assert.match(k.body, /EURUSD 売り 型A（Entry 1\.10400〜1\.10420） → 該当する案なし ／ 到達済み。保有中なら元の SL・TP1 のまま/);
+  assert.ok(!/AUDUSD[^\n]*到達済み/.test(k.body), "到達していない版には添えない");
+  assert.equal(F.REACHED_NOTE, "到達済み。保有中なら元の SL・TP1 のまま");
+  // reachedKeys を渡さない（従来の呼び方）では何も添えない
+  assert.ok(!/到達済み/.test(F.cancelComment({ cancelled: [cv(c)], newCands: [], nowMs: iso("2026-10-08T21:35:00+09:00") }).body));
+});

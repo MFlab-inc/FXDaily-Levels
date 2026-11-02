@@ -13,6 +13,8 @@ const { planDateOf, expiresAtMs, noNewEntryReason } = require("./windows");
 const { jstIso, MIN } = require("./jst");
 const { provisionalIds } = require("./decisions");
 const { previousDaySummary } = require("./score");
+const V = require("./versions");
+const { evaluateShadow, shadowOf } = require("./shadow");
 const L = require("./log");
 const N = require("./num");
 
@@ -172,7 +174,7 @@ function rejectedDetail(r, sc) {
 
 function summarize(results) {
   const rejections = Object.fromEntries(COUNTED.map((k) => [k, 0]));
-  const extra = { no_reference: 0, no_obstacle: 0, no_data: 0 };
+  const extra = { no_reference: 0, no_obstacle: 0, no_data: 0, level_reached: 0 };
   const watch = new Map(), noBasis = new Map(), notFormed = [];
   const rejected = []; // 不採用の案（1案1行。出力の3項目目）
   let rows = 0; const pass = { A: 0, B: 0 };
@@ -185,7 +187,7 @@ function summarize(results) {
       if (sc.pass) { pass[s.name] += 1; continue; }
       if (rejections[sc.reason] !== undefined) rejections[sc.reason] += 1;
       else if (extra[sc.reason] !== undefined) extra[sc.reason] += 1;
-      rejected.push({ symbol: r.symbol, setup: r.setup, scheme: s.name, reason: sc.reason, reason_text: REASONS[sc.reason] ?? sc.reason, counted: rejections[sc.reason] !== undefined, detail: sc.reason === "no_direction" ? (r.detail ?? null) : rejectedDetail(r, sc) });
+      rejected.push({ symbol: r.symbol, setup: r.setup, scheme: s.name, reason: sc.reason, reason_text: REASONS[sc.reason] ?? sc.reason, counted: rejections[sc.reason] !== undefined, detail: sc.reason === "no_direction" ? (r.detail ?? null) : sc.reason === "level_reached" ? null : rejectedDetail(r, sc) });
     }
     if (r.setup === "A" && r.symbolReason === "no_direction") {
       (r.outcome === "watch" ? watch : noBasis).set(r.symbol, r.detail);
@@ -193,7 +195,7 @@ function summarize(results) {
   }
   return {
     candidate_rows: rows, scheme_pass: pass, rejections, rejections_text: Object.fromEntries(COUNTED.map((k) => [REASONS[k], rejections[k]])),
-    extra: { 基準水準なし: extra.no_reference, 障害なし: extra.no_obstacle, 入力欠落: extra.no_data },
+    extra: { 基準水準なし: extra.no_reference, 障害なし: extra.no_obstacle, 入力欠落: extra.no_data, [REASONS.level_reached]: extra.level_reached },
     unit: "案（型×銘柄×A/B案）。1案につき最初に当たった理由1つ", rejected_cases: rejected, watch_only: [...watch].map(([symbol, detail]) => ({ symbol, detail })),
     no_basis: [...noBasis].map(([symbol, detail]) => ({ symbol, detail })), not_formed: notFormed,
   };
@@ -208,6 +210,26 @@ function summaryWithCandidates(summary, cands) {
 // 発注できる状態の入力か（鮮度・日次レベル・MTF・イベント停止の対象通貨表・口座設定）。満たさない設計は『済み』にしない（窓の中の次の実行でやり直す）
 function inputsOk(inputs, mtfSt) {
   return !inputs.freshness.stale && inputs.freshness.daily.ok && mtfSt.ok && inputs.rulesOk !== false && !(inputs.accountProblems || []).length;
+}
+
+/**
+ * ■2: 設計①を待つべきか。発注不可の理由が『日次レベル未更新』『方向根拠なし（MTF の日付）』だけのとき、その理由の一覧（文字列の配列）。そうでなければ null。
+ * 『日付が古い』ときだけ（session_date／data_base_date が直近に確定した営業日より前）。ファイルが無い・status が ok でない・日付が新しすぎる・errors だけ、
+ * 鮮度超過・停止対象通貨表・口座設定の問題があるときは待たない（これまでどおり『発注不可』の計画を出す）[Q81]
+ */
+function inputsWaiting(inputs) {
+  const mtfSt = globalMtfStatus(inputs.raw.mtf, inputs.expectedSession);
+  const exp = inputs.expectedSession;
+  const d = inputs.raw.daily, m = inputs.raw.mtf;
+  const dailyOld = !inputs.freshness.daily.ok && Boolean(d) && typeof d.session_date === "string" && d.session_date < exp;
+  const mtfOld = !mtfSt.ok && Boolean(m) && Array.isArray(m.symbols) && m.status === "ok" && typeof m.data_base_date === "string" && m.data_base_date < exp;
+  const other = inputs.freshness.stale || inputs.rulesOk === false || (inputs.accountProblems || []).length > 0
+    || (!inputs.freshness.daily.ok && !dailyOld) || (!mtfSt.ok && !mtfOld);
+  if (other || !(dailyOld || mtfOld)) return null;
+  const out = [];
+  if (dailyOld) out.push(`日次レベル未更新（daily-levels.json の session_date ${d.session_date}、直近に確定した営業日 ${exp}）`);
+  if (mtfOld) out.push(`MTF の日付が古い（mtf-feed.json の data_base_date ${m.data_base_date}、直近に確定した営業日 ${exp}）`);
+  return out;
 }
 
 // 銘柄ごとの方向（表示用）と、その日の停止時間（カレンダーが使えるときだけ）
@@ -299,15 +321,30 @@ function commonPlan({ inputs, riskFeed, nowMs, calSt, mtfSt, run, planDate, logR
   };
 }
 
-function buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows }) {
+// 版の鍵（log.csv の keyOf と同じ）
+const versionKeyOf = (c) => L.keyOf(candRow(c, "design", c.generated_at));
+
+// ■3: 同じ計画日・型・銘柄・向きで、基準水準が同じ版がすでに到達していれば、その案は出し直さない（不採用の理由『同じ水準は到達済み』）[Q79]
+function levelReachedResult(res) {
+  const schemes = Object.fromEntries(Object.entries(res.schemes).map(([n, sc]) => [n, sc.pass ? { ...sc, pass: false, reason: "level_reached" } : sc]));
+  return { ...res, outcome: "rejected", schemes };
+}
+
+function buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows, shadowLogRows = [] }) {
   const planDate = planDateOf(nowMs);
   const mtfSt = globalMtfStatus(inputs.raw.mtf, inputs.expectedSession);
   const calSt = calendarStatus(inputs.raw.calendar, nowMs);
   const pairCur = inputs.rules?.pair_currencies || {};
   // 型A は設計①②③、型B は設計③（設計②は型Aの再設計だけ。型Bは 16:00〜21:59 の状態更新の中で追加する）[Q09]
   const setups = slot === 3 ? ["A", "B"] : ["A"];
+  const rows = L.readLogLike(logRows);
+  const shadowRows = L.readLogLike(shadowLogRows, L.SHADOW_COLUMNS);
+  const hist = V.reachedIdeas({ rows, planDate, barsByCode: inputs.h1, nowMs });
+  const sHist = V.reachedIdeas({ rows: shadowRows, planDate, barsByCode: inputs.h1, nowMs });
   const results = [];
   const cands = [];
+  const shadowCands = [];
+  let shadowPass = 0;
   for (const pair of PAIRS) {
     const windows = stopWindows(inputs.raw.calendar, pairCur[pair.code], calSt);
     for (const setup of setups) {
@@ -319,8 +356,24 @@ function buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows }) {
           schemes: setup === "A" ? Object.fromEntries(SCHEMES.map((s) => [s.name, { name: s.name, pass: false, reason: "no_data" }])) : {},
         };
       } else { ctx = buildCtx(pair, inputs, planDate, setup, mtfSt); res = evaluate(ctx, setup); }
+      const res0 = res;
+      const mk = (r) => toCandidate(r, pair, { planDate, nowMs, slot, calOk: calSt.ok, windows, ctx, commissionPerLot: inputs.commissionPerLotJpy });
+      let cand = null;
+      if (res.outcome === "candidate") {
+        cand = mk(res);
+        if (hist.suppresses(cand, versionKeyOf(cand))) { res = levelReachedResult(res); cand = null; } // ■3
+      }
       results.push(res);
-      if (res.outcome === "candidate") cands.push(toCandidate(res, pair, { planDate, nowMs, slot, calOk: calSt.ok, windows, ctx, commissionPerLot: inputs.commissionPerLotJpy }));
+      if (cand) cands.push(cand);
+      // ■4 並行記録: ライブの出力・判定には影響しない（別の評価を足すだけ）
+      if (ctx) {
+        const sh = shadowOf(res0, evaluateShadow(ctx, setup));
+        if (sh) {
+          shadowPass += sh.onlyB.length;
+          const sc = mk(sh.sres);
+          if (!sHist.suppresses(sc, versionKeyOf(sc))) shadowCands.push(sc);
+        }
+      }
     }
   }
   const sameDay = prevPlan && prevPlan.plan_date === planDate;
@@ -329,9 +382,10 @@ function buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows }) {
   markSameDirection(cands, pairCur);
   rankCandidates(cands);
 
-  const rows = L.readLogLike(logRows);
   const ok = inputsOk(inputs, mtfSt);
   const prevDesigns = sameDay && Array.isArray(prevPlan.designs) ? prevPlan.designs.filter((d) => d.slot !== slot) : [];
+  const summary = summarize(results);
+  summary.sl_floor_b = { pass: shadowPass }; // 参考：SL下限 (b) なら通る案の数（案＝型×銘柄×A/B案。発注の対象外）
   const plan = {
     ...commonPlan({ inputs, riskFeed, nowMs, calSt, mtfSt, run: "design", planDate, logRows }),
     design_slot: slot, generated_at: jstIso(nowMs),
@@ -341,10 +395,14 @@ function buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows }) {
     banners: baseHeader(inputs, nowMs, calSt, mtfSt),
     design_missing: false,
     candidates: cands,
-    summary: summarize(results),
+    summary,
   };
-  const logAppend = designLogRows(plan, prevPlan, rows, nowMs);
-  return { plan, logAppend };
+  const prevRows = sameDay && Array.isArray(prevPlan.candidates) ? prevPlan.candidates.map((pc) => candRow(pc, "design", pc.generated_at)) : [];
+  const logAppend = trackLogRows({ cands: plan.candidates, prevRows, rows, generatedAt: plan.generated_at, nowMs, barsByCode: inputs.h1 });
+  // 並行記録の版は shadow-log.csv の行から引き継ぐ（設計①②は型Aだけ再設計するので、型Bの版は取消さない）
+  const shadowPrev = openRows(shadowRows, planDate).filter((r) => setups.length === 2 || r.setup === "A");
+  const shadowAppend = trackLogRows({ cands: shadowCands, prevRows: shadowPrev, rows: shadowRows, generatedAt: plan.generated_at, nowMs, barsByCode: inputs.h1, variant: L.SHADOW_VARIANT });
+  return { plan, logAppend, shadowAppend };
 }
 
 // log.csv の行（設計の案ごと）。版（値）が既にあれば追記しない。前の設計にあって今回消えた版は『取消（再設計）』を追記 [Q18]
@@ -364,31 +422,42 @@ function candRow(c, run, generatedIso) {
   };
 }
 
-function designLogRows(plan, prevPlan, rows, nowMs) {
+// その計画日に有効な版（最後の行が design／design-b）の行。並行記録（shadow-log.csv）の引き継ぎに使う
+function openRows(rows, planDate) {
+  return [...V.lastLifeByKey(rows).values()].filter((l) => l.design.plan_date === planDate && V.isDesignRow(l.last)).map((l) => l.last);
+}
+
+/**
+ * 案の版の追記と取消（log.csv・shadow-log.csv 共通。variant があれば並行記録の行）。
+ *  cands … 今回の案  prevRows … 直前まで有効だった版の行（今回の案に無ければ取消）  rows … そのファイルの既存の行
+ * 版（値）が既にあれば追記しない。前の設計にあって今回消えた版は、H1 足で取消の時刻までの到達を判定して取消の行を追記する [Q18]：
+ *   到達していれば 取消(到達後)（reached_at＝H1 で到達した足の時刻。先着はその版の有効期限後の採点で判定）、そうでなければ 取消(再設計)。
+ *   取消の時刻までの H1 足が届いていなければ 取消(再設計) とし、採点のときに判定し直す（score.js）。
+ */
+function trackLogRows({ cands, prevRows, rows, generatedAt, nowMs, barsByCode, variant = null }) {
   const latest = L.latestByKey(rows);
+  const tag = (r) => (variant ? { variant, ...r } : r);
   const out = [];
   const newKeys = new Set();
-  for (const c of plan.candidates) {
-    const row = candRow(c, "design", plan.generated_at);
+  for (const c of cands) {
+    const row = candRow(c, "design", generatedAt);
     const key = L.keyOf(row);
     newKeys.add(key);
     const last = latest.get(key);
     if (last) { row.filled_ticket_A = last.filled_ticket_A; row.filled_ticket_B = last.filled_ticket_B; } // 人が埋めた約定の突き合わせは引き継ぐ
     // 版がまだ無い、または直近の行が status（取消済み）なら、新しい design の行として追記する（取消後に同じ案が再び出たとき、ログ・採点から漏れない）
-    if (!last || last.run === "status") out.push(row);
+    if (!last || last.run === "status") out.push(tag(row));
   }
-  if (prevPlan && prevPlan.plan_date === plan.plan_date && Array.isArray(prevPlan.candidates)) {
-    for (const pc of prevPlan.candidates) {
-      const pr = candRow(pc, "design", pc.generated_at);
-      const key = L.keyOf(pr);
-      if (newKeys.has(key)) continue; // 同じ版が続く
-      const last = latest.get(key) || pr;
-      if (last.run === "status") continue; // 既に取消・採点済み
-      out.push({
-        ...last, run: "status", generated_at: plan.generated_at,
-        reached: "取消(再設計)", reached_at: pc.state?.reached_at || "",
-      });
-    }
+  for (const pr of prevRows) {
+    const key = L.keyOf(pr);
+    if (newKeys.has(key)) continue; // 同じ版が続く
+    const last = latest.get(key) || pr;
+    if (last.run === "status") continue; // 既に取消・採点済み
+    const j = V.judgeCancel({ designRow: last, bars: barsByCode?.[last.symbol], cancelMs: nowMs });
+    out.push(tag({
+      ...last, run: "status", generated_at: generatedAt,
+      reached: j.reached ? V.CANCEL_REACHED : V.CANCEL, reached_at: j.reached ? jstIso(j.reached_at) : "",
+    }));
   }
   return out;
 }
@@ -396,33 +465,41 @@ function designLogRows(plan, prevPlan, rows, nowMs) {
 // ---- 状態更新 ----
 // 型B の追加（Q09）: JST 16:00〜21:59 の状態更新で、東京レンジをMTFの向きにブレイクして戻っていない銘柄を新規に設計する。
 // 同じ計画日・同じ銘柄・同じ向きの型Bが既にあれば（計画にもログにも。取消済みも）追加しない。
-function typeBAdditions({ inputs, nowMs, planDate, mtfSt, calSt, pairCur, cands, rows }) {
-  if (!isBAddTime(nowMs) || !inputsOk(inputs, mtfSt)) return []; // 古い入力・使えない入力では追加しない（追加するとログと『同じ日の同じ型B』の重複判定に残るため）
+function typeBAdditions({ inputs, nowMs, planDate, mtfSt, calSt, pairCur, cands, rows, shadowRows = [] }) {
+  const none = { added: [], shadowAdded: [], shadowPass: 0 };
+  if (!isBAddTime(nowMs) || !inputsOk(inputs, mtfSt)) return none; // 古い入力・使えない入力では追加しない（追加するとログと『同じ日の同じ型B』の重複判定に残るため）
   const existing = new Set(cands.filter((c) => c.setup === "B").map((c) => `${c.symbol}|${c.side}`));
   for (const r of rows) if (r.plan_date === planDate && r.setup === "B") existing.add(`${r.symbol}|${r.side}`);
-  const added = [];
+  // 並行記録（■4）も同じ規則を、自分のログだけで独立に判定する
+  const sExisting = new Set();
+  for (const r of shadowRows) if (r.plan_date === planDate && r.setup === "B") sExisting.add(`${r.symbol}|${r.side}`);
+  const out = { added: [], shadowAdded: [], shadowPass: 0 };
   for (const pair of PAIRS) {
     if (!inputs.raw.intraday?.pairs?.[pair.code]) continue;
     const ctx = buildCtx(pair, inputs, planDate, "B", mtfSt);
     const res = evaluate(ctx, "B");
-    if (res.outcome !== "candidate") continue;
-    const k = `${pair.code}|${res.side}`;
-    if (existing.has(k)) continue;
-    existing.add(k);
-    added.push(toCandidate(res, pair, {
-      planDate, nowMs, slot: null, calOk: calSt.ok, windows: stopWindows(inputs.raw.calendar, pairCur[pair.code], calSt),
-      ctx, commissionPerLot: inputs.commissionPerLotJpy, run: "design-b",
-    }));
+    const windows = stopWindows(inputs.raw.calendar, pairCur[pair.code], calSt);
+    const mk = (r) => toCandidate(r, pair, { planDate, nowMs, slot: null, calOk: calSt.ok, windows, ctx, commissionPerLot: inputs.commissionPerLotJpy, run: "design-b" });
+    if (res.outcome === "candidate") {
+      const k = `${pair.code}|${res.side}`;
+      if (!existing.has(k)) { existing.add(k); out.added.push(mk(res)); }
+    }
+    const sh = shadowOf(res, evaluateShadow(ctx, "B"));
+    if (sh) {
+      const k = `${pair.code}|${sh.sres.side}`;
+      if (!sExisting.has(k)) { sExisting.add(k); out.shadowAdded.push(mk(sh.sres)); out.shadowPass += sh.onlyB.length; }
+    }
   }
-  return added;
+  return out;
 }
 
-function buildStatus({ inputs, riskFeed, nowMs, prevPlan, logRows }) {
+function buildStatus({ inputs, riskFeed, nowMs, prevPlan, logRows, shadowLogRows = [] }) {
   const planDate = planDateOf(nowMs);
   const mtfSt = globalMtfStatus(inputs.raw.mtf, inputs.expectedSession);
   const calSt = calendarStatus(inputs.raw.calendar, nowMs);
   const pairCur = inputs.rules?.pair_currencies || {};
   const rows = L.readLogLike(logRows);
+  const shadowRows = L.readLogLike(shadowLogRows, L.SHADOW_COLUMNS);
   const same = Boolean(prevPlan && prevPlan.plan_date === planDate);
   // 今日の設計の履歴。古い形式（designs が無い）の plan.json は generated_at から1件とみなす
   const designs = !same ? [] : Array.isArray(prevPlan.designs) ? prevPlan.designs : prevPlan.generated_at ? [{ slot: prevPlan.design_slot ?? null, generated_at: prevPlan.generated_at }] : [];
@@ -435,21 +512,25 @@ function buildStatus({ inputs, riskFeed, nowMs, prevPlan, logRows }) {
 
   const base = same && Array.isArray(prevPlan.candidates) ? prevPlan.candidates : [];
   const cands = base.map((c) => updateCandidate(c, inputs, nowMs, planDate, pairCur, calSt));
-  const additions = typeBAdditions({ inputs, nowMs, planDate, mtfSt, calSt, pairCur, cands, rows });
+  const { added: additions, shadowAdded, shadowPass } = typeBAdditions({ inputs, nowMs, planDate, mtfSt, calSt, pairCur, cands, rows, shadowRows });
   cands.push(...additions);
   if (additions.length || cands.length) { markSameDirection(cands, pairCur); rankCandidates(cands); }
 
+  let summary = summaryWithCandidates(same ? prevPlan.summary ?? null : null, cands);
+  // 参考：SL下限 (b) なら通る案の数に、状態更新で追加した型Bの分を足す（設計時の数は引き継ぐ）
+  if (summary && shadowPass) summary = { ...summary, sl_floor_b: { pass: (summary.sl_floor_b?.pass ?? 0) + shadowPass } };
   const plan = {
     ...commonPlan({ inputs, riskFeed, nowMs, calSt, mtfSt, run: "status", planDate, logRows }),
     design_slot: same ? prevPlan.design_slot ?? null : null, generated_at: same ? prevPlan.generated_at ?? null : null,
     designs,
     inputs_ok: ok, order_ok: !designMissing && ok, banners,
     design_missing: designMissing,
-    candidates: cands, summary: summaryWithCandidates(same ? prevPlan.summary ?? null : null, cands),
+    candidates: cands, summary,
     additions_b: additions.map((c) => c.id),
   };
   const logAppend = additions.map((c) => candRow(c, "design-b", c.generated_at));
-  return { plan, logAppend };
+  const shadowAppend = shadowAdded.map((c) => ({ variant: L.SHADOW_VARIANT, ...candRow(c, "design-b", c.generated_at) }));
+  return { plan, logAppend, shadowAppend };
 }
 
 // Entry・SL・TP は変えない。距離・ADR消化・到達／失効・新規可否・停止中だけ更新
@@ -477,4 +558,4 @@ function updateCandidate(c, inputs, nowMs, planDate, pairCur, calSt) {
   };
 }
 
-module.exports = { SCHEMA_VERSION, buildDesign, buildStatus, buildCtx, toCandidate, candRow, markSameDirection, rankCandidates, summarize, entryStateOf, pipsOf, typeBAdditions };
+module.exports = { SCHEMA_VERSION, buildDesign, buildStatus, buildCtx, toCandidate, candRow, markSameDirection, rankCandidates, summarize, entryStateOf, pipsOf, typeBAdditions, inputsWaiting, versionKeyOf, openRows, trackLogRows };

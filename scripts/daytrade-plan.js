@@ -6,7 +6,7 @@
  *   node scripts/daytrade-plan.js --run=status                  … 手動: 状態更新（距離・ADR消化・鮮度・到達／失効・停止中。JST 16:00〜21:59 は型Bの追加も）
  * 環境変数 DAYTRADE_RUN / DAYTRADE_SLOT でも指定できる（workflow_dispatch の入力）。
  *   --resolve   種類を決めて key=value を出力するだけ（GITHUB_OUTPUT 用）
- *   --force     済み・同じ時間内の判定を無視して必ず実行（手動の試験用）
+ *   --force     済み・同じ時間内の判定・設計①の入力待ちを無視して必ず実行（手動の試験用）
  *   --now=<ISO> 現在時刻を指定（試験用）  --data-dir=<dir>  --no-risk-feed  --dry-run（書き込まない）
  * 既存のファイル（fetch.js・daytrade.js・intraday.json など）は読むだけで、変更しない。
  */
@@ -15,7 +15,7 @@ const path = require("path");
 const { parseArgs, repoRoot, dataDir: defaultDataDir } = require("./daytrade/cli");
 const { loadInputs } = require("./daytrade/inputs");
 const { fetchRiskFeed } = require("./daytrade/riskfeed");
-const { buildDesign, buildStatus } = require("./daytrade/plan");
+const { buildDesign, buildStatus, inputsWaiting } = require("./daytrade/plan");
 const { render } = require("./daytrade/render");
 const { resolveAuto, designsDone } = require("./daytrade/schedule");
 const { planDateOf } = require("./daytrade/windows");
@@ -39,6 +39,11 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
   // log.csv が壊れていても生成は止めない（追記だけ行わず、バナーで知らせる）。壊れたファイルを上書きしない
   let logRows = [], logBroken = null;
   try { logRows = logText ? L.parseLog(logText) : []; } catch (e) { logBroken = String(e.message || e).slice(0, 160); }
+  // 並行記録（参考。SL下限 (b) の案）も同じ。読めなければ追記だけ行わず、ライブの計画・log.csv には影響させない
+  const shadowPath = path.join(dataDir, "daytrade", "shadow-log.csv");
+  const shadowText = fs.existsSync(shadowPath) ? fs.readFileSync(shadowPath, "utf8") : "";
+  let shadowRows = [], shadowBroken = null;
+  try { shadowRows = shadowText ? L.parseLog(shadowText, L.SHADOW_COLUMNS) : []; } catch (e) { shadowBroken = String(e.message || e).slice(0, 160); }
 
   // 1) 起動の種類: 手動（run を指定）か、自動（実行時刻と済みの設計で決める）
   let action, slot = null, reason = null;
@@ -78,23 +83,34 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
 
   // 3) 入力
   const inputs = loadInputs({ dataDir, repoRoot, nowMs, env });
+  // 設計①の窓の中で、発注不可の理由が『日次レベル未更新』『MTF の日付』だけなら、発注不可の計画をコミットせず、次の実行を待つ（入力がそろった最初の実行が設計①になる）。
+  // 窓の終わりまでそろわなければ、設計が無いまま窓が終わり、『設計なし』の異常として通知される。手動（run を指定）と --force では待たない。採点（daytrade-score.js）はこの前に動いている [Q81]
+  if (!manual && action === "design" && slot === 1 && !args.force) {
+    const waiting = inputsWaiting(inputs);
+    if (waiting) {
+      io.log(`[daytrade] 入力待ち: 設計①の窓の中で、${waiting.join(" ／ ")}。何も書かず、次の実行を待ちます（${jstIso(nowMs)}）`);
+      return { waiting };
+    }
+  }
   const riskFeed = args["no-risk-feed"] ? { status: "未取得", reason: "取得しない指定", pairs: {} } : await fetchRiskFeed({ nowMs });
 
   // 4) 組み立て
-  const { plan, logAppend } = action === "design"
-    ? buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows })
-    : buildStatus({ inputs, riskFeed, nowMs, prevPlan, logRows });
+  const { plan, logAppend, shadowAppend } = action === "design"
+    ? buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows, shadowLogRows: shadowRows })
+    : buildStatus({ inputs, riskFeed, nowMs, prevPlan, logRows, shadowLogRows: shadowRows });
   if (logBroken) plan.banners.push(`log.csv を読めないため、ログの追記を行っていません（${logBroken}）`);
+  if (shadowBroken) io.log(`[daytrade] shadow-log.csv を読めないため、並行記録の追記を行っていません（${shadowBroken}）`); // 参考の記録なので、計画のバナーには出さない
   const txt = render(plan, inputs.accounts);
 
   // 5) 書き込み（全部できてから data/ に置く。一時ファイルは data/ の外）。ログを先に置く（途中で止まっても、計画だけが先に公開されて案の記録が抜ける、を避ける）
   const entries = [];
   if (!logBroken && logAppend && logAppend.length) entries.push({ file: path.join("daytrade", "log.csv"), content: L.appendedText(logText, logAppend) });
+  if (!shadowBroken && shadowAppend && shadowAppend.length) entries.push({ file: path.join("daytrade", "shadow-log.csv"), content: L.appendedText(shadowText, shadowAppend, L.SHADOW_COLUMNS) });
   entries.push({ file: "daytrade-plan.json", content: JSON.stringify(plan, null, 2) + "\n" }, { file: "daytrade-plan.txt", content: txt });
-  if (args["dry-run"]) { io.log(txt); return { plan, logAppend, dry: true }; }
+  if (args["dry-run"]) { io.log(txt); return { plan, logAppend, shadowAppend, dry: true }; }
   store.writeAll(dataDir, entries);
-  io.log(`[daytrade] ${action}${action === "design" ? `（設計${slot}）` : ""} 計画日 ${plan.plan_date} / 候補 ${plan.candidates.length}件 / 発注${plan.order_ok ? "可" : "不可"} / log追記 ${logBroken ? 0 : logAppend ? logAppend.length : 0}行 / ${jstIso(nowMs)}`);
-  return { plan, logAppend };
+  io.log(`[daytrade] ${action}${action === "design" ? `（設計${slot}）` : ""} 計画日 ${plan.plan_date} / 候補 ${plan.candidates.length}件 / 発注${plan.order_ok ? "可" : "不可"} / log追記 ${logBroken ? 0 : logAppend ? logAppend.length : 0}行 / 並行記録 ${shadowBroken ? 0 : shadowAppend ? shadowAppend.length : 0}行 / ${jstIso(nowMs)}`);
+  return { plan, logAppend, shadowAppend };
 }
 
 if (require.main === module) {
