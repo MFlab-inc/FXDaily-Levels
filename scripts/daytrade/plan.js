@@ -466,13 +466,14 @@ function trackLogRows({ cands, prevRows, rows, generatedAt, nowMs, barsByCode, v
 // 型B の追加（Q09）: JST 16:00〜21:59 の状態更新で、東京レンジをMTFの向きにブレイクして戻っていない銘柄を新規に設計する。
 // 同じ計画日・同じ銘柄・同じ向きの型Bが既にあれば（計画にもログにも。取消済みも）追加しない。
 function typeBAdditions({ inputs, nowMs, planDate, mtfSt, calSt, pairCur, cands, rows, shadowRows = [] }) {
+  // shadowRows が null のときは、並行記録（shadow-log.csv）を読めない。重複の判定ができないので、並行記録の評価そのものをしない（件数が毎時積み上がるのを防ぐ）
   const none = { added: [], shadowAdded: [], shadowPass: 0 };
   if (!isBAddTime(nowMs) || !inputsOk(inputs, mtfSt)) return none; // 古い入力・使えない入力では追加しない（追加するとログと『同じ日の同じ型B』の重複判定に残るため）
   const existing = new Set(cands.filter((c) => c.setup === "B").map((c) => `${c.symbol}|${c.side}`));
   for (const r of rows) if (r.plan_date === planDate && r.setup === "B") existing.add(`${r.symbol}|${r.side}`);
   // 並行記録（■4）も同じ規則を、自分のログだけで独立に判定する
   const sExisting = new Set();
-  for (const r of shadowRows) if (r.plan_date === planDate && r.setup === "B") sExisting.add(`${r.symbol}|${r.side}`);
+  for (const r of shadowRows || []) if (r.plan_date === planDate && r.setup === "B") sExisting.add(`${r.symbol}|${r.side}`);
   const out = { added: [], shadowAdded: [], shadowPass: 0 };
   for (const pair of PAIRS) {
     if (!inputs.raw.intraday?.pairs?.[pair.code]) continue;
@@ -484,7 +485,7 @@ function typeBAdditions({ inputs, nowMs, planDate, mtfSt, calSt, pairCur, cands,
       const k = `${pair.code}|${res.side}`;
       if (!existing.has(k)) { existing.add(k); out.added.push(mk(res)); }
     }
-    const sh = shadowOf(res, evaluateShadow(ctx, "B"));
+    const sh = shadowRows ? shadowOf(res, evaluateShadow(ctx, "B")) : null;
     if (sh) {
       const k = `${pair.code}|${sh.sres.side}`;
       if (!sExisting.has(k)) { sExisting.add(k); out.shadowAdded.push(mk(sh.sres)); out.shadowPass += sh.onlyB.length; }
@@ -499,7 +500,7 @@ function buildStatus({ inputs, riskFeed, nowMs, prevPlan, logRows, shadowLogRows
   const calSt = calendarStatus(inputs.raw.calendar, nowMs);
   const pairCur = inputs.rules?.pair_currencies || {};
   const rows = L.readLogLike(logRows);
-  const shadowRows = L.readLogLike(shadowLogRows, L.SHADOW_COLUMNS);
+  const shadowRows = shadowLogRows === null ? null : L.readLogLike(shadowLogRows, L.SHADOW_COLUMNS); // null = 並行記録を読めない（typeBAdditions を参照）
   const same = Boolean(prevPlan && prevPlan.plan_date === planDate);
   // 今日の設計の履歴。古い形式（designs が無い）の plan.json は generated_at から1件とみなす
   const designs = !same ? [] : Array.isArray(prevPlan.designs) ? prevPlan.designs : prevPlan.generated_at ? [{ slot: prevPlan.design_slot ?? null, generated_at: prevPlan.generated_at }] : [];

@@ -65,6 +65,8 @@ test("■3 設計で: 同じ水準の版が H1 で到達済みなら、SL の違
     assert.equal(eu(d.plan), undefined, "同じ水準は候補に出さない");
     assert.deepEqual(d.plan.candidates.map((x) => x.symbol).sort(), ["AUDUSD", "GBPUSD", "XAUUSD"]);
     assert.equal(d.plan.summary.extra[REASON], 2, "A案・B案の2件");
+    assert.equal(d.plan.summary.candidate_rows, d.plan.candidates.length, "候補数は、出した候補の数（同じ水準の分は含めない）");
+    assert.match(render(d.plan, d.plan.accounts), new RegExp(`候補数: ${d.plan.candidates.length}件`));
     assert.equal(d.plan.summary.rejections.sl_narrow, c.plan.summary.rejections.sl_narrow, "6分類の件数は増えない");
     const cases = d.plan.summary.rejected_cases.filter((r) => r.reason === "level_reached");
     assert.deepEqual(cases.map((r) => [r.symbol, r.setup, r.scheme, r.reason_text, r.counted, r.detail]), [["EURUSD", "A", "A", REASON, false, null], ["EURUSD", "A", "B", REASON, false, null]]);

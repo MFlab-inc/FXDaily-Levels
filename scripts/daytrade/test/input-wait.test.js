@@ -56,8 +56,12 @@ test("inputsWaiting: 理由が日付以外にもあるときは待たない（�
     "口座の資金が未設定": makeScenario({ nowIso: "2026-10-08T06:05:00+09:00", ...STALE, env: { DAYTRADE_EQUITY_A: "" } }),
     "MTF が無い": makeScenario({ nowIso: "2026-10-08T06:05:00+09:00", dailySession: "2026-10-06", tweak: (f) => { f["mtf-feed.json"] = null; } }),
     "日次が無い": makeScenario({ nowIso: "2026-10-08T06:05:00+09:00", mtfBase: "2026-10-06", tweak: (f) => { f["daily-levels.json"] = null; } }),
+    "停止通貨の対応表が壊れている": makeScenario({ nowIso: "2026-10-08T06:05:00+09:00", ...STALE }),
   };
+  // 対応表（config/daytrade-rules.json）の10銘柄が欠けている。日付が古いだけでなく別の問題もあるので、待たずに『発注不可』の計画を書く
+  fs.writeFileSync(path.join(cases["停止通貨の対応表が壊れている"].repoRoot, "config", "daytrade-rules.json"), JSON.stringify({ pair_currencies: { EURUSD: ["EUR", "USD"] } }));
   try {
+    assert.equal(inputsOf(cases["停止通貨の対応表が壊れている"]).rulesOk, false);
     for (const [name, sc] of Object.entries(cases)) assert.equal(inputsWaiting(inputsOf(sc)), null, name);
   } finally { for (const sc of Object.values(cases)) cleanup(sc); }
 });

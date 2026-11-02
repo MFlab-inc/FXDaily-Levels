@@ -59,7 +59,11 @@ const toLine = (row, columns = COLUMNS) => csv.line(columns.map((c) => row[c]));
 function appendedText(existingText, newRows, columns = COLUMNS) {
   let base = existingText && existingText.length ? existingText.replace(/\n*$/, "\n") : `${columns.join(",")}\n`;
   const legacy = LEGACY_OF.get(columns);
-  if (legacy && base.startsWith(`${legacy.join(",")}\n`)) base = `${columns.join(",")}\n${base.slice(legacy.join(",").length + 1)}`;
+  if (legacy) {
+    // 先頭行だけを見る。表計算ソフトを通したファイル（BOM・CRLF）でも、元の BOM と改行はそのまま残して見出しの文字だけ差し替える
+    const m = /^(\uFEFF?)([^\r\n]*)(\r?\n)/.exec(base);
+    if (m && m[2] === legacy.join(",")) base = `${m[1]}${columns.join(",")}${m[3]}${base.slice(m[0].length)}`;
+  }
   return base + newRows.map((r) => toLine(r, columns)).join("\n") + (newRows.length ? "\n" : "");
 }
 

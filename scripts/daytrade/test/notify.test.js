@@ -594,6 +594,31 @@ test("■1 採点の通知: 先着まで追った 取消(到達後) は採点と
   assert.deepEqual(s, { versions: 3, cancelled: 3, scored: 1, valid_at_expiry: 0, near_notified: 0, new_notified: 0 });
 });
 
+test("■1 採点の通知: 片方の案だけ先着が入った 取消(到達後) も採点（A案だけ・B案だけ）。72時間の境目: 金曜分を月曜朝に採点した行は出し、有効期限から72時間より後に書いた移行の行は出さない。通常の採点の行には、この境目を使わない", () => {
+  const c = by(BASE, "EURUSD");
+  const d = (x) => candRow(x, "design", x.generated_at);
+  const st = (o) => ({ ...d(c), run: "status", reached: "取消(到達後)", reached_at: "2026-10-08T17:00:00+09:00", generated_at: "2026-10-09T06:20:00+09:00", ...o });
+  const due = (rows, nowIso, planDate = "2026-10-08") => D.scoreEvents({ logRows: rows, planDate, markers: [], nowMs: iso(nowIso) }).due.length;
+  // 片方の案だけの先着
+  for (const o of [{ first_hit_a: "TP1" }, { first_hit_b: "SL" }]) {
+    const rows = [d(c), st(o)];
+    assert.equal(D.isScoredRow(rows[1]), true);
+    assert.equal(due(rows, "2026-10-09T06:30:00+09:00"), 1);
+    assert.equal(D.daySummary({ logRows: rows, planDate: "2026-10-08", markers: [] }).scored, 1);
+  }
+  const none = [d(c), st({})]; // 先着が両方空 = まだ採点していない
+  assert.equal(due(none, "2026-10-09T06:30:00+09:00"), 0);
+  assert.equal(D.daySummary({ logRows: none, planDate: "2026-10-08", markers: [] }).scored, 0);
+  // 72時間の境目（有効期限＝計画日の翌日 03:00）
+  const fri = (o) => [{ ...d(c), plan_date: "2026-10-09" }, { ...st({ first_hit_a: "SL" }), plan_date: "2026-10-09", ...o }];
+  assert.equal(due(fri({ generated_at: "2026-10-12T06:30:00+09:00" }), "2026-10-12T06:35:00+09:00", "2026-10-09"), 1, "金曜分を月曜朝（有効期限の51.5時間後）に採点した行は出す");
+  assert.equal(due(fri({ generated_at: "2026-10-13T06:10:00+09:00" }), "2026-10-13T06:15:00+09:00", "2026-10-09"), 0, "有効期限の75時間後に書いた移行の行は出さない");
+  assert.equal(due(fri({ generated_at: "2026-10-12T05:00:00+09:00" }), "2026-10-12T05:05:00+09:00", "2026-10-09"), 1, "ちょうど72時間以内の行は出す");
+  // 取消(到達後) 以外（通常の採点の行）は、有効期限から72時間より後に書かれていても、採点から72時間以内なら出す
+  const plain = [d(c), { ...d(c), run: "status", reached: "到達", reached_at: "2026-10-08T17:00:00+09:00", first_hit_a: "SL", generated_at: "2026-10-12T04:00:00+09:00" }];
+  assert.equal(due(plain, "2026-10-12T05:00:00+09:00"), 1);
+});
+
 test("■1 文面: 採点の結果に 取消(到達後) の先着を載せる。取消の通知は、到達済みの版にだけ『到達済み。保有中なら元の SL・TP1 のまま』を添える", () => {
   const c = by(BASE, "EURUSD"), a = by(BASE, "AUDUSD");
   const d = (x) => candRow(x, "design", x.generated_at);

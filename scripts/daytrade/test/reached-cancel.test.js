@@ -89,8 +89,7 @@ test("■1 取消の行を書くとき: 到達していれば 取消(到達後)�
       assert.equal(out[0].reached_at, "");
     }
     assert.equal(out[0].run, "status");
-    assert.equal(out[0].first_hit_a, undefined === out[0].first_hit_a ? undefined : out[0].first_hit_a); // 先着は取消の時には書かない（採点のとき）
-    assert.ok(!out[0].first_hit_a && !out[0].first_hit_b);
+    assert.ok(!out[0].first_hit_a && !out[0].first_hit_b); // 先着は取消の時には書かない（採点のとき）
     assert.equal(L.keyOf(out[0]), L.keyOf(v.design)); // 同じ版
   }
   // 取消の時刻より後に帯へ触れる足があっても、到達にしない（10/29 NZDUSD の到達の足は 20:00。取消が 19:30 なら未到達）
@@ -188,6 +187,7 @@ test("■1 採点: 取消(到達後) の行は、有効期限の前は採点せ�
   const row = ok.newRows[0];
   assert.equal(row.reached, "取消(到達後)");
   assert.equal(row.first_hit_a, "TP1");
+  assert.deepEqual([row.exit_a, row.pips_a, row.r_a], ["177.000", "24.1", "2.11"], "取消(到達後) を通常の採点で採点した行にも損益が入る");
   assert.equal(row.reached_at, "2026-10-15T16:00:00+09:00");
   assert.equal(row.generated_at, J.jstIso(exp + 3 * HR));
   // 採点済みの行（先着が入った行）は、もう採点しない
@@ -206,8 +206,13 @@ test("■1 採点: 取消の時刻に H1 足がそろっていない移行（期
   const second = scoreRows({ rows: [v.design, v.cancel, first.newRows[0]], barsByCode: { EURJPY: bars }, nowMs: exp + HR });
   assert.equal(second.newRows.length, 1);
   assert.equal(second.newRows[0].first_hit_a, "TP1");
+  assert.deepEqual([second.newRows[0].exit_a, second.newRows[0].pips_a, second.newRows[0].r_a], ["177.000", "24.1", "2.11"]);
   // 取消の時刻は最初の取消の行（v.cancel）のもの。移行の行の書いた時刻ではない
   assert.equal(hm(J.parseIso(second.newRows[0].reached_at)), "10-15 16:00");
+  // 取消の時刻は『最初の status の行』のものであって、移行で足した行（書いた時刻）のものではない
+  const life = V.livesOf([v.design, v.cancel, first.newRows[0]])[0];
+  assert.equal(V.cancelMsOf(life), J.parseIso(v.cancel.generated_at));
+  assert.notEqual(V.cancelMsOf(life), J.parseIso(first.newRows[0].generated_at));
 });
 
 test("■1 前営業日の集計（出力の6項目目）: 取消(到達後) を数え、先着まで追った分は A案／B案の先着にも含める。txt にも出る", () => {
@@ -252,6 +257,28 @@ test("■1 見出しの移行: 古い見出し（27列）の log.csv も読め�
   assert.throws(() => L.parseLog("plan_date,generated_at\n1,2\n"), /見出し行/);
 });
 
+test("■1 見出しの移行: 表計算ソフトを通した log.csv（BOM つき・CRLF）でも、見出しの行だけを33列にし、BOM と改行はそのまま残す。shadow-log.csv の旧い見出しは対象外", () => {
+  const row = (o) => ({ ...Object.fromEntries(L.COLUMNS.map((c) => [c, ""])), plan_date: "2026-10-08", generated_at: "2026-10-08T15:30:00+09:00", run: "design", setup: "A", symbol: "EURUSD", side: "sell", entry_low: "1.10400", entry_high: "1.10420", ...o });
+  const lf = L.appendedText("", [row({}), row({ symbol: "GBPUSD" })], L.LEGACY_COLUMNS);
+  const add = [row({ run: "status", reached: "到達", exit_a: "1.09900", pips_a: "50.5", r_a: "5.05" })];
+  for (const [name, text] of [["CRLF", lf.replace(/\n/g, "\r\n")], ["BOM", `\uFEFF${lf}`], ["BOM+CRLF", `\uFEFF${lf.replace(/\n/g, "\r\n")}`]]) {
+    const next = L.appendedText(text, add);
+    const first = next.split(/\r?\n/)[0].replace(/^\uFEFF/, "");
+    assert.equal(first, L.COLUMNS.join(","), `${name}: 見出しは33列`);
+    assert.equal(next.startsWith("\uFEFF"), text.startsWith("\uFEFF"), `${name}: BOM はそのまま`);
+    assert.equal(next.slice(next.indexOf("\n") + 1, next.indexOf("\n") + 1 + 20), text.slice(text.indexOf("\n") + 1, text.indexOf("\n") + 1 + 20), `${name}: 既存の行は変えない`);
+    assert.equal(next.split("\n")[0].endsWith("\r"), text.split("\n")[0].endsWith("\r"), `${name}: 見出しの改行はそのまま`);
+    const rows = L.parseLog(next);
+    assert.equal(rows.length, 3);
+    assert.equal(rows[2].r_a, "5.05");
+    // 2回目の追記でも見出しは33列のまま（もう旧い見出しではない）
+    assert.equal(L.parseLog(L.appendedText(next, add)).length, 4);
+  }
+  // 旧い見出しでないファイルの見出し行は、触らない
+  const cur = L.appendedText("", [row({})]);
+  assert.equal(L.appendedText(cur, []), cur);
+});
+
 // ---- ■5 損益の列 ----
 const sim = (side, entry, schemes) => ({ side, schemes });
 const mk = (o) => ({ symbol: "EURUSD", side: "sell", entry_low: "1.10400", entry_high: "1.10420", sl_a: "1.10500", sl_b: "1.10600", ...o });
@@ -269,8 +296,10 @@ test("■5 損益の列: 最悪Entry（売り=帯の下端、買い=帯の上端
   assert.deepEqual(xau, { exit_a: "4184.50", pips_a: "-66.9", r_a: "-1.00" });
   // SL を越えて始まった足（ギャップ）は、始値で決済するので R が -1 より悪くなる
   assert.deepEqual(pnlColumns(mk({ sl_b: "" }), { schemes: { A: { exit_price: 1.107 } } }), { exit_a: "1.10700", pips_a: "-30.0", r_a: "-3.00" });
-  // 損益 0 は「-0.0」にしない
+  // 損益 0 は「-0.0」にしない。わずかな損（0.1pips）が R の小数2桁で 0 に丸まる場合も「-0.00」にしない（SL幅 50pips）
   assert.equal(pnlColumns(mk({ sl_b: "" }), { schemes: { A: { exit_price: 1.104 } } }).pips_a, "0.0");
+  const tiny = pnlColumns(mk({ sl_a: "1.10900", sl_b: "" }), { schemes: { A: { exit_price: 1.10401 } } });
+  assert.deepEqual([tiny.pips_a, tiny.r_a], ["-0.1", "0.00"]);
   // 案の無い列は空（その案が通っていない）。円の金額の列は無い
   assert.deepEqual(Object.keys(pnlColumns(mk({ sl_a: "", sl_b: "1.10600" }), { schemes: { B: { exit_price: 1.1 } } })).sort(), ["exit_b", "pips_b", "r_b"]);
   assert.ok(L.PNL_COLUMNS.every((x) => !/jpy|yen|円/i.test(x)));

@@ -186,6 +186,57 @@ test("■4 型Bの追加（16:00〜21:59 の状態更新）も並行記録する
   } finally { cleanup(d, s17); }
 });
 
+test("■4 ライブが全案不採用でも (b) で通れば記録する。件数の単位は案（A案・B案それぞれ1件）。ライブの候補には出ない", () => {
+  // H1 の幅 5pips: A案・B案とも (a) では『SL幅不足』→ ライブの EURUSD は不採用。(b) なら両案とも 10pips で通る
+  const sc = makeScenario({ barsEdit: { EURUSD: narrow(5) } });
+  try {
+    const { plan, logAppend, shadowAppend } = buildDesign({ inputs: inputsOf(sc), riskFeed: noFeed, nowMs: sc.nowMs, slot: 2, prevPlan: null, logRows: [] });
+    assert.equal(eurusd(plan.candidates), undefined, "ライブの候補に EURUSD は無い");
+    assert.ok(!logAppend.some((x) => x.symbol === "EURUSD"), "log.csv にも入らない");
+    const rows = shadowAppend.filter((x) => x.symbol === "EURUSD");
+    assert.equal(rows.length, 1);
+    assert.deepEqual([rows[0].variant, rows[0].run, rows[0].setup, rows[0].sl_a, rows[0].sl_b], ["sl_floor_b", "design", "A", "1.10500", "1.10500"]);
+    assert.equal(plan.summary.sl_floor_b.pass, 2, "A案とB案で2件（版の数ではなく案の数）");
+    assert.match(render(plan, plan.accounts), /参考：SL下限\(b\)なら通る案 2件（発注対象外）/);
+  } finally { cleanup(sc); }
+});
+
+test("■4 設計③は型Bも並行記録する（型A・型Bの両方を評価）。①②は型Aだけ", () => {
+  const down = { EURUSD: { bars: { dir: "down" } } };
+  const sc = makeScenario({ nowIso: "2026-10-08T16:00:00+09:00", spec: down, barsEdit: { EURUSD: narrow(5) } });
+  try {
+    const d3 = buildDesign({ inputs: inputsOf(sc), riskFeed: noFeed, nowMs: sc.nowMs, slot: 3, prevPlan: null, logRows: [] });
+    assert.deepEqual(d3.shadowAppend.filter((x) => x.symbol === "EURUSD").map((x) => x.setup).sort(), ["A", "B"]);
+    assert.equal(eurusd(d3.plan.candidates), undefined);
+    const d2 = buildDesign({ inputs: inputsOf(sc), riskFeed: noFeed, nowMs: sc.nowMs, slot: 2, prevPlan: null, logRows: [] });
+    assert.deepEqual(d2.shadowAppend.filter((x) => x.symbol === "EURUSD").map((x) => x.setup), ["A"]);
+  } finally { cleanup(sc); }
+});
+
+test("■4 型Bの追加で、ライブでは不採用の型Bも (b) で通れば並行記録する（件数は案の数だけ増える）", () => {
+  const down = { EURUSD: { bars: { dir: "down" } } };
+  const d = makeScenario({ spec: down, barsEdit: { EURUSD: narrow(5) } });
+  const s17 = makeScenario({ nowIso: "2026-10-08T17:00:00+09:00", spec: down, barsEdit: { EURUSD: narrow(5) } });
+  try {
+    const design = buildDesign({ inputs: inputsOf(d), riskFeed: noFeed, nowMs: d.nowMs, slot: 2, prevPlan: null, logRows: [] });
+    const st = buildStatus({ inputs: inputsOf(s17), riskFeed: noFeed, nowMs: s17.nowMs, prevPlan: design.plan, logRows: design.logAppend, shadowLogRows: design.shadowAppend });
+    assert.ok(!st.logAppend.some((x) => x.symbol === "EURUSD"), "ライブの型Bは EURUSD を追加しない（SL幅不足）");
+    assert.deepEqual(st.shadowAppend.map((x) => [x.setup, x.run, x.symbol]), [["B", "design-b", "EURUSD"]]);
+    assert.equal(st.plan.summary.sl_floor_b.pass, design.plan.summary.sl_floor_b.pass + 2, "A案・B案の2件を足す");
+  } finally { cleanup(d, s17); }
+});
+
+test("■4 前の計画日の並行記録の版（採点待ち）には、新しい日の設計で取消の行を足さない", () => {
+  const sc = makeScenario({ barsEdit: { EURUSD: narrow(12) } });
+  try {
+    const first = buildDesign({ inputs: inputsOf(sc), riskFeed: noFeed, nowMs: sc.nowMs, slot: 2, prevPlan: null, logRows: [] });
+    const prevDay = { ...first.shadowAppend[0], plan_date: "2026-10-07", generated_at: "2026-10-07T15:30:00+09:00", expires_at: "2026-10-08T03:00:00+09:00" };
+    const d = buildDesign({ inputs: inputsOf(sc), riskFeed: noFeed, nowMs: sc.nowMs, slot: 2, prevPlan: null, logRows: [], shadowLogRows: [prevDay] });
+    assert.ok(!d.shadowAppend.some((x) => x.plan_date === "2026-10-07"), "前日の版には触らない");
+    assert.equal(d.shadowAppend.filter((x) => x.run === "design" && x.symbol === "EURUSD").length, 1);
+  } finally { cleanup(sc); }
+});
+
 // ---- CLI（ファイル）----
 const quiet = () => { const out = []; return { out, io: { log: (m) => out.push(String(m)) } }; };
 const run = (sc, extra, env = {}) => { const q = quiet(); return main([`--data-dir=${sc.dataDir}`, "--no-risk-feed", `--now=${sc.nowIso}`, ...extra], { ...sc.env, ...env }, q.io).then((r) => ({ r, out: q.out })); };
@@ -257,6 +308,29 @@ test("■4 daytrade-score.js: shadow-log.csv も同じ規則で別に採点す�
       assert.equal(read(sc2, "daytrade/shadow-log.csv"), "x,y\n1,2\n");
     } finally { cleanup(sc2); }
   } finally { cleanup(sc); }
+});
+
+test("■4 daytrade-plan.js: 状態更新を何度繰り返しても、型Bの並行記録は1回だけ。shadow-log.csv を読めないときは、件数を積み上げず並行記録も触らない", async () => {
+  const mk = () => makeScenario({ nowIso: "2026-10-08T17:00:00+09:00", spec: { EURUSD: { bars: { dir: "down" } } }, barsEdit: { EURUSD: narrow(12) } });
+  const count = (sc) => Number(read(sc, "daytrade-plan.txt").match(SHADOW_NOTE)[1]);
+  const designB = (sc) => L.parseLog(read(sc, "daytrade/shadow-log.csv"), L.SHADOW_COLUMNS).filter((x) => x.run === "design-b" && x.setup === "B" && x.symbol === "EURUSD");
+  const sc = mk(), bad = mk();
+  try {
+    // 読める場合: 設計のあと状態更新を3回（--force）→ 型Bの行は1つ、件数も増え続けない
+    await run(sc, ["--run=design", "--slot=2"]);
+    await run(sc, ["--run=status", "--force"]);
+    const n1 = count(sc);
+    for (let i = 0; i < 2; i++) await run(sc, ["--run=status", "--force"]);
+    assert.equal(designB(sc).length, 1);
+    assert.equal(count(sc), n1);
+    // 読めない場合: 件数が毎回増えない。shadow-log.csv は書き換えない
+    await run(bad, ["--run=design", "--slot=2"]);
+    fs.writeFileSync(path.join(bad.dataDir, "daytrade", "shadow-log.csv"), "broken,header\n1,2\n");
+    const counts = [];
+    for (let i = 0; i < 3; i++) { await run(bad, ["--run=status", "--force"]); counts.push(count(bad)); }
+    assert.equal(new Set(counts).size, 1, `件数が増え続けない（${counts.join(",")}）`);
+    assert.equal(read(bad, "daytrade/shadow-log.csv"), "broken,header\n1,2\n");
+  } finally { cleanup(sc, bad); }
 });
 
 test("■4 通知（Issue）には出ない: 並行記録の版・件数は、Issue の本文にもコメントにも入らない。通知は shadow-log.csv を読まない", async () => {

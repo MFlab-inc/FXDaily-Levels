@@ -97,7 +97,7 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
   // 4) 組み立て
   const { plan, logAppend, shadowAppend } = action === "design"
     ? buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows, shadowLogRows: shadowRows })
-    : buildStatus({ inputs, riskFeed, nowMs, prevPlan, logRows, shadowLogRows: shadowRows });
+    : buildStatus({ inputs, riskFeed, nowMs, prevPlan, logRows, shadowLogRows: shadowBroken ? null : shadowRows });
   if (logBroken) plan.banners.push(`log.csv を読めないため、ログの追記を行っていません（${logBroken}）`);
   if (shadowBroken) io.log(`[daytrade] shadow-log.csv を読めないため、並行記録の追記を行っていません（${shadowBroken}）`); // 参考の記録なので、計画のバナーには出さない
   const txt = render(plan, inputs.accounts);
