@@ -63,7 +63,8 @@ jobs:
           node risk/run-daily.js --data-dir "$RUNNER_TEMP/risk" > "$RUNNER_TEMP/out.txt" 2>&1
           code=$?
           cat "$RUNNER_TEMP/out.txt"
-          while IFS= read -r line; do echo "::notice title=run-daily（終了コード ${code}）::${line}"; done < "$RUNNER_TEMP/out.txt"
+          # 注釈（notice）は1ステップ10件までしか残らないため、run-daily の出力は1件にまとめる
+          echo "::notice title=run-daily（終了コード ${code}）::$(tr '\n' ' ' < "$RUNNER_TEMP/out.txt")"
           [ -f "$RUNNER_TEMP/risk/risk.json" ] || exit 1
           node -e '
             const d = require(process.env.RUNNER_TEMP + "/risk/risk.json");
@@ -75,9 +76,14 @@ jobs:
             console.log("::notice title=イベント警戒::" + JSON.stringify({ level: e.level, base_jst: e.base_jst, count: e.count, items: (e.items || []).map((i) => `${i.kind}@${i.at_jst}`) }));
             console.log("::notice title=generation::" + JSON.stringify(d.generation));
             const t = d.trial || {};
+            const brief = {};
             for (const k of ["rates_vol", "cp_spread", "nfci_credit"]) {
               const x = t[k] || {};
-              console.log(`::notice title=試し運転 ${k}::` + JSON.stringify(x.error ? { error: x.error } : { date: x.date, value: x.value, rank_pct: x.rank_pct, count_le: x.count_le, window_start: x.window_start, last_modified: x.last_modified }));
+              brief[k] = x.error ? { error: x.error } : { date: x.date, value: x.value, rank_pct: x.rank_pct, count_le: x.count_le, window_start: x.window_start, stale: x.stale };
+            }
+            console.log("::notice title=試し運転（まとめ）::" + JSON.stringify({ ...brief, warnings: t.warnings }));
+            for (const k of ["rates_vol", "cp_spread", "nfci_credit"]) {
+              const x = t[k] || {};
               console.log(`::notice title=試し運転 ${k} の履歴（日付=値/順位）::` + (x.history || []).map((h) => `${h.date}=${h.value ?? ""}/${h.rank_pct}`).join(" "));
             }
           '

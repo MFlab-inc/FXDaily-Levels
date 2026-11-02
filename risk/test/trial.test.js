@@ -176,3 +176,18 @@ test("--if-stale：VIX が最新でも、その日の試し運転がまだなら
   assert.equal(await go(dir, srv2, "2026-11-01 10:30", ["--if-stale"]), 0);
   assert.equal(srv2.calls.length, 0);
 });
+
+test("最新の値が古ければ警告する（日次は7日、週1回は14日より古いとき）。止めはしない", async () => {
+  const dir = tmp();
+  // NFCI だけ、4月で止まったファイルを返す
+  const srv = server();
+  const base = srv.fetchImpl;
+  srv.fetchImpl = async (url) => (url.includes("nfci") ? new Response(H.syntheticNfciCsv("2024-06-07", "2026-04-24"), { status: 200 }) : base(url));
+  assert.equal(await go(dir, srv, "2026-10-30 10:00"), 0);
+  const t = readRisk(dir).trial;
+  assert.equal(t.nfci_credit.date, "2026-04-24");
+  assert.equal(t.nfci_credit.stale, true);
+  assert.match(t.warnings.join("\n"), /NFCIの信用の部分：最新の値が 2026-04-24 で、14日より古くなっています/);
+  assert.ok(!t.rates_vol.stale && !t.cp_spread.stale);
+  assert.equal(readRisk(dir).generation.status, "ok");
+});

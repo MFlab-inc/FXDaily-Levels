@@ -158,6 +158,17 @@ async function fetchTrial({ nowMs, fetchImpl, sleep }) {
     if (snap.error) throw new Error(snap.error);
     out.nfci_credit = { ...snap, frequency: "weekly", source: N.pageUrl };
   } catch (e) { fail("nfci_credit", "NFCIの信用の部分", e); }
+
+  // 古さの確認（止めはしない）。取得先のファイルが更新されていないことに気づけるように
+  const today = ev.jstDate(nowMs);
+  const ageDays = (d) => (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${d}T00:00:00Z`)) / 86400000;
+  for (const [k, label, maxDays] of [["rates_vol", "米国債の値動き", T.staleDays.daily], ["cp_spread", "CP金利差", T.staleDays.daily], ["nfci_credit", "NFCIの信用の部分", T.staleDays.weekly]]) {
+    const x = out[k];
+    if (x && !x.error && ageDays(x.date) > maxDays) {
+      x.stale = true;
+      out.warnings.push(`${label}：最新の値が ${x.date} で、${maxDays}日より古くなっています（取得先のファイルが更新されていない可能性）`);
+    }
+  }
   return out;
 }
 
