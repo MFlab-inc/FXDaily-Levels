@@ -6,7 +6,7 @@
  *   node risk/run-daily.js               VIX を取得し、イベント警戒を数え直して data/risk.json を更新する（常に取得）
  *   node risk/run-daily.js --if-stale    VIX が最新で、イベント警戒も今日の分で、試し運転の取り直しも要らなければ、何もせず終了
  *                                        （risk.yml の schedule・workflow_run 用）。VIX が最新なら Cboe へは接続しない。
- *                                        試し運転（米国債の値動き）は、新しい米国の営業日の値が出たはずの日に取る（1日3回まで。SPEC 10-1）
+ *                                        試し運転（米国債の値動き）は、新しい米国の営業日の値が出たはずのときに取る（その日付ごとに3回まで。SPEC 10-1）
  *   node risk/run-daily.js --check-fresh 外部へ接続せず、risk.json が「いま」最新か確かめる（古ければ終了コード1）
  *   --data-dir <dir>                     risk.json を置く場所（既定は data/。PR の試験で実データを取得して見るときに使う）
  *
@@ -112,9 +112,9 @@ function mergeByDate(...lists) {
 function ratesVolRowsNeeded(R) { return R.lookback + R.window + R.historyN - 1; }
 
 // prevRatesVol：前回の正しい値。取得に失敗したときは、これを残して last_error を付ける（GPT の値との比較の記録を途切れさせない）
-async function fetchTrial({ nowMs, fetchImpl, sleep, attempts, prevRatesVol }) {
+async function fetchTrial({ nowMs, fetchImpl, sleep, attempts, attemptsFor, prevRatesVol }) {
   const T = cfg.TRIAL, R = T.ratesVol;
-  const out = { note: TRIAL_NOTE, fetched_at: toJstIso(nowMs), attempts, rates_vol: null, warnings: [] };
+  const out = { note: TRIAL_NOTE, fetched_at: toJstIso(nowMs), attempts, attempts_for: attemptsFor, rates_vol: null, warnings: [] };
 
   // ② MOVE の代わり：米国債の金利の実際の値動きの大きさ。今年から1年ずつさかのぼり、足りたら止める（最大4年分）
   try {
@@ -151,35 +151,42 @@ async function fetchTrial({ nowMs, fetchImpl, sleep, attempts, prevRatesVol }) {
   return out;
 }
 
-// その日（日本時間）に、試し運転の指標をすでに何回取りに行ったか
-function trialAttemptsToday(prevTrial, nowMs) {
-  if (!prevTrial || !prevTrial.fetched_at) return 0;
-  const fetchedMs = Date.parse(prevTrial.fetched_at);
-  if (!Number.isFinite(fetchedMs) || ev.jstDate(fetchedMs) !== ev.jstDate(nowMs)) return 0;
+// 回数を数える区切り：待っている米国の日付（"us:YYYY-MM-DD"。米東部18:30を過ぎた、米国債市場の最新の営業日）。
+// 決められないとき（休みが長く続いたときなど）は日本時間の日付（"jst:YYYY-MM-DD"）
+function trialTarget(prevTrial, nowMs) {
+  const rv = prevTrial && prevTrial.rates_vol;
+  try {
+    const known = new Set(((rv && Array.isArray(rv.history)) ? rv.history : []).map((h) => h.date));
+    return `us:${ratesCal.expectedUsLatest(nowMs, known,
+      { readyMin: ratesCfg.US_READY_ET_MIN, uncertainClosedAfterHours: ratesCfg.UNCERTAIN_US_CLOSED_AFTER_HOURS })}`;
+  } catch {
+    return `jst:${ev.jstDate(nowMs)}`;
+  }
+}
+
+// 同じ区切り（target）の中で、すでに何回取りに行ったか。回数が壊れていれば1回とみなす
+function trialAttemptsSoFar(prevTrial, target) {
+  if (!prevTrial || prevTrial.attempts_for !== target) return 0;
   return Number.isInteger(prevTrial.attempts) && prevTrial.attempts > 0 ? prevTrial.attempts : 1;
 }
 
 // 試し運転の指標を取り直すか（SPEC 10-1）。
 //   まだ一度も取っていない → 取る
-//   その日（日本時間）に maxFetchesPerDay 回取った、または前回から60分たっていない → 取らない
-//   前回の取得に失敗した、または米国債の値が公表されているはずの日（米東部18:30を過ぎた営業日）の値が無い → 取る
-// 新しい値が出ない日（週末・米国の休日）は取りに行かない
+//   待っている米国の日付で maxFetchesPerTarget 回取った、または前回から60分たっていない → 取らない
+//   前回の取得に失敗した（error・last_error）、または待っている米国の日付の値が無い → 取る
+// 新しい値が出ない日（週末・米国債市場の休日）は取りに行かない
 function trialNeedsRefresh(prevTrial, nowMs) {
   if (!prevTrial || !prevTrial.fetched_at) return true;
   const fetchedMs = Date.parse(prevTrial.fetched_at);
   if (!Number.isFinite(fetchedMs)) return true;
-  if (trialAttemptsToday(prevTrial, nowMs) >= cfg.TRIAL.maxFetchesPerDay) return false;
+  const target = trialTarget(prevTrial, nowMs);
+  if (trialAttemptsSoFar(prevTrial, target) >= cfg.TRIAL.maxFetchesPerTarget) return false;
   if (nowMs - fetchedMs < cfg.TRIAL.minRefetchMinutes * 60000) return false;
   const rv = prevTrial.rates_vol;
-  if (!rv || rv.error || typeof rv.date !== "string") return true;
-  try {
-    const expected = ratesCal.expectedUsLatest(nowMs, new Set((rv.history || []).map((h) => h.date)),
-      { readyMin: ratesCfg.US_READY_ET_MIN, uncertainClosedAfterHours: ratesCfg.UNCERTAIN_US_CLOSED_AFTER_HOURS });
-    return rv.date < expected;
-  } catch {
-    // 「公表されているはずの日」を決められないときは、1日1回だけ取る
-    return ev.jstDate(fetchedMs) !== ev.jstDate(nowMs);
-  }
+  if (!rv || rv.error || rv.last_error || typeof rv.date !== "string") return true;
+  if (target.startsWith("us:")) return rv.date < target.slice(3);
+  // 待っている日付を決められないときは、日本時間の1日1回
+  return prevTrial.attempts_for !== target;
 }
 
 // ---- イベント警戒（SPEC 5節。外部へは接続しない）----
@@ -247,7 +254,8 @@ async function run({
   // 試し運転の指標。失敗しても errors にはしない（記事に使っていないため、実行を赤くしない）
   let trial = prevTrial;
   if (trialRefresh) {
-    trial = await fetchTrial({ nowMs, fetchImpl, sleep, attempts: trialAttemptsToday(prevTrial, nowMs) + 1, prevRatesVol: prevTrial && prevTrial.rates_vol });
+    const target = trialTarget(prevTrial, nowMs);
+    trial = await fetchTrial({ nowMs, fetchImpl, sleep, attempts: trialAttemptsSoFar(prevTrial, target) + 1, attemptsFor: target, prevRatesVol: prevTrial && prevTrial.rates_vol });
     for (const w of trial.warnings) log(`::warning title=試し運転の指標（記事には未使用）::${w}`);
   }
   const warnings = [...(vix && vix.warnings ? vix.warnings : []), ...fetchNotes, ...event.warnings];
@@ -288,7 +296,7 @@ async function run({
   return errors.length ? 1 : 0;
 }
 
-module.exports = { run, stable, computeEvent, trialNeedsRefresh, trialAttemptsToday, ratesVolRowsNeeded };
+module.exports = { run, stable, computeEvent, trialNeedsRefresh, trialTarget, trialAttemptsSoFar, ratesVolRowsNeeded };
 
 if (require.main === module) {
   const argv = process.argv.slice(2);

@@ -5,7 +5,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const T = require("../lib/trial");
-const { run, trialNeedsRefresh, ratesVolRowsNeeded } = require("../run-daily");
+const { run, trialNeedsRefresh, trialTarget, trialAttemptsSoFar, ratesVolRowsNeeded } = require("../run-daily");
 const cfg = require("../config");
 const H = require("./helpers");
 
@@ -61,7 +61,7 @@ test("順位：最新と直近の履歴。値を載せるかを選べる", () =>
 });
 
 test("HY OAS の代わりの候補（CP 金利差・NFCI）は計算しない（2026-11-02 決定。SPEC 10-2）", () => {
-  assert.deepEqual(Object.keys(cfg.TRIAL).sort(), ["http", "maxFetchesPerDay", "minRefetchMinutes", "ratesVol", "staleDays"]);
+  assert.deepEqual(Object.keys(cfg.TRIAL).sort(), ["http", "maxFetchesPerTarget", "minRefetchMinutes", "ratesVol", "staleDays"]);
   assert.deepEqual(Object.keys(T).sort(), ["TrialError", "parseParYieldCsv", "rankSnapshot", "realizedVolSeries"]);
 });
 
@@ -79,9 +79,9 @@ test("必要な行の数：20＋252＋60−1＝331行で、履歴60個がそろ�
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "risk-trial-"));
 const readRisk = (dir) => JSON.parse(fs.readFileSync(path.join(dir, "risk.json"), "utf8"));
 // to＝VIX の最新日、ratesTo＝米国債の最新日（省略時は to と同じ）。fail に URL の断片 → HTTPステータス
-function server({ to = "2026-10-29", ratesTo = to, fail = {} } = {}) {
+function server({ to = "2026-10-29", ratesTo = to, ratesFrom = "2023-06-01", fail = {} } = {}) {
   const calls = [];
-  const yields = H.syntheticYields("2023-06-01", ratesTo);
+  const yields = H.syntheticYields(ratesFrom, ratesTo);
   const fetchImpl = async (url) => {
     calls.push(url);
     for (const [frag, st] of Object.entries(fail)) if (url.includes(frag)) return new Response("x", { status: st });
@@ -126,6 +126,14 @@ test("年ごとのCSV：10月は今年と前の年の2つで足りる。1月の�
   assert.deepEqual([2027, 2026, 2025, 2024].map((y) => srvJan.n(`csv/${y}/`)), [1, 1, 1, 0]);
   assert.equal(readRisk(dir).trial.rates_vol.date, "2026-12-31");
   assert.equal(readRisk(dir).trial.rates_vol.history.length, 60);
+
+  // ちょうど331行そろった年で止まる（330行なら、さらに前の年を取りに行く）
+  const all = H.syntheticYields("2025-01-01", "2026-10-29");
+  for (const [n, years] of [[331, [1, 1, 0]], [330, [1, 1, 1]]]) {
+    const srvN = server({ ratesFrom: all[all.length - n].date });
+    await go(tmp(), srvN, "2026-10-30 10:00");
+    assert.deepEqual([2026, 2025, 2024].map((y) => srvN.n(`csv/${y}/`)), years, `${n}行`);
+  }
 
   const dir2 = tmp(), srvFail = server({ fail: { "csv/2025/": 503 } });
   assert.equal(await go(dir2, srvFail, "2026-10-30 10:00"), 0);
@@ -186,51 +194,105 @@ test("失敗したときは、前回の正しい値を残して last_error を�
   const t2 = readRisk(dir).trial;
   assert.equal(t2.rates_vol.date, "2026-10-29");
   assert.ok(!("last_error" in t2.rates_vol));
+  assert.equal(t2.attempts, 3);
+  // ここまでで 10/29 を待つ3回を使い切ったので、手動で失敗させても、次の --if-stale では取らない（上限）
+  assert.equal(await go(dir, server({ fail: { "daily-treasury-rates.csv/": 404 } }), "2026-10-30 11:15"), 0);
+  const srvCap = server();
+  await go(dir, srvCap, "2026-10-30 12:20", ["--if-stale"]);
+  assert.equal(srvCap.n("daily-treasury-rates.csv"), 0);
 });
 
-test("取りに行くのは1日3回まで：米国債の値が届かない日、30分ごとに起動しても、取得と risk.json の書き換えは3回で止まる", async () => {
+test("値が最新のときに（手動の実行で）失敗しても、次の --if-stale で取り直す（last_error を残したままにしない）", async () => {
+  const dir = tmp();
+  assert.equal(await go(dir, server(), "2026-10-30 10:00"), 0); // 1回目：10/29 まで（最新）
+  assert.equal(await go(dir, server({ fail: { "daily-treasury-rates.csv/": 404 } }), "2026-10-30 11:00"), 0); // 2回目（手動）：失敗
+  assert.match(readRisk(dir).trial.rates_vol.last_error, /HTTP 404/);
+  const early = server();
+  await go(dir, early, "2026-10-30 11:30", ["--if-stale"]); // 60分たっていない
+  assert.equal(early.n("daily-treasury-rates.csv"), 0);
+  const srv = server();
+  assert.equal(await go(dir, srv, "2026-10-30 12:05", ["--if-stale"]), 0); // 3回目：取り直して成功
+  assert.ok(srv.n("daily-treasury-rates.csv") >= 1);
+  assert.equal(srv.n("cdn-api.cboe.com"), 0);
+  const t = readRisk(dir).trial;
+  assert.ok(!("last_error" in t.rates_vol));
+  assert.equal(t.attempts, 3);
+});
+
+test("残した前回の値の古さは、そのときの日付で計算し直す", async () => {
+  const dir = tmp();
+  assert.equal(await go(dir, server({ ratesTo: "2026-10-28" }), "2026-10-30 08:00"), 0);
+  assert.ok(!readRisk(dir).trial.rates_vol.stale);
+  // 11/06：取得に失敗。残した 10/28 の値は9日前なので古い
+  assert.equal(await go(dir, server({ to: "2026-11-05", fail: { "daily-treasury-rates.csv/": 404 } }), "2026-11-06 10:00", ["--if-stale"]), 0);
+  const t = readRisk(dir).trial;
+  assert.equal(t.rates_vol.date, "2026-10-28");
+  assert.equal(t.rates_vol.stale, true);
+  assert.match(t.rates_vol.last_error, /HTTP 404/);
+  assert.equal(t.warnings.length, 2);
+});
+
+test("取りに行くのは、待っている米国の日付ごとに3回まで：値が届かない日に30分ごとに起動しても3回で止まり、夜中の起動で回数を使わない", async () => {
   const dir = tmp();
   const srv = server({ ratesTo: "2026-10-28" }); // 10/29 の値がいつまでも届かない（VIX は 10/29 まで）
+  const hhmm = (m) => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
   let fetchRounds = 0, writes = 0, last = null;
+  // 10/30 8:00〜23:30（日本時間）。待っている日付は米国の 10/29
   for (let m = 8 * 60; m <= 23 * 60 + 30; m += 30) {
     const before = srv.n("daily-treasury-rates.csv");
-    const now = `2026-10-30 ${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
-    assert.equal(await go(dir, srv, now, m === 8 * 60 ? [] : ["--if-stale"]), 0);
+    assert.equal(await go(dir, srv, `2026-10-30 ${hhmm(m)}`, m === 8 * 60 ? [] : ["--if-stale"]), 0);
     if (srv.n("daily-treasury-rates.csv") > before) fetchRounds++;
     const txt = fs.readFileSync(path.join(dir, "risk.json"), "utf8");
     if (txt !== last) { writes++; last = txt; }
   }
-  assert.equal(fetchRounds, cfg.TRIAL.maxFetchesPerDay);
-  assert.equal(writes, cfg.TRIAL.maxFetchesPerDay);
+  assert.equal(fetchRounds, cfg.TRIAL.maxFetchesPerTarget);
+  assert.equal(writes, cfg.TRIAL.maxFetchesPerTarget);
   assert.equal(srv.n("cdn-api.cboe.com"), 1);
   assert.equal(readRisk(dir).trial.attempts, 3);
-  // 次の日（日本時間）は、また取りに行ける
+  assert.equal(readRisk(dir).trial.attempts_for, "us:2026-10-29");
+  // 10/31 0:00〜7:00：日本時間の日付は変わったが、待っている日付は同じ 10/29 なので取りに行かない
+  for (let m = 0; m <= 7 * 60; m += 30) {
+    const before = srv.n("daily-treasury-rates.csv");
+    await go(dir, srv, `2026-10-31 ${hhmm(m)}`, ["--if-stale"]);
+    assert.equal(srv.n("daily-treasury-rates.csv"), before, `10/31 ${hhmm(m)}`);
+  }
+  // 10/31 7:30（米東部 10/30 18:30）：待っている日付が 10/30 に変わり、また取りに行ける
   const before = srv.n("daily-treasury-rates.csv");
-  await go(dir, srv, "2026-10-31 08:00", ["--if-stale"]);
+  await go(dir, srv, "2026-10-31 07:30", ["--if-stale"]);
   assert.ok(srv.n("daily-treasury-rates.csv") > before);
   assert.equal(readRisk(dir).trial.attempts, 1);
+  assert.equal(readRisk(dir).trial.attempts_for, "us:2026-10-30");
 });
 
-test("取り直しの条件：新しい米国の営業日の値が出たはずのときだけ。60分は待つ。1日3回まで", () => {
+test("取り直しの条件：待っている米国の日付の値が無いとき・前回失敗したときだけ。60分は待つ。同じ日付で3回まで", () => {
+  const T29 = "us:2026-10-29";
   const base = (fetched, rvDate, extra = {}) => ({
     fetched_at: fetched, rates_vol: { date: rvDate, history: [{ date: rvDate }] }, ...extra,
   });
   const now = H.jst("2026-10-30 10:00"); // 米東部 10/29 21:00（夏時間）→ 10/29 の値が出ているはず
+  assert.equal(trialTarget(null, now), T29);
   assert.equal(trialNeedsRefresh(null, now), true);
   assert.equal(trialNeedsRefresh({ fetched_at: "壊れた値" }, now), true);
   assert.equal(trialNeedsRefresh(base("2026-10-29T23:00:00+09:00", "2026-10-29"), now), false);  // 前の日に取ったが、値は最新
-  assert.equal(trialNeedsRefresh(base("2026-10-29T23:00:00+09:00", "2026-10-28"), now), true);   // 前の日に取り、10/29 が未取得
+  assert.equal(trialNeedsRefresh(base("2026-10-29T23:00:00+09:00", "2026-10-28"), now), true);   // 10/29 が未取得
   assert.equal(trialNeedsRefresh(base("2026-10-30T09:30:00+09:00", "2026-10-28"), now), false);  // 60分たっていない
   assert.equal(trialNeedsRefresh(base("2026-10-30T08:30:00+09:00", "2026-10-28"), now), true);   // 10/29 の値が公表済みのはず
   assert.equal(trialNeedsRefresh(base("2026-10-30T08:30:00+09:00", "2026-10-29"), now), false);  // 最新
   assert.equal(trialNeedsRefresh(base("2026-10-30T08:30:00+09:00", "2026-10-29", { rates_vol: { error: "x" } }), now), true);  // 前回失敗
   assert.equal(trialNeedsRefresh(base("2026-10-30T09:30:00+09:00", "2026-10-29", { rates_vol: { error: "x" } }), now), false); // 失敗でも60分は待つ
-  assert.equal(trialNeedsRefresh(base("2026-10-30T08:30:00+09:00", "2026-10-28", { attempts: 3 }), now), false); // 今日はもう3回
-  assert.equal(trialNeedsRefresh(base("2026-10-29T08:30:00+09:00", "2026-10-28", { attempts: 3 }), now), true);  // 3回は前の日の分
-  // 週末：日曜の朝は、金曜（米国）の値が最新なので取らない。冬時間に入った火曜 9:00（米東部 月曜 19:00）は月曜の値を取りに行く
+  // 前回の値を残して失敗（last_error）。値が最新でも取り直す
+  const kept = { rates_vol: { date: "2026-10-29", history: [{ date: "2026-10-29" }], last_error: "x" } };
+  assert.equal(trialNeedsRefresh(base("2026-10-30T08:30:00+09:00", "2026-10-29", kept), now), true);
+  assert.equal(trialNeedsRefresh(base("2026-10-30T08:30:00+09:00", "2026-10-29", { ...kept, attempts: 3, attempts_for: T29 }), now), false);
+  // 回数：同じ日付で3回なら取らない。別の日付の3回は数えない。壊れた回数は1回とみなす
+  assert.equal(trialNeedsRefresh(base("2026-10-30T08:30:00+09:00", "2026-10-28", { attempts: 3, attempts_for: T29 }), now), false);
+  assert.equal(trialNeedsRefresh(base("2026-10-30T08:30:00+09:00", "2026-10-28", { attempts: 3, attempts_for: "us:2026-10-28" }), now), true);
+  for (const bad of ["5", -1, 0, 2.5, null]) assert.equal(trialAttemptsSoFar({ attempts: bad, attempts_for: T29 }, T29), 1, String(bad));
+  assert.equal(trialAttemptsSoFar({ attempts: 2, attempts_for: T29 }, "us:2026-10-30"), 0);
+  // 週末：日曜の朝は、金曜（米国）の値が最新なので取らない。冬時間に入った火曜（米東部 月曜 18:30 ＝ 日本時間 8:30）から月曜の値を取りに行く
   assert.equal(trialNeedsRefresh(base("2026-10-31T09:00:00+09:00", "2026-10-30"), H.jst("2026-11-01 10:00")), false);
-  assert.equal(trialNeedsRefresh(base("2026-11-02T09:00:00+09:00", "2026-10-30"), H.jst("2026-11-03 08:20")), false); // 米東部 11/2 18:20（公表の前）
-  assert.equal(trialNeedsRefresh(base("2026-11-02T09:00:00+09:00", "2026-10-30"), H.jst("2026-11-03 09:00")), true);
+  assert.equal(trialNeedsRefresh(base("2026-11-02T09:00:00+09:00", "2026-10-30"), H.jst("2026-11-03 08:20")), false);
+  assert.equal(trialNeedsRefresh(base("2026-11-02T09:00:00+09:00", "2026-10-30"), H.jst("2026-11-03 08:40")), true);
 });
 
 test("最新の値が古ければ警告する（7日より古いとき）。止めはしない", async () => {

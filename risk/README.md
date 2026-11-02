@@ -22,7 +22,7 @@ swing-flow の記事の「全体の取引可否」に使う5項目のうち、**
 
 ```
 node risk/run-daily.js               # VIX を取得し、イベント警戒を数え直して data/risk.json を更新（常に取得）
-node risk/run-daily.js --if-stale    # VIX が最新なら Cboe へ接続しない。試し運転は新しい米国債の値が出たはずのときだけ取る（1日3回まで）。どれも要らなければ何もしない
+node risk/run-daily.js --if-stale    # VIX が最新なら Cboe へ接続しない。試し運転は新しい米国債の値が出たはずのとき・前回失敗したときだけ取る（待っている米国の日付ごとに3回まで）。どれも要らなければ何もしない
 node risk/run-daily.js --check-fresh # 外部へ接続せず、いま最新か確かめる（古ければ終了コード1）
 node --test risk/test/*.test.js      # 試験
 ```
