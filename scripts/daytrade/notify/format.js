@@ -127,13 +127,15 @@ function newCandidatesComment({ cands, plan }) {
 // 版の鍵・ログの行にある Entry 帯の価格を、銘柄の桁にそろえて出す（候補の表示と同じ桁）
 const bandText = (i) => { const pair = pairOf(i.symbol); const f = (v) => (pair && Number.isFinite(Number(v)) ? Number(v).toFixed(pair.digits) : v); return `Entry ${f(i.entry_low)}〜${f(i.entry_high)}`; };
 // 取消（再設計）。newCands は同じ実行で出た新しい案（同じ型・銘柄・向きがあれば『再設計』）
-function cancelComment({ cancelled, newCands, nowMs }) {
+// reachedKeys: 到達してから取消された版（log.csv の最後の行が 取消(到達後)）の鍵。保有中の人に向けた一言を添える
+const REACHED_NOTE = "到達済み。保有中なら元の SL・TP1 のまま";
+function cancelComment({ cancelled, newCands, nowMs, reachedKeys = new Set() }) {
   const keys = cancelled.map((x) => D.K.cancel(x.v));
   const lines = [`${D.MENTION} 案を取消しました（${hm(jstIso(nowMs))}）`, ""];
-  for (const { info } of cancelled) {
+  for (const { v, info } of cancelled) {
     const re = newCands.find((c) => c.setup === info.setup && c.symbol === info.symbol && c.side === info.side);
     const pair = pairOf(info.symbol);
-    lines.push(`- ${info.symbol} ${SIDE[info.side] ?? info.side} 型${info.setup}（${bandText(info)}） → ${re ? `再設計: 新しい案は ${px(re.band.low, pair)}〜${px(re.band.high, pair)}（別コメント）` : "該当する案なし"}`);
+    lines.push(`- ${info.symbol} ${SIDE[info.side] ?? info.side} 型${info.setup}（${bandText(info)}） → ${re ? `再設計: 新しい案は ${px(re.band.low, pair)}〜${px(re.band.high, pair)}（別コメント）` : "該当する案なし"}${reachedKeys.has(v) ? ` ／ ${REACHED_NOTE}` : ""}`);
   }
   return { body: withMarkers(lines, keys), keys };
 }
@@ -162,6 +164,10 @@ function scoreLine(row, gap) {
     const hits = [row.first_hit_a ? `A案 ${HIT[row.first_hit_a] ?? row.first_hit_a}` : null, row.first_hit_b ? `B案 ${HIT[row.first_hit_b] ?? row.first_hit_b}` : null].filter(Boolean);
     return `- ${base}: 到達（${md(row.reached_at)}の足）${hits.length ? ` ／ ${hits.join("、")}` : ""}`;
   }
+  if (row.reached === D.CANCELLED_REACHED) {
+    const hits = [row.first_hit_a ? `A案 ${HIT[row.first_hit_a] ?? row.first_hit_a}` : null, row.first_hit_b ? `B案 ${HIT[row.first_hit_b] ?? row.first_hit_b}` : null].filter(Boolean);
+    return `- ${base}: 取消(到達後)（${md(row.reached_at)}の足で到達してから取消）${hits.length ? ` ／ ${hits.join("、")}` : ""}`;
+  }
   if (row.reached === "未到達") return `- ${base}: 未到達${Number.isFinite(gap) ? `（Entry帯まで ${gap}pips 足りず）` : ""}`;
   if (row.reached === "失効後到達") return `- ${base}: 失効後到達（${md(row.reached_at)}の足）`;
   return `- ${base}: ${row.reached}`;
@@ -173,7 +179,7 @@ function scoreComment({ planDate, due, all, gaps }) {
   const lines = [`${D.MENTION} 採点の結果（計画日 ${planDate}）`, ""];
   const order = { scored: 0, cancelled: 1, open: 2, other: 3 };
   for (const x of [...all].sort((a, b) => order[a.state] - order[b.state])) {
-    if (x.state === "cancelled") lines.push(`- ${x.row.symbol} ${SIDE[x.row.side] ?? x.row.side} 型${x.row.setup}（${bandText(x.row)}）: 取消(再設計)`);
+    if (x.state === "cancelled") lines.push(`- ${x.row.symbol} ${SIDE[x.row.side] ?? x.row.side} 型${x.row.setup}（${bandText(x.row)}）: ${x.row.reached}${x.row.reached === D.CANCELLED_REACHED ? `（${md(x.row.reached_at)}の足で到達。採点はこれから）` : ""}`);
     else if (x.state === "scored") lines.push(scoreLine(x.row, gaps?.get(x.v)));
     else lines.push(`- ${x.row.symbol} ${SIDE[x.row.side] ?? x.row.side} 型${x.row.setup}（${bandText(x.row)}）: 未採点`);
   }
@@ -216,4 +222,4 @@ function anomalyComment({ evs, planDate }) {
   return { body: withMarkers(lines, keys), keys };
 }
 
-module.exports = { SIDE, SLOT, issueTitle, parseIssueDate, issueBody, designResultComment, candidateBlock, newCandidatesComment, cancelComment, nearComment, scoreComment, summaryComment, anomalyComment };
+module.exports = { SIDE, SLOT, REACHED_NOTE, issueTitle, parseIssueDate, issueBody, designResultComment, candidateBlock, newCandidatesComment, cancelComment, nearComment, scoreComment, summaryComment, anomalyComment };

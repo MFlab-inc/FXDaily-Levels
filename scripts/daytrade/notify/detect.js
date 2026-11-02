@@ -36,6 +36,9 @@ const STALE_ALERT_MIN = 60;         // 入力の更新が止まった通知の�
 const SCORE_WINDOW_HOURS = 72;      // 採点の通知は、採点から72時間以内の結果だけ（金曜分の採点は月曜、通知の失敗は次の実行で再試行される）
 const SCORED = new Set(["到達", "未到達", "失効後到達"]);
 const CANCELLED = "取消(再設計)";
+const CANCELLED_REACHED = "取消(到達後)"; // 到達してから取消された版。採点（有効期限まで SL/TP1 を追った行）は first_hit が入る
+// 採点の行か（run=status で、到達・未到達・失効後到達、または先着まで追った 取消(到達後)）
+const isScoredRow = (r) => r.run === "status" && (SCORED.has(r.reached) || (r.reached === CANCELLED_REACHED && (r.first_hit_a !== "" || r.first_hit_b !== "")));
 const FEEDS = ["intraday.json", "h1-bars.json", "daytrade-context.json"];
 const TRUSTED_AUTHORS = ["github-actions[bot]"]; // GITHUB_TOKEN で書いたときの書き手。手元で別のトークンを使うときは DAYTRADE_NOTIFY_TRUSTED（カンマ区切り）で足す
 
@@ -143,13 +146,16 @@ function scoreEvents({ logRows, planDate, markers, nowMs }) {
   const latest = [...L.latestByKey((logRows || []).filter((r) => r.plan_date === planDate)).entries()];
   const all = latest.map(([v, row]) => ({
     v, row,
-    state: row.run === "status" && SCORED.has(row.reached) ? "scored" : row.run === "status" && row.reached === CANCELLED ? "cancelled" : row.run === "status" ? "other" : "open",
+    state: isScoredRow(row) ? "scored" : row.run === "status" && (row.reached === CANCELLED || row.reached === CANCELLED_REACHED) ? "cancelled" : row.run === "status" ? "other" : "open",
   }));
   const done = new Set(markers);
   const due = all.filter((x) => {
     if (x.state !== "scored" || done.has(K.score(x.v))) return false;
     const t = parseIso(x.row.generated_at); // 採点を書いた時刻
-    return Number.isFinite(t) && nowMs - t <= SCORE_WINDOW_HOURS * HR;
+    if (!(Number.isFinite(t) && nowMs - t <= SCORE_WINDOW_HOURS * HR)) return false;
+    // 過去分の移行で足した 取消(到達後) の採点は、通知しない（有効期限から72時間より後に書かれた行。移行の分を一度に流さない）[Q82]
+    if (x.row.reached === CANCELLED_REACHED && t - expiresAtMs(planDate) > SCORE_WINDOW_HOURS * HR) return false;
+    return true;
   });
   return { all, due };
 }
@@ -161,8 +167,8 @@ const closeDue = ({ nowMs, issueDate, markers }) => isExpired(nowMs, issueDate) 
 // 終了のまとめの材料（log.csv のその計画日の版ごとの最終状態と、通知した件数）
 function daySummary({ logRows, planDate, markers }) {
   const latest = [...L.latestByKey((logRows || []).filter((r) => r.plan_date === planDate)).values()];
-  const cancelled = latest.filter((r) => r.run === "status" && r.reached === CANCELLED).length;
-  const scored = latest.filter((r) => r.run === "status" && SCORED.has(r.reached)).length;
+  const cancelled = latest.filter((r) => r.run === "status" && (r.reached === CANCELLED || r.reached === CANCELLED_REACHED)).length;
+  const scored = latest.filter(isScoredRow).length;
   return {
     versions: latest.length, cancelled, scored, valid_at_expiry: latest.length - cancelled,
     near_notified: markers.filter((k) => k.startsWith("near:") || k.startsWith("band:")).length,
@@ -201,7 +207,7 @@ function anomalyEvents({ nowMs, plan, logRows, feeds, failure, markers }) {
 }
 
 module.exports = {
-  MENTION, LABEL, NEAR_ATR, STALE_ALERT_MIN, SCORE_WINDOW_HOURS, SCORED, CANCELLED, FEEDS, TRUSTED_AUTHORS, K,
+  MENTION, LABEL, NEAR_ATR, STALE_ALERT_MIN, SCORE_WINDOW_HOURS, SCORED, CANCELLED, CANCELLED_REACHED, isScoredRow, FEEDS, TRUSTED_AUTHORS, K,
   isTrusted, safeText, markerOf, parseMarkers, versionKey, validVersion, parseVersionKey, announcedState, isOperating, hourLabel, entryBlockers,
   candidateEvents, scoreEvents, isExpired, closeDue, daySummary, anomalyEvents, jstDow,
 };

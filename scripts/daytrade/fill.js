@@ -78,4 +78,12 @@ function coversExpiry(bars, planDate) {
   return bars[bars.length - 1].t + HR >= expiresAtMs(planDate);
 }
 
-module.exports = { simulate, coversExpiry, overlaps };
+// ms（取消の時刻など）までに確定する足がそろっているか。ms 以前に終わる最後の足（ms の時間の頭に終わる足）が届いていれば、ms までの到達を判定できる。
+// 届いていないとき、『到達』は分かっても『未到達』とは確定できない（採点のときにもう一度判定する）
+function coversUntil(bars, ms) {
+  if (!bars.length) return false;
+  const hourStart = ms - (((ms % HR) + HR) % HR);
+  return bars[bars.length - 1].t + HR >= hourStart;
+}
+
+module.exports = { simulate, coversExpiry, coversUntil, overlaps };

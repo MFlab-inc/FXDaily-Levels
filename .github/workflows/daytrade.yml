@@ -2,8 +2,8 @@ name: Daytrade Plan
 
 # デイトレプラン自動生成（仕様 docs/daytrade-plan-spec.md 7節・10節）。daily.yml・intraday.yml とは別のワークフローで、
 # 失敗してもそれらには影響しない。既存のフィード（intraday.json・h1-bars.json・daily-levels.json・mtf-feed.json・
-# economic-calendar.json・daytrade-context.json）は読むだけで、書くのは次の3ファイルだけ:
-#   data/daytrade-plan.txt / data/daytrade-plan.json / data/daytrade/log.csv
+# economic-calendar.json・daytrade-context.json）は読むだけで、書くのは次の4ファイルだけ:
+#   data/daytrade-plan.txt / data/daytrade-plan.json / data/daytrade/log.csv / data/daytrade/shadow-log.csv（参考の並行記録。SL下限 (b) の案。発注の対象外）
 # 外部のAPIキー（secrets）は使わない（risk-feed.json は公開URLから読む）。
 # 口座の資金（円・整数）は、リポジトリの Secrets（運用）または Variables の DAYTRADE_EQUITY_A（デイトレ専用口座）・DAYTRADE_EQUITY_B（スイング＋デイトレ口座）から読む。
 # 同名が両方にあれば Secrets が優先。ファイル（accounts.json・計画・log.csv）には書かない。未設定なら『上限ロット 未設定・発注不可』になる。設定方法は data/daytrade/README.md。
@@ -17,7 +17,8 @@ name: Daytrade Plan
 # 起動: cron ではなく、intraday のワークフロー（Intraday Snapshot）が完了した直後（workflow_run）。入力が更新された直後に動くので、
 # 鮮度（20分）を満たす。GitHub の schedule が欠落・遅延する問題（daily.yml のコメント参照）の影響も受けない。
 # 実行の種類は『実行時刻（JST）』と『その計画日・その枠の設計が済んでいるか』で、scripts/daytrade/schedule.js が決める:
-#   設計①＋採点  06:00〜08:59 の最初の実行（NY冬時間は 07:00〜09:59）
+#   設計①＋採点  06:00〜08:59 の最初の実行（NY冬時間は 07:00〜09:59）。この窓の中で、発注不可の理由が『日次レベル未更新』『MTF の日付』だけのときは、
+#                 計画をコミットせず入力がそろうのを待つ（入力待ち。採点は動く）。窓の終わりまでそろわなければ『設計なし』の異常として通知する
 #   設計②        15:00〜16:59 の最初の実行
 #   設計③        21:00〜22:59 の最初の実行（冬時間は 22:00〜23:59）
 #   状態更新      それ以外（07:00〜翌02:59。毎時1回まで。前の実行が古い入力だったときは同じ時間内にやり直す）。JST 16:00〜21:59 の状態更新では、型B を追加で設計する（run=design-b）
@@ -112,8 +113,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/daytrade-plan.txt data/daytrade-plan.json
-          # log.csv は最初の案が出るまで存在しない（git add は存在しないパスで失敗するので、あるときだけ足す）
+          # log.csv・shadow-log.csv は最初の案が出るまで存在しない（git add は存在しないパスで失敗するので、あるときだけ足す）
           if [ -f data/daytrade/log.csv ]; then git add data/daytrade/log.csv; fi
+          if [ -f data/daytrade/shadow-log.csv ]; then git add data/daytrade/shadow-log.csv; fi
           git diff --cached --quiet && echo "変更なし" && exit 0
           git commit -m "daytrade: ${ACTION} $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
           # intraday.yml 等と同じリポジトリへ押し合うことがある（他のワークフローは別のファイルを書く）。

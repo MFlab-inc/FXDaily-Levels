@@ -166,6 +166,8 @@ function render(plan, accountsParam = {}) {
   }
   const eg = plan.reference.existing_gate;
   L.push(`  参考：既存ゲート（gate.state。${dt(eg.as_of)} 時点のスナップショット。停止判定には使わない）: ${PAIRS.map((p) => `${p.code} ${eg.states[p.code] ?? "—"}`).join(" ／ ")}`);
+  // 並行記録（参考）: ライブでは不採用だが SL下限 (b) なら通る案の数だけ。候補の欄・Issue には出さない（発注の対象外）
+  if (sm?.sl_floor_b) L.push(`  参考：SL下限(b)なら通る案 ${sm.sl_floor_b.pass}件（発注対象外）`);
 
   // 4. 価格根拠
   L.push("");
@@ -187,8 +189,8 @@ function render(plan, accountsParam = {}) {
   const pd = plan.previous_day;
   if (!pd) L.push("  採点済みの案はありません。");
   else {
-    L.push(`  計画日 ${pd.plan_date}: 案 ${pd.n}件 ／ 到達 ${pd.reached}・未到達 ${pd.not_reached}・失効後到達 ${pd.after_expiry}・取消 ${pd.cancelled}`);
-    L.push(`  先着（到達した案）: A案 TP1 ${pd.a.tp1}・SL ${pd.a.sl}・未決 ${pd.a.open} ／ B案 TP1 ${pd.b.tp1}・SL ${pd.b.sl}・未決 ${pd.b.open}`);
+    L.push(`  計画日 ${pd.plan_date}: 案 ${pd.n}件 ／ 到達 ${pd.reached}・未到達 ${pd.not_reached}・失効後到達 ${pd.after_expiry}・取消 ${pd.cancelled}${pd.cancelled_after_reach ? `・取消(到達後) ${pd.cancelled_after_reach}` : ""}`);
+    L.push(`  先着（到達した案${pd.cancelled_after_reach ? "。取消(到達後)も有効期限まで追った分を含む" : ""}）: A案 TP1 ${pd.a.tp1}・SL ${pd.a.sl}・未決 ${pd.a.open} ／ B案 TP1 ${pd.b.tp1}・SL ${pd.b.sl}・未決 ${pd.b.open}`);
     for (const i of pd.items) L.push(`    ${i.symbol} ${SIDE[i.side] ?? i.side} 型${i.setup}: ${i.reached}${i.reached_at ? `（${dt(i.reached_at)}）` : ""}${i.first_hit_a ? ` A案 ${i.first_hit_a}` : ""}${i.first_hit_b ? ` B案 ${i.first_hit_b}` : ""}`);
   }
 

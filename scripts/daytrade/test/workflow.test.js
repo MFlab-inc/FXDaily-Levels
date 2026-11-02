@@ -37,10 +37,10 @@ test("workflow: workflow_run は main の Intraday Snapshot が成功／失敗�
   assert.match(PLAN, /ref: \$\{\{ github\.event_name == 'workflow_run' && github\.event\.repository\.default_branch \|\| github\.ref \}\}/);
 });
 
-test("workflow: 書き込むのは計画の3ファイルだけ（git add data/ や -A をしない）。secrets を使わない", () => {
+test("workflow: 書き込むのは計画の4ファイルだけ（計画 txt／json・log.csv・並行記録 shadow-log.csv。git add data/ や -A をしない）。secrets を使わない", () => {
   const code = PLAN.split("\n").filter((l) => !l.trim().startsWith("#")).join("\n"); // コメント行は除く
   const added = [...code.matchAll(/git add ([^;\n]+)/g)].flatMap((m) => m[1].trim().split(/\s+/));
-  assert.deepEqual(added.sort(), ["data/daytrade-plan.json", "data/daytrade-plan.txt", "data/daytrade/log.csv"]);
+  assert.deepEqual(added.sort(), ["data/daytrade-plan.json", "data/daytrade-plan.txt", "data/daytrade/log.csv", "data/daytrade/shadow-log.csv"]);
   // secrets は APIキーなどには使わない。使うのは口座の資金（DAYTRADE_EQUITY_A／B。Variables と同名で、ログで伏せるための任意の上書き）だけ
   assert.deepEqual([...new Set([...PLAN.matchAll(/secrets\.([A-Z0-9_]+)/g)].map((m) => m[1]))].sort(), ["DAYTRADE_EQUITY_A", "DAYTRADE_EQUITY_B"]);
   assert.match(PLAN, /group: daytrade-plan/);
@@ -62,11 +62,11 @@ function stepScript(yml, name) {
   return out.join("\n");
 }
 
-test("workflow: 『Commit and push』の手順を実際に動かす — log.csv が無くても計画の2ファイルをコミット・pushできる（有れば3ファイル）", () => {
+test("workflow: 『Commit and push』の手順を実際に動かす — log.csv・shadow-log.csv が無くても計画の2ファイルをコミット・pushできる（有ればそれも）", () => {
   const { execFileSync } = require("node:child_process");
   const os = require("node:os");
   const script = stepScript(PLAN, "Commit and push");
-  const run = (withLog) => {
+  const run = (withLog, withShadow = false) => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "wf-"));
     try {
       const sh = (cmd, cwd = root, env = {}) => execFileSync("bash", ["-ec", cmd], { cwd, env: { ...process.env, ...env }, encoding: "utf8" });
@@ -76,12 +76,15 @@ test("workflow: 『Commit and push』の手順を実際に動かす — log.csv 
       fs.writeFileSync(path.join(work, "data", "daytrade-plan.txt"), "x\n");
       fs.writeFileSync(path.join(work, "data", "daytrade-plan.json"), "{}\n");
       if (withLog) fs.writeFileSync(path.join(work, "data", "daytrade", "log.csv"), "a,b\n");
+      if (withShadow) fs.writeFileSync(path.join(work, "data", "daytrade", "shadow-log.csv"), "a,b\n");
       sh(script, work, { ACTION: "status", GITHUB_REF_NAME: "main" });
       return sh("git show --name-only --format= HEAD", work).trim().split("\n").sort();
     } finally { fs.rmSync(root, { recursive: true, force: true }); }
   };
   assert.deepEqual(run(false), ["data/daytrade-plan.json", "data/daytrade-plan.txt"]);
   assert.deepEqual(run(true), ["data/daytrade-plan.json", "data/daytrade-plan.txt", "data/daytrade/log.csv"]);
+  assert.deepEqual(run(true, true), ["data/daytrade-plan.json", "data/daytrade-plan.txt", "data/daytrade/log.csv", "data/daytrade/shadow-log.csv"]);
+  assert.deepEqual(run(false, true), ["data/daytrade-plan.json", "data/daytrade-plan.txt", "data/daytrade/shadow-log.csv"]); // 並行記録だけがある日（ログは無い）でも足りる
 });
 
 test("workflow: 起動の解決は pipefail 付きの shell で動かす。採点の失敗は設計を止めない。CI の試験ワークフローは secrets を使わず read-only", () => {
