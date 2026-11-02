@@ -47,48 +47,22 @@ test("実際の値動きの大きさ：1つの年限でも値が無い日は、�
   assert.deepEqual(a, b);
 });
 
-test("順位：最新と直近の履歴。値を載せるかを選べる（NFCI は値を載せない）", () => {
+test("順位：最新と直近の履歴。値を載せるかを選べる", () => {
   const series = Array.from({ length: 300 }, (_, i) => ({ date: `d${String(i).padStart(3, "0")}`, value: (i * 37) % 101 }));
   const a = T.rankSnapshot(series, { window: 252, thresholdPct: 80, historyN: 5, keepValue: true });
   assert.equal(a.window_start, "d048");
   assert.equal(a.history.length, 5);
   assert.ok("value" in a && "value" in a.history[0]);
+  assert.equal(a.rank_pct, H.naiveRank(series.map((x) => x.value), 299, 252));
   const b = T.rankSnapshot(series, { window: 52, thresholdPct: 70, historyN: 3, keepValue: false });
   assert.ok(!("value" in b) && !("value" in b.history[0]));
   assert.match(T.rankSnapshot(series.slice(0, 10), { window: 52, thresholdPct: 70, historyN: 3 }).error, /足りません/);
 });
 
-test("ZIP：無圧縮・deflate の両方を読む。ZIP でなければ失敗", () => {
-  const zip = H.makeZip([{ name: "a.txt", data: Buffer.from("hello"), store: true }, { name: "b.xml", data: Buffer.from("<x>".repeat(100)) }]);
-  const files = T.readZip(zip);
-  assert.deepEqual(files.map((f) => f.name), ["a.txt", "b.xml"]);
-  assert.equal(files[0].data.toString(), "hello");
-  assert.equal(files[1].data.toString(), "<x>".repeat(100));
-  assert.throws(() => T.readZip(Buffer.from("not a zip at all, definitely not")), /ZIP/);
-});
-
-test("FRB の CP：2つの系列を名前で探し、n.a.（-9999）の日を除いて、金利差を bp で出す", () => {
-  const xml = H.syntheticCpXml("2025-01-01", "2025-01-10", { naDates: ["2025-01-03"] });
-  const found = T.parseCpXml(xml, ["RIFSPPNA2P2D30_N.B", "RIFSPPNAAD30_N.B"]);
-  assert.ok(!found.get("RIFSPPNA2P2D30_N.B").has("2025-01-03"));
-  const s = T.cpSpreadSeries(found, "RIFSPPNA2P2D30_N.B", "RIFSPPNAAD30_N.B");
-  assert.ok(!s.some((x) => x.date === "2025-01-03"));
-  const d = "2025-01-02";
-  const lo = found.get("RIFSPPNA2P2D30_N.B").get(d), hi = found.get("RIFSPPNAAD30_N.B").get(d);
-  assert.equal(s.find((x) => x.date === d).value, (lo - hi) / 10);
-  // 名前の記号の違い（FRED の書き方）でも見つかる
-  assert.ok(T.parseCpXml(xml, ["RIFSPPNA2P2D30NB", "RIFSPPNAAD30NB"]).size === 2);
-  assert.throws(() => T.parseCpXml(xml, ["NOPE"]), /見つかりません.*見つかった系列の数 3/);
-  const spread = T.cpSpreadSeries(new Map([["L", new Map([["2025-01-02", 4210]])], ["H", new Map([["2025-01-02", 4050]])]]), "L", "H");
-  assert.deepEqual(spread, [{ date: "2025-01-02", value: 16 }]);
-});
-
-test("NFCI：日付（M/D/YYYY・YYYY-MM-DD）と Credit の列を読む。列が無ければ失敗", () => {
-  const rows = T.parseNfciCsv(H.syntheticNfciCsv("2025-01-01", "2025-02-28"), "Credit");
-  assert.equal(rows[0].date, "2025-01-03");
-  assert.equal(rows[0].value, -0.4);
-  assert.deepEqual(T.parseNfciCsv("Date,Credit\n2025-01-03,0.5\n2025-01-10,\n", "Credit"), [{ date: "2025-01-03", value: 0.5 }]);
-  assert.throws(() => T.parseNfciCsv("Date,Risk\n2025-01-03,0.5\n", "Credit"), /列 Credit がありません/);
+test("HY OAS の代わりの候補（CP 金利差・NFCI）は計算しない（2026-11-02 決定。SPEC 10-2）", () => {
+  const cfg = require("../config");
+  assert.deepEqual(Object.keys(cfg.TRIAL).sort(), ["minRefetchMinutes", "ratesVol", "staleDays"]);
+  assert.deepEqual(Object.keys(T).sort(), ["TrialError", "parseParYieldCsv", "rankSnapshot", "realizedVolSeries"]);
 });
 
 // ---------- run-daily との結合 ----------
@@ -101,8 +75,6 @@ function server({ to = "2026-10-29", fail = {} } = {}) {
     calls.push(url);
     for (const [frag, st] of Object.entries(fail)) if (url.includes(frag)) return new Response("x", { status: st });
     if (url.includes("daily-treasury-rates.csv/")) return new Response(H.toTreasuryCsv(yields, /csv\/(\d{4})\//.exec(url)[1]), { status: 200 });
-    if (url.includes("FRB_CP_xml.zip")) return new Response(H.makeZip([{ name: "FRB_CP.xml", data: Buffer.from(H.syntheticCpXml("2024-06-03", to)) }]), { status: 200 });
-    if (url.includes("nfci-data-series-csv.csv")) return new Response(H.syntheticNfciCsv("2024-06-07", to), { status: 200 });
     if (url.includes("cdn-api.cboe.com")) return new Response(H.toCboeCsv(H.syntheticRows("2024-06-03", to)), { status: 200 });
     return new Response("not found", { status: 404 });
   };
@@ -111,7 +83,7 @@ function server({ to = "2026-10-29", fail = {} } = {}) {
 const go = (dir, srv, now, argv = [], logs = []) =>
   run({ argv, nowMs: H.jst(now), fetchImpl: srv.fetchImpl, sleep: async () => {}, dataDir: dir, log: (m) => logs.push(m), env: {} });
 
-test("試し運転の3指標を risk.json の trial に出す。NFCI は値を載せず順位だけ", async () => {
+test("試し運転の指標（米国債の値動き）を risk.json の trial に出す", async () => {
   const dir = tmp(), srv = server();
   assert.equal(await go(dir, srv, "2026-10-30 10:00"), 0);
   const t = readRisk(dir).trial;
@@ -121,12 +93,10 @@ test("試し運転の3指標を risk.json の trial に出す。NFCI は値を�
   assert.equal(t.rates_vol.window, 252);
   assert.equal(t.rates_vol.history.length, 60);
   assert.equal(typeof t.rates_vol.value, "number");
-  assert.equal(t.cp_spread.date, "2026-10-29");
-  assert.equal(t.cp_spread.threshold_pct, 70);
-  assert.equal(t.nfci_credit.date, "2026-10-23"); // 金曜ごと
-  assert.equal(t.nfci_credit.window, 52);
-  assert.ok(!("value" in t.nfci_credit) && t.nfci_credit.history.every((h) => !("value" in h)));
+  assert.ok(!("cp_spread" in t) && !("nfci_credit" in t));
   assert.deepEqual(t.warnings, []);
+  // FRB・シカゴ連銀へは接続しない
+  assert.ok(srv.calls.every((u) => !u.includes("federalreserve.gov") && !u.includes("chicagofed.org")));
   // 素朴な計算と一致（米国債の値動き）
   const rows = H.syntheticYields("2023-06-01", "2026-10-29");
   const s = T.realizedVolSeries(rows, TEN, 20);
@@ -135,24 +105,29 @@ test("試し運転の3指標を risk.json の trial に出す。NFCI は値を�
 });
 
 test("試し運転の取得に失敗しても、実行は赤くしない（errors にせず、trial.warnings に記録）", async () => {
-  const dir = tmp(), srv = server({ fail: { "nfci-data-series-csv.csv": 404, "FRB_CP_xml.zip": 500 } });
+  const dir = tmp(), srv = server({ fail: { "daily-treasury-rates.csv/": 404 } });
   const logs = [];
   assert.equal(await go(dir, srv, "2026-10-30 10:00", [], logs), 0);
   const r = readRisk(dir);
   assert.equal(r.generation.status, "ok");
-  assert.match(r.trial.nfci_credit.error, /HTTP 404/);
-  assert.match(r.trial.cp_spread.error, /HTTP 500/);
-  assert.equal(r.trial.warnings.length, 2);
-  assert.equal(r.trial.rates_vol.date, "2026-10-29");
+  assert.deepEqual(r.generation.errors, []);
+  assert.match(r.trial.rates_vol.error, /HTTP 404/);
+  assert.equal(r.trial.warnings.length, 1);
+  assert.equal(r.vix.date, "2026-10-29");
   const out = [];
   assert.equal(await go(dir, server(), "2026-10-30 10:05", ["--check-fresh"], out), 0);
-  assert.match(out.join("\n"), /TRIAL（試し運転・判定には使わない）: 米国債の値動き 2026-10-29 順位[\d.]+%／CP金利差 取得失敗／NFCIの信用 取得失敗/);
+  assert.match(out.join("\n"), /TRIAL（試し運転・判定には使わない）: 米国債の値動き 取得失敗/);
+  // 取り直すと、その日のうちに成功の値に置き換わる（60分たってから）
+  assert.equal(await go(dir, server(), "2026-10-30 11:05", ["--if-stale"]), 0);
+  assert.equal(readRisk(dir).trial.rates_vol.date, "2026-10-29");
+  const out2 = [];
+  assert.equal(await go(dir, server(), "2026-10-30 11:10", ["--check-fresh"], out2), 0);
+  assert.match(out2.join("\n"), /TRIAL（試し運転・判定には使わない）: 米国債の値動き 2026-10-29 順位[\d.]+%/);
 });
 
 test("取り直しの条件：その日（日本時間）に未取得なら取る。同じ日は60分たち、米国債の値の公表待ち・失敗があるときだけ", () => {
   const base = (fetched, rvDate, extra = {}) => ({
-    fetched_at: fetched, rates_vol: { date: rvDate, history: [{ date: rvDate }] },
-    cp_spread: { date: rvDate }, nfci_credit: { date: "2026-10-23" }, ...extra,
+    fetched_at: fetched, rates_vol: { date: rvDate, history: [{ date: rvDate }] }, ...extra,
   });
   const now = H.jst("2026-10-30 10:00");
   assert.equal(trialNeedsRefresh(null, now), true);
@@ -160,7 +135,8 @@ test("取り直しの条件：その日（日本時間）に未取得なら取�
   assert.equal(trialNeedsRefresh(base("2026-10-30T09:30:00+09:00", "2026-10-28"), now), false);  // 60分たっていない
   assert.equal(trialNeedsRefresh(base("2026-10-30T08:30:00+09:00", "2026-10-28"), now), true);   // 10/29 の値が公表済みのはず
   assert.equal(trialNeedsRefresh(base("2026-10-30T08:30:00+09:00", "2026-10-29"), now), false);  // 最新
-  assert.equal(trialNeedsRefresh(base("2026-10-30T08:30:00+09:00", "2026-10-29", { cp_spread: { error: "x" } }), now), true);
+  assert.equal(trialNeedsRefresh(base("2026-10-30T08:30:00+09:00", "2026-10-29", { rates_vol: { error: "x" } }), now), true);  // 前回失敗
+  assert.equal(trialNeedsRefresh(base("2026-10-30T09:30:00+09:00", "2026-10-29", { rates_vol: { error: "x" } }), now), false); // 失敗でも60分は待つ
 });
 
 test("--if-stale：VIX が最新でも、その日の試し運転がまだなら取り直す（Cboe へは接続しない）", async () => {
@@ -169,7 +145,8 @@ test("--if-stale：VIX が最新でも、その日の試し運転がまだなら
   const srv = server({ to: "2026-10-30" });
   assert.equal(await go(dir, srv, "2026-11-01 10:00", ["--if-stale"]), 0);
   assert.equal(srv.n("cdn-api.cboe.com"), 0);
-  assert.ok(srv.n("daily-treasury-rates.csv") >= 1 && srv.n("FRB_CP_xml.zip") === 1 && srv.n("nfci") === 1);
+  assert.ok(srv.n("daily-treasury-rates.csv") >= 1);
+  assert.equal(srv.calls.length, srv.n("daily-treasury-rates.csv"));
   assert.equal(readRisk(dir).trial.fetched_at, "2026-11-01T10:00:00+09:00");
   // 同じ日の30分後は、どこへも接続しない
   const srv2 = server({ to: "2026-10-30" });
@@ -177,17 +154,22 @@ test("--if-stale：VIX が最新でも、その日の試し運転がまだなら
   assert.equal(srv2.calls.length, 0);
 });
 
-test("最新の値が古ければ警告する（日次は7日、週1回は14日より古いとき）。止めはしない", async () => {
+test("最新の値が古ければ警告する（7日より古いとき）。止めはしない", async () => {
   const dir = tmp();
-  // NFCI だけ、4月で止まったファイルを返す
-  const srv = server();
+  // 米国債の CSV が 10/20 で止まっているとする（10/30 の時点で10日前）
+  const srv = server({ to: "2026-10-20" });
   const base = srv.fetchImpl;
-  srv.fetchImpl = async (url) => (url.includes("nfci") ? new Response(H.syntheticNfciCsv("2024-06-07", "2026-04-24"), { status: 200 }) : base(url));
+  srv.fetchImpl = async (url) => (url.includes("cdn-api.cboe.com") ? server().fetchImpl(url) : base(url));
   assert.equal(await go(dir, srv, "2026-10-30 10:00"), 0);
   const t = readRisk(dir).trial;
-  assert.equal(t.nfci_credit.date, "2026-04-24");
-  assert.equal(t.nfci_credit.stale, true);
-  assert.match(t.warnings.join("\n"), /NFCIの信用の部分：最新の値が 2026-04-24 で、14日より古くなっています/);
-  assert.ok(!t.rates_vol.stale && !t.cp_spread.stale);
+  assert.equal(t.rates_vol.date, "2026-10-20");
+  assert.equal(t.rates_vol.stale, true);
+  assert.match(t.warnings.join("\n"), /米国債の値動き：最新の値が 2026-10-20 で、7日より古くなっています/);
   assert.equal(readRisk(dir).generation.status, "ok");
+  // 7日ちょうど（10/23）なら警告しない
+  const dir2 = tmp(), srv2 = server({ to: "2026-10-23" });
+  const b2 = srv2.fetchImpl;
+  srv2.fetchImpl = async (url) => (url.includes("cdn-api.cboe.com") ? server().fetchImpl(url) : b2(url));
+  await go(dir2, srv2, "2026-10-30 10:00");
+  assert.ok(!readRisk(dir2).trial.rates_vol.stale);
 });

@@ -13,8 +13,8 @@ const readRisk = (dir) => JSON.parse(fs.readFileSync(path.join(dir, "risk.json")
 // 取得の時刻（as_of・試し運転の fetched_at）を除いた中身
 const core = (dir) => { const d = readRisk(dir); delete d.as_of; if (d.trial) delete d.trial.fetched_at; if (d.vix && d.vix.source) { delete d.vix.source.fetched_at; delete d.vix.source.last_modified; } return JSON.stringify(d); };
 
-// Cboe・米財務省・FRB・シカゴ連銀の URL に、試験用のデータを返す差し替えの fetch。
-// to＝VIX と米国債・CP の最新日。trialFail に URL の断片 → HTTPステータスを入れると、その取得だけ失敗させる
+// Cboe・米財務省の URL に、試験用のデータを返す差し替えの fetch。
+// to＝VIX と米国債の最新日。trialFail に URL の断片 → HTTPステータスを入れると、その取得だけ失敗させる
 function server({ to = "2026-10-29", status = 200, body, trialFail = {} } = {}) {
   const calls = [];
   const yields = H.syntheticYields("2023-06-01", to);
@@ -25,11 +25,6 @@ function server({ to = "2026-10-29", status = 200, body, trialFail = {} } = {}) 
       const y = /daily-treasury-rates\.csv\/(\d{4})\//.exec(url)[1];
       return new Response(H.toTreasuryCsv(yields, y), { status: 200 });
     }
-    if (url.includes("FRB_CP_xml.zip")) {
-      const zip = H.makeZip([{ name: "CP_struct.xml", data: Buffer.from("<x/>") }, { name: "FRB_CP.xml", data: Buffer.from(H.syntheticCpXml("2024-06-03", to)) }]);
-      return new Response(zip, { status: 200 });
-    }
-    if (url.includes("nfci-data-series-csv.csv")) return new Response(H.syntheticNfciCsv("2024-06-07", to), { status: 200 });
     if (!url.includes("cdn-api.cboe.com")) return new Response("not found", { status: 404 });
     if (status !== 200) return new Response("x", { status });
     return new Response(body ?? H.toCboeCsv(H.syntheticRows("2024-06-03", to)), { status: 200, headers: { "last-modified": "Thu, 29 Oct 2026 22:05:00 GMT" } });

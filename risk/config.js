@@ -2,7 +2,7 @@
 
 /**
  * 取引可否の指標（自前の定義）の設定値。仕様は risk/SPEC.md。
- * いまは VIX 順位とイベント警戒。MOVE・HY OAS の代わりは試し運転中（TRIAL）。中立の数は、定義が決まってから足す。
+ * いまは VIX 順位とイベント警戒。MOVE の代わりは試し運転中（TRIAL）。HY OAS（当面は GPT の値のまま）と中立の数は、決まってから足す。
  */
 
 // ---- VIX（SPEC 2節・3節）----
@@ -47,6 +47,7 @@ const EVENT = {
 };
 
 // ---- 試し運転の指標（SPEC 10節。記事にはまだ使わない。2026-11-02 ユーザー決定）----
+// ③ HY OAS の代わり（FRB の CP 金利差・シカゴ連銀 NFCI）は試算の結果、使わないことにした（SPEC 10-2）
 const TRIAL = {
   // ② MOVE の代わり：米国債の金利の実際の値動きの大きさ（自前の定義）
   ratesVol: {
@@ -61,29 +62,10 @@ const TRIAL = {
     thresholdPct: 80,  // swing-flow SPEC 3-6 の MOVE の基準と同じ（切り替える前に試し運転で確かめる）
     historyN: 60,
   },
-  // ③ HY OAS の代わり（候補1）：FRB の短期社債（CP）の金利差。A2/P2 − AA、非金融・30日物
-  cpSpread: {
-    zipUrl: "https://www.federalreserve.gov/releases/cp/data/FRB_CP_xml.zip",
-    pageUrl: "https://www.federalreserve.gov/releases/cp/",
-    low: "RIFSPPNA2P2D30_N.B",   // 30-Day A2/P2 Nonfinancial（FRED では RIFSPPNA2P2D30NB）
-    high: "RIFSPPNAAD30_N.B",    // 30-Day AA Nonfinancial（FRED では RIFSPPNAAD30NB）
-    window: 252,
-    thresholdPct: 70,  // swing-flow SPEC 3-6 の HY OAS の基準と同じ
-    historyN: 60,
-  },
-  // ③ HY OAS の代わり（候補2）：シカゴ連銀 NFCI の信用の部分（週1回）。商用で使う前に許可の問い合わせが必要
-  nfciCredit: {
-    csvUrl: "https://www.chicagofed.org/-/media/publications/nfci/nfci-data-series-csv.csv",
-    pageUrl: "https://www.chicagofed.org/research/data/nfci/current-data",
-    column: "Credit",
-    window: 52,        // 週1回の値なので、過去1年＝52週
-    thresholdPct: 70,
-    historyN: 13,
-  },
   // 1日の中で取り直す間隔の下限（分）。米国債の値の公表待ちのとき、起動のたびに取りに行かないように
   minRefetchMinutes: 60,
-  // 最新の値がこの日数（暦日）より古ければ、警告を出す（日次の指標は連休を見込んで7日、週1回の指標は14日）
-  staleDays: { daily: 7, weekly: 14 },
+  // 最新の値がこの日数（暦日）より古ければ、警告を出す（連休を見込んで7日）
+  staleDays: 7,
 };
 
 // ---- 時刻（SPEC 4節）----

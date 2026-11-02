@@ -76,15 +76,9 @@ jobs:
             console.log("::notice title=イベント警戒::" + JSON.stringify({ level: e.level, base_jst: e.base_jst, count: e.count, items: (e.items || []).map((i) => `${i.kind}@${i.at_jst}`) }));
             console.log("::notice title=generation::" + JSON.stringify(d.generation));
             const t = d.trial || {};
-            const brief = {};
-            for (const k of ["rates_vol", "cp_spread", "nfci_credit"]) {
-              const x = t[k] || {};
-              brief[k] = x.error ? { error: x.error } : { date: x.date, value: x.value, rank_pct: x.rank_pct, count_le: x.count_le, window_start: x.window_start, stale: x.stale };
-            }
-            console.log("::notice title=試し運転（まとめ）::" + JSON.stringify({ ...brief, warnings: t.warnings }));
-            for (const k of ["rates_vol", "cp_spread", "nfci_credit"]) {
-              const x = t[k] || {};
-              console.log(`::notice title=試し運転 ${k} の履歴（日付=値/順位）::` + (x.history || []).map((h) => `${h.date}=${h.value ?? ""}/${h.rank_pct}`).join(" "));
-            }
+            const x = t.rates_vol || {};
+            const brief = x.error ? { error: x.error } : { date: x.date, value: x.value, rank_pct: x.rank_pct, count_le: x.count_le, window_start: x.window_start, stale: x.stale };
+            console.log("::notice title=試し運転 rates_vol（まとめ）::" + JSON.stringify({ ...brief, warnings: t.warnings }));
+            console.log("::notice title=試し運転 rates_vol の履歴（日付=値/順位）::" + (x.history || []).map((h) => `${h.date}=${h.value}/${h.rank_pct}`).join(" "));
           '
           exit $code

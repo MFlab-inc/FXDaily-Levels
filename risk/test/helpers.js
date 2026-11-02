@@ -45,7 +45,6 @@ function naiveRank(closes, i, window) {
 module.exports = { ROOT, EVENTS_PATH, eventsText, jst, syntheticRows, toCboeCsv, naiveRank };
 
 // ---------- 試し運転の指標の試験用データ（どれも試験のために作った値。実データではない） ----------
-const zlib = require("zlib");
 const { addDays: addD } = require("../../mtf/lib/ny-time");
 const isWeekdayIso = (d) => { const w = new Date(`${d}T00:00:00Z`).getUTCDay(); return w >= 1 && w <= 5; };
 
@@ -78,67 +77,5 @@ function toTreasuryCsv(rows, year) {
   return [head, ...body].join("\n") + "\n";
 }
 
-// FRB の CP の XML（SDMX 風）。A2/P2 と AA の30日物（非金融）。n.a. の日を混ぜられる
-function syntheticCpXml(from, to, { naDates = [] } = {}) {
-  const obs = (fn) => {
-    const out = [];
-    let i = 0;
-    for (let d = from; d <= to; d = addD(d, 1)) {
-      if (!isWeekdayIso(d)) continue;
-      const v = naDates.includes(d) ? "-9999" : fn(i).toFixed(2);
-      out.push(`<frb:Obs OBS_STATUS="A" OBS_VALUE="${v}" TIME_PERIOD="${d}"/>`);
-      i++;
-    }
-    return out.join("\n");
-  };
-  const ser = (name, fn) => `<kf:Series CURRENCY="NA" FREQ="9" SERIES_NAME="${name}" UNIT="Percent">\n<frb:Annotations/>\n${obs(fn)}\n</kf:Series>`;
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<frb:DataSet id="CP">\n` +
-    ser("RIFSPPNAAD30_N.B", (i) => 4.0 + 0.2 * Math.sin(i / 30)) + "\n" +
-    ser("RIFSPPNA2P2D30_N.B", (i) => 4.0 + 0.2 * Math.sin(i / 30) + 0.15 + 0.1 * Math.abs(Math.sin(i / 7))) + "\n" +
-    ser("RIFSPPFAAD30_N.B", () => 4.1) + "\n</frb:DataSet>\n";
-}
-
-// ZIP を作る（読み取り側は CRC を確かめないため、CRC は 0 のまま）
-function makeZip(files) {
-  const locals = [], centrals = [];
-  let offset = 0;
-  for (const { name, data, store } of files) {
-    const nameBuf = Buffer.from(name, "utf8");
-    const comp = store ? data : zlib.deflateRawSync(data);
-    const method = store ? 0 : 8;
-    const lh = Buffer.alloc(30);
-    lh.writeUInt32LE(0x04034b50, 0); lh.writeUInt16LE(20, 4); lh.writeUInt16LE(method, 8);
-    lh.writeUInt32LE(comp.length, 18); lh.writeUInt32LE(data.length, 22); lh.writeUInt16LE(nameBuf.length, 26);
-    locals.push(lh, nameBuf, comp);
-    const ch = Buffer.alloc(46);
-    ch.writeUInt32LE(0x02014b50, 0); ch.writeUInt16LE(20, 4); ch.writeUInt16LE(20, 6); ch.writeUInt16LE(method, 10);
-    ch.writeUInt32LE(comp.length, 20); ch.writeUInt32LE(data.length, 24); ch.writeUInt16LE(nameBuf.length, 28);
-    ch.writeUInt32LE(offset, 42);
-    centrals.push(ch, nameBuf);
-    offset += 30 + nameBuf.length + comp.length;
-  }
-  const cd = Buffer.concat(centrals);
-  const eocd = Buffer.alloc(22);
-  eocd.writeUInt32LE(0x06054b50, 0); eocd.writeUInt16LE(files.length, 8); eocd.writeUInt16LE(files.length, 10);
-  eocd.writeUInt32LE(cd.length, 12); eocd.writeUInt32LE(offset, 16);
-  return Buffer.concat([...locals, cd, eocd]);
-}
-
-// シカゴ連銀 NFCI の CSV（金曜ごと）
-function syntheticNfciCsv(from, to) {
-  const out = ["Friday_of_Week,NFCI,Risk,Credit,Leverage,Nonfinancial Leverage"];
-  let i = 0;
-  for (let d = from; d <= to; d = addD(d, 1)) {
-    if (new Date(`${d}T00:00:00Z`).getUTCDay() !== 5) continue;
-    const mdy = `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}/${d.slice(0, 4)}`;
-    out.push(`${mdy},-0.5,-0.3,${(-0.4 + 0.3 * Math.sin(i / 5)).toFixed(4)},0.1,-0.2`);
-    i++;
-  }
-  return out.join("\n") + "\n";
-}
-
 module.exports.syntheticYields = syntheticYields;
 module.exports.toTreasuryCsv = toTreasuryCsv;
-module.exports.syntheticCpXml = syntheticCpXml;
-module.exports.makeZip = makeZip;
-module.exports.syntheticNfciCsv = syntheticNfciCsv;
