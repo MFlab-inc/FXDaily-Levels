@@ -5,39 +5,39 @@
     "note": "未確定の判断はありません（確定した解釈は docs/daytrade-plan-spec.md 10節、経緯は docs/daytrade-plan-impl-notes.md）"
   },
   "plan_date": "2026-11-02",
-  "run": "design",
-  "status_updated_at": "2026-11-02T15:05:48+09:00",
+  "run": "status",
+  "status_updated_at": "2026-11-02T16:05:54+09:00",
   "expires_at": "2026-11-03T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-11-02T15:05:17+09:00",
+        "as_of": "2026-11-02T16:05:20+09:00",
         "age_min": 1,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-11-02T15:05:21+09:00",
-        "age_min": 0,
+        "as_of": "2026-11-02T16:05:24+09:00",
+        "age_min": 1,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-11-02T15:05:21+09:00",
-        "age_min": 0,
+        "as_of": "2026-11-02T16:05:24+09:00",
+        "age_min": 1,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-11-02 14:45",
-      "newest_last_closed": "2026-11-02 14:45",
+      "oldest_last_closed": "2026-11-02 15:45",
+      "newest_last_closed": "2026-11-02 15:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-11-02 14:00",
-      "newest": "2026-11-02 14:00"
+      "oldest": "2026-11-02 15:00",
+      "newest": "2026-11-02 15:00"
     },
     "stale": false,
     "daily": {
@@ -67,7 +67,7 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-11-02T15:05:17+09:00",
+    "as_of": "2026-11-02T16:05:20+09:00",
     "date": "2026-11-02",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
@@ -203,7 +203,7 @@
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-11-02T15:05:21+09:00",
+      "as_of": "2026-11-02T16:05:24+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "TRADE_OK",
@@ -222,7 +222,7 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-11-02T15:04:10+09:00",
+        "generated_intraday": "2026-11-02T16:04:13+09:00",
         "age_min": 2
       },
       "pairs": {
@@ -232,16 +232,16 @@
             "range_today": 0.552,
             "range_vs_adr": 0.689,
             "spike_flag": false,
-            "updated_at": "2026-11-02T15:04:10+09:00"
+            "updated_at": "2026-11-02T16:04:13+09:00"
           }
         },
         "EURUSD": {
           "state": "ok",
           "items": {
-            "range_today": 0.0031,
-            "range_vs_adr": 0.465,
+            "range_today": 0.00339,
+            "range_vs_adr": 0.508,
             "spike_flag": false,
-            "updated_at": "2026-11-02T15:04:10+09:00"
+            "updated_at": "2026-11-02T16:04:13+09:00"
           }
         },
         "GBPUSD": {
@@ -250,10 +250,10 @@
         "AUDUSD": {
           "state": "ok",
           "items": {
-            "range_today": 0.00182,
-            "range_vs_adr": 0.427,
+            "range_today": 0.00193,
+            "range_vs_adr": 0.453,
             "spike_flag": false,
-            "updated_at": "2026-11-02T15:04:10+09:00"
+            "updated_at": "2026-11-02T16:04:13+09:00"
           }
         },
         "NZDUSD": {
@@ -265,7 +265,7 @@
             "range_today": 0.00404,
             "range_vs_adr": 0.602,
             "spike_flag": false,
-            "updated_at": "2026-11-02T15:04:10+09:00"
+            "updated_at": "2026-11-02T16:04:13+09:00"
           }
         },
         "USDCHF": {
@@ -277,10 +277,10 @@
         "EURGBP": {
           "state": "ok",
           "items": {
-            "range_today": 0.00151,
-            "range_vs_adr": 0.466,
+            "range_today": 0.00158,
+            "range_vs_adr": 0.488,
             "spike_flag": false,
-            "updated_at": "2026-11-02T15:04:10+09:00"
+            "updated_at": "2026-11-02T16:04:13+09:00"
           }
         },
         "XAUUSD": {
@@ -289,7 +289,7 @@
             "range_today": 52.66,
             "range_vs_adr": 0.744,
             "spike_flag": false,
-            "updated_at": "2026-11-02T15:04:10+09:00"
+            "updated_at": "2026-11-02T16:04:13+09:00"
           }
         }
       }
@@ -368,8 +368,8 @@
         "high": 3916.7
       },
       "worst_entry": 3915.02,
-      "price": 3914.85,
-      "distance_pips": 1.7,
+      "price": 3906.93,
+      "distance_pips": 80.9,
       "atr_pips": 168,
       "adr_used_pct": 75,
       "adr_remaining_pips": 175.2,
@@ -1030,5 +1030,6 @@
     ],
     "no_basis": [],
     "not_formed": []
-  }
+  },
+  "additions_b": []
 }
