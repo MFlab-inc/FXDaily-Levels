@@ -202,7 +202,7 @@ test("失敗したときは、前回の正しい値を残して last_error を�
   assert.equal(srvCap.n("daily-treasury-rates.csv"), 0);
 });
 
-test("値が最新のときに（手動の実行で）失敗しても、次の --if-stale で取り直す（last_error を残したままにしない）", async () => {
+test("値が最新のときに（手動の実行で）失敗しても、上限に達していなければ次の --if-stale で取り直す", async () => {
   const dir = tmp();
   assert.equal(await go(dir, server(), "2026-10-30 10:00"), 0); // 1回目：10/29 まで（最新）
   assert.equal(await go(dir, server({ fail: { "daily-treasury-rates.csv/": 404 } }), "2026-10-30 11:00"), 0); // 2回目（手動）：失敗
