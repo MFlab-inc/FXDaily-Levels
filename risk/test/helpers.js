@@ -43,3 +43,39 @@ function naiveRank(closes, i, window) {
 }
 
 module.exports = { ROOT, EVENTS_PATH, eventsText, jst, syntheticRows, toCboeCsv, naiveRank };
+
+// ---------- 試し運転の指標の試験用データ（どれも試験のために作った値。実データではない） ----------
+const { addDays: addD } = require("../../mtf/lib/ny-time");
+const isWeekdayIso = (d) => { const w = new Date(`${d}T00:00:00Z`).getUTCDay(); return w >= 1 && w <= 5; };
+
+// 平日の米国債の金利（2・5・10・30年）。bp の整数で、日ごとに決まった式で動く
+function syntheticYields(from, to) {
+  const rows = [];
+  let i = 0;
+  for (let d = from; d <= to; d = addD(d, 1)) {
+    if (!isWeekdayIso(d)) continue;
+    const base = { "2 Yr": 420, "5 Yr": 440, "10 Yr": 470, "30 Yr": 500 };
+    const bp = {};
+    for (const [t, b] of Object.entries(base)) {
+      bp[t] = b + Math.round(25 * Math.sin(i / 17 + b) + 6 * Math.sin(i / 3.1) * (1 + (i % 40) / 40));
+    }
+    rows.push({ date: d, bp });
+    i++;
+  }
+  return rows;
+}
+// 米財務省のCSVと同じ形（新しい日付が先頭、列名は引用符つき）。year を指定するとその年の行だけ
+function toTreasuryCsv(rows, year) {
+  const cols = ["1 Mo", "2 Mo", "3 Mo", "6 Mo", "1 Yr", "2 Yr", "3 Yr", "5 Yr", "7 Yr", "10 Yr", "20 Yr", "30 Yr"];
+  const head = ["Date", ...cols.map((c) => `"${c}"`)].join(",");
+  const pick = year ? rows.filter((r) => r.date.startsWith(String(year))) : rows;
+  if (!pick.length) return "";
+  const body = [...pick].reverse().map((r) => {
+    const mmdd = `${r.date.slice(5, 7)}/${r.date.slice(8, 10)}/${r.date.slice(0, 4)}`;
+    return [mmdd, ...cols.map((c) => (r.bp[c] !== undefined ? (r.bp[c] / 100).toFixed(2) : "4.00"))].join(",");
+  });
+  return [head, ...body].join("\n") + "\n";
+}
+
+module.exports.syntheticYields = syntheticYields;
+module.exports.toTreasuryCsv = toTreasuryCsv;

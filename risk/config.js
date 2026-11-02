@@ -2,7 +2,7 @@
 
 /**
  * 取引可否の指標（自前の定義）の設定値。仕様は risk/SPEC.md。
- * いまは VIX 順位とイベント警戒。MOVE・HY OAS・中立の数は、定義が決まってから足す。
+ * いまは VIX 順位とイベント警戒。MOVE の代わりは試し運転中（TRIAL）。HY OAS（当面は GPT の値のまま）と中立の数は、決まってから足す。
  */
 
 // ---- VIX（SPEC 2節・3節）----
@@ -46,6 +46,34 @@ const EVENT = {
   coverageWarnDays: 60,
 };
 
+// ---- 試し運転の指標（SPEC 10節。記事にはまだ使わない。2026-11-02 ユーザー決定）----
+// ③ HY OAS の代わり（FRB の CP 金利差・シカゴ連銀 NFCI）は試算の結果、使わないことにした（SPEC 10-2）
+const TRIAL = {
+  // ② MOVE の代わり：米国債の金利の実際の値動きの大きさ（自前の定義）
+  ratesVol: {
+    // 米財務省 Daily Treasury Par Yield Curve Rates の年ごとのCSV（rates/ と同じ取得先）
+    csvUrl: (year) =>
+      `https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/${year}/all` +
+      `?type=daily_treasury_yield_curve&field_tdr_date_value=${year}&page&_format=csv`,
+    pageUrl: "https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics",
+    tenors: ["2 Yr", "5 Yr", "10 Yr", "30 Yr"],
+    lookback: 20,      // 直近20営業日の1日の変化
+    window: 252,       // 順位を数える範囲
+    thresholdPct: 80,  // swing-flow SPEC 3-6 の MOVE の基準と同じ（切り替える前に試し運転で確かめる）
+    historyN: 60,
+  },
+  // 取り直す間隔の下限（分）。米国債の値の公表待ち・失敗のとき、起動のたびに取りに行かないように
+  minRefetchMinutes: 60,
+  // 待っている米国の日付（米東部18:30を過ぎた最新の営業日）ごとに、取りに行く回数の上限。
+  // 値が届かない・失敗が続くときに、取り直しと risk.json の書き込みが1日中続かないように（2026-11-02 の点検の指摘）。
+  // 日本時間の日付で区切ると、夜中の起動で回数を使い切り、朝に出る新しい値を取れなくなるため、米国の日付で区切る
+  maxFetchesPerTarget: 3,
+  // 取得の待ち時間・再試行は VIX より短くする（最大4年分を取っても、risk.yml の上限10分に収めるため）
+  http: { timeoutMs: 20000, retries: 1 },
+  // 最新の値がこの日数（暦日）より古ければ、警告を出す（連休を見込んで7日）
+  staleDays: 7,
+};
+
 // ---- 時刻（SPEC 4節）----
 // VIX の終値は米東部16:15に確定する。CSV がいつ更新されるかは未確認のため、米東部18:00を過ぎたら
 // その日の値があるはずとみなして取りに行き始める（--if-stale）。
@@ -73,4 +101,4 @@ const CITATIONS = {
     `（各URLは risk/events.csv）。件数の集計は${PROCESSOR_NAME}`,
 };
 
-module.exports = { VIX, EVENT, READY_ET_MIN, STALE_AFTER_HOURS, EXTRA_CLOSED_DATES, HTTP, PROCESSOR_NAME, CITATIONS };
+module.exports = { VIX, EVENT, TRIAL, READY_ET_MIN, STALE_AFTER_HOURS, EXTRA_CLOSED_DATES, HTTP, PROCESSOR_NAME, CITATIONS };

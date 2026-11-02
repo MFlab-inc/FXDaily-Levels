@@ -10,17 +10,27 @@ const H = require("./helpers");
 const noSleep = async () => {};
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "risk-test-"));
 const readRisk = (dir) => JSON.parse(fs.readFileSync(path.join(dir, "risk.json"), "utf8"));
+// 取得の時刻（as_of・試し運転の fetched_at と、その日に取りに行った回数 attempts）を除いた中身
+const core = (dir) => { const d = readRisk(dir); delete d.as_of; if (d.trial) { delete d.trial.fetched_at; delete d.trial.attempts; } if (d.vix && d.vix.source) { delete d.vix.source.fetched_at; delete d.vix.source.last_modified; } return JSON.stringify(d); };
 
-// Cboe の URL に、試験用の CSV を返す差し替えの fetch
-function server({ to = "2026-10-29", status = 200, body } = {}) {
+// Cboe・米財務省の URL に、試験用のデータを返す差し替えの fetch。
+// to＝VIX と米国債の最新日。trialFail に URL の断片 → HTTPステータスを入れると、その取得だけ失敗させる
+function server({ to = "2026-10-29", status = 200, body, trialFail = {} } = {}) {
   const calls = [];
+  const yields = H.syntheticYields("2023-06-01", to);
   const fetchImpl = async (url) => {
     calls.push(url);
+    for (const [frag, st] of Object.entries(trialFail)) if (url.includes(frag)) return new Response("x", { status: st });
+    if (url.includes("daily-treasury-rates.csv/")) {
+      const y = /daily-treasury-rates\.csv\/(\d{4})\//.exec(url)[1];
+      return new Response(H.toTreasuryCsv(yields, y), { status: 200 });
+    }
     if (!url.includes("cdn-api.cboe.com")) return new Response("not found", { status: 404 });
     if (status !== 200) return new Response("x", { status });
     return new Response(body ?? H.toCboeCsv(H.syntheticRows("2024-06-03", to)), { status: 200, headers: { "last-modified": "Thu, 29 Oct 2026 22:05:00 GMT" } });
   };
-  return { fetchImpl, calls };
+  const cboe = () => calls.filter((u) => u.includes("cdn-api.cboe.com")).length;
+  return { fetchImpl, calls, cboe };
 }
 const go = (dir, srv, now, argv = [], logs = []) =>
   run({ argv, nowMs: H.jst(now), fetchImpl: srv.fetchImpl, sleep: noSleep, dataDir: dir, log: (m) => logs.push(m), env: {} });
@@ -44,7 +54,7 @@ test("取得：10/30 10:00 に実行すると、VIX は 10/29 まで・順位は
   assert.equal(r.event.base_jst, "2026-10-30T09:00+09:00");
   assert.equal(r.generation.status, "ok");
   assert.deepEqual(r.generation.errors, []);
-  assert.equal(srv.calls.length, 1);
+  assert.equal(srv.cboe(), 1);
   assert.ok(srv.calls.every((u) => !u.includes("stlouisfed")), "FRED は使わない");
   // 公開リポジトリに Cboe の終値を置かない（順位と個数だけ。SPEC 6節）
   assert.ok(!/"close"/.test(fs.readFileSync(path.join(dir, "risk.json"), "utf8")));
@@ -56,7 +66,7 @@ test("--if-stale：VIX が最新で、イベント警戒も今日の分なら、
   const before = fs.readFileSync(path.join(dir, "risk.json"), "utf8");
   const srv = server(), logs = [];
   assert.equal(await go(dir, srv, "2026-10-30 13:00", ["--if-stale"], logs), 0);
-  assert.equal(srv.calls.length, 0);
+  assert.equal(srv.cboe(), 0);
   assert.equal(fs.readFileSync(path.join(dir, "risk.json"), "utf8"), before);
   assert.match(logs.join("\n"), /スキップ/);
 });
@@ -66,7 +76,7 @@ test("--if-stale：日曜（VIX は金曜の値で最新）は接続せず、イ
   await go(dir, server({ to: "2026-10-30" }), "2026-10-31 10:00");
   const srv = server({ to: "2026-10-30" });
   assert.equal(await go(dir, srv, "2026-11-01 10:00", ["--if-stale"]), 0);
-  assert.equal(srv.calls.length, 0);
+  assert.equal(srv.cboe(), 0);
   const r = readRisk(dir);
   assert.equal(r.vix.date, "2026-10-30");
   assert.equal(r.event.base_jst, "2026-11-01T09:00+09:00");
@@ -77,14 +87,14 @@ test("--if-stale：翌朝（VIX の期待する日が進んだ）は取得する
   await go(dir, server(), "2026-10-30 10:00");
   const srv = server({ to: "2026-10-30" });
   assert.equal(await go(dir, srv, "2026-10-31 10:00", ["--if-stale"]), 0);
-  assert.equal(srv.calls.length, 1);
+  assert.equal(srv.cboe(), 1);
   assert.equal(readRisk(dir).vix.date, "2026-10-30");
   // Cboe がまだ 10/30 を載せていない（10/29 まで）→ 内容は同じなので書き換えず、終了コードは0
   const dir2 = tmp();
   await go(dir2, server(), "2026-10-30 10:00");
   const srv2 = server({ to: "2026-10-29" }), logs = [];
   assert.equal(await go(dir2, srv2, "2026-10-31 10:00", ["--if-stale"], logs), 0);
-  assert.equal(srv2.calls.length, 1);
+  assert.equal(srv2.cboe(), 1);
   assert.equal(readRisk(dir2).vix.date, "2026-10-29");
 });
 
@@ -120,12 +130,15 @@ test("形式の変化（見出しが違う）・未来の日付は失敗とし�
   assert.match(readRisk(dir2).generation.errors[0], /より先です/);
 });
 
-test("内容が同じなら書き換えない（as_of・取得時刻だけの違いではコミットを作らない）", async () => {
+test("内容が同じなら、取得の時刻のほかは変わらない。--if-stale の同じ日の2回目は書き換えない", async () => {
   const dir = tmp();
   await go(dir, server(), "2026-10-30 10:00");
-  const before = fs.readFileSync(path.join(dir, "risk.json"), "utf8");
-  assert.equal(await go(dir, server(), "2026-10-30 11:00"), 0); // --if-stale なしで取得し直す
-  assert.equal(fs.readFileSync(path.join(dir, "risk.json"), "utf8"), before);
+  const before = core(dir);
+  assert.equal(await go(dir, server(), "2026-10-30 11:00"), 0); // --if-stale なしで取得し直す（試し運転の取得時刻だけ変わる）
+  assert.equal(core(dir), before);
+  const text = fs.readFileSync(path.join(dir, "risk.json"), "utf8");
+  assert.equal(await go(dir, server(), "2026-10-30 11:30", ["--if-stale"]), 0);
+  assert.equal(fs.readFileSync(path.join(dir, "risk.json"), "utf8"), text);
 });
 
 test("--check-fresh：OK／PENDING（掲載待ち）／STALE（16時間を過ぎた・イベント警戒が別の日）", async () => {
@@ -200,7 +213,7 @@ test("期待する最新日より新しい行（米国の取引時間中の途�
   // 米東部 18:00 を過ぎた（10/30 07:00 JST）--if-stale は、10/29 が無いので取り直す
   const srv = server({ to: "2026-10-29" });
   assert.equal(await go(dir, srv, "2026-10-30 07:00", ["--if-stale"]), 0);
-  assert.equal(srv.calls.length, 1);
+  assert.equal(srv.cboe(), 1);
   r = readRisk(dir);
   assert.equal(r.vix.date, "2026-10-29");
   assert.deepEqual(r.vix.unconfirmed_rows_ignored, []);
@@ -232,7 +245,7 @@ test("失敗の記録が残っていれば、同じ日の --if-stale でもス�
   assert.equal(readRisk(dir).generation.status, "error");
   const srv = server();
   assert.equal(await go(dir, srv, "2026-10-30 11:00", ["--if-stale"]), 0);
-  assert.equal(srv.calls.length, 0); // VIX は最新なので取りに行かない
+  assert.equal(srv.cboe(), 0); // VIX は最新なので取りに行かない
   const r = readRisk(dir);
   assert.equal(r.generation.status, "ok");
   assert.deepEqual(r.generation.errors, []);
@@ -274,10 +287,14 @@ test("古い版を続けて受け取っても、警告の文は同じ（Last-Mod
   const dir = tmp();
   await go(dir, server({ to: "2026-10-30" }), "2026-10-31 10:00");
   await go(dir, server({ to: "2026-10-27" }), "2026-10-31 10:30");
-  const before = fs.readFileSync(path.join(dir, "risk.json"), "utf8");
+  const before = core(dir);
   const srv = server({ to: "2026-10-27" });
   const lm = srv.fetchImpl;
-  srv.fetchImpl = async (url) => { const res = await lm(url); return new Response(await res.text(), { status: 200, headers: { "last-modified": "Sat, 31 Oct 2026 01:00:00 GMT" } }); };
+  srv.fetchImpl = async (url) => {
+    const res = await lm(url);
+    if (!url.includes("cdn-api.cboe.com")) return res;
+    return new Response(Buffer.from(await res.arrayBuffer()), { status: 200, headers: { "last-modified": "Sat, 31 Oct 2026 01:00:00 GMT" } });
+  };
   assert.equal(await go(dir, srv, "2026-10-31 10:45"), 0);
-  assert.equal(fs.readFileSync(path.join(dir, "risk.json"), "utf8"), before);
+  assert.equal(core(dir), before);
 });

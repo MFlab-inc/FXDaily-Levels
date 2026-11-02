@@ -5,6 +5,11 @@ on:
     paths:
       - "risk/**"
       - "mtf/lib/ny-time.js"
+      # 試し運転の指標（risk/lib/trial.js・run-daily.js）が読み込む rates/ の部品
+      - "rates/lib/parse.js"
+      - "rates/lib/calendar.js"
+      - "rates/config.js"
+      - "rates/test/fixtures/ust-2026-tail.csv"
       - ".github/workflows/risk*.yml"
       # risk.yml の workflow_run が参照する name: を確かめる試験（risk/test/workflows.test.js）が読むファイル
       - ".github/workflows/intraday.yml"
@@ -14,6 +19,11 @@ on:
     paths:
       - "risk/**"
       - "mtf/lib/ny-time.js"
+      # 試し運転の指標（risk/lib/trial.js・run-daily.js）が読み込む rates/ の部品
+      - "rates/lib/parse.js"
+      - "rates/lib/calendar.js"
+      - "rates/config.js"
+      - "rates/test/fixtures/ust-2026-tail.csv"
       - ".github/workflows/risk*.yml"
       - ".github/workflows/intraday.yml"
       - ".github/workflows/daily.yml"
@@ -40,7 +50,7 @@ jobs:
   live-check:
     if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -55,7 +65,8 @@ jobs:
           node risk/run-daily.js --data-dir "$RUNNER_TEMP/risk" > "$RUNNER_TEMP/out.txt" 2>&1
           code=$?
           cat "$RUNNER_TEMP/out.txt"
-          while IFS= read -r line; do echo "::notice title=run-daily（終了コード ${code}）::${line}"; done < "$RUNNER_TEMP/out.txt"
+          # 注釈（notice）は1ステップ10件までしか残らないため、run-daily の出力は1件にまとめる
+          echo "::notice title=run-daily（終了コード ${code}）::$(tr '\n' ' ' < "$RUNNER_TEMP/out.txt")"
           [ -f "$RUNNER_TEMP/risk/risk.json" ] || exit 1
           node -e '
             const d = require(process.env.RUNNER_TEMP + "/risk/risk.json");
@@ -66,5 +77,10 @@ jobs:
             const e = d.event || {};
             console.log("::notice title=イベント警戒::" + JSON.stringify({ level: e.level, base_jst: e.base_jst, count: e.count, items: (e.items || []).map((i) => `${i.kind}@${i.at_jst}`) }));
             console.log("::notice title=generation::" + JSON.stringify(d.generation));
+            const t = d.trial || {};
+            const x = t.rates_vol || {};
+            const brief = x.error ? { error: x.error } : { date: x.date, value: x.value, rank_pct: x.rank_pct, count_le: x.count_le, window_start: x.window_start, stale: x.stale };
+            console.log("::notice title=試し運転 rates_vol（まとめ）::" + JSON.stringify({ ...brief, warnings: t.warnings }));
+            console.log("::notice title=試し運転 rates_vol の履歴（日付=値/順位）::" + (x.history || []).map((h) => `${h.date}=${h.value}/${h.rank_pct}`).join(" "));
           '
           exit $code
