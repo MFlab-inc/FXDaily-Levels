@@ -6,38 +6,38 @@
   },
   "plan_date": "2026-11-03",
   "run": "status",
-  "status_updated_at": "2026-11-03T10:05:47+09:00",
+  "status_updated_at": "2026-11-03T11:05:55+09:00",
   "expires_at": "2026-11-04T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-11-03T10:05:18+09:00",
-        "age_min": 0,
+        "as_of": "2026-11-03T11:05:19+09:00",
+        "age_min": 1,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-11-03T10:05:22+09:00",
-        "age_min": 0,
+        "as_of": "2026-11-03T11:05:23+09:00",
+        "age_min": 1,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-11-03T10:05:22+09:00",
-        "age_min": 0,
+        "as_of": "2026-11-03T11:05:23+09:00",
+        "age_min": 1,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-11-03 09:45",
-      "newest_last_closed": "2026-11-03 09:45",
+      "oldest_last_closed": "2026-11-03 10:45",
+      "newest_last_closed": "2026-11-03 10:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-11-03 09:00",
-      "newest": "2026-11-03 09:00"
+      "oldest": "2026-11-03 10:00",
+      "newest": "2026-11-03 10:00"
     },
     "stale": false,
     "daily": {
@@ -67,7 +67,7 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-11-03T10:05:18+09:00",
+    "as_of": "2026-11-03T11:05:19+09:00",
     "date": "2026-11-03",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
@@ -395,7 +395,7 @@
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-11-03T10:05:22+09:00",
+      "as_of": "2026-11-03T11:05:23+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "TRADE_OK",
@@ -412,41 +412,77 @@
     },
     "volatility": {
       "risk_feed": {
-        "status": "未取得",
-        "reason": "HTTP 503",
-        "generated_intraday": null,
-        "age_min": null
+        "status": "ok",
+        "reason": null,
+        "generated_intraday": "2026-11-03T11:04:11+09:00",
+        "age_min": 2
       },
       "pairs": {
         "USDJPY": {
-          "state": "未取得"
+          "state": "ok",
+          "items": {
+            "range_today": 0.269,
+            "range_vs_adr": 0.342,
+            "spike_flag": false,
+            "updated_at": "2026-11-03T11:04:11+09:00"
+          }
         },
         "EURUSD": {
-          "state": "未取得"
+          "state": "ok",
+          "items": {
+            "range_today": 0.0017,
+            "range_vs_adr": 0.258,
+            "spike_flag": false,
+            "updated_at": "2026-11-03T11:04:11+09:00"
+          }
         },
         "GBPUSD": {
-          "state": "未取得"
+          "state": "未収録"
         },
         "AUDUSD": {
-          "state": "未取得"
+          "state": "ok",
+          "items": {
+            "range_today": 0.00178,
+            "range_vs_adr": 0.419,
+            "spike_flag": false,
+            "updated_at": "2026-11-03T11:04:11+09:00"
+          }
         },
         "NZDUSD": {
-          "state": "未取得"
+          "state": "未収録"
         },
         "USDCAD": {
-          "state": "未取得"
+          "state": "ok",
+          "items": {
+            "range_today": 0.00155,
+            "range_vs_adr": 0.237,
+            "spike_flag": false,
+            "updated_at": "2026-11-03T11:04:11+09:00"
+          }
         },
         "USDCHF": {
-          "state": "未取得"
+          "state": "未収録"
         },
         "EURJPY": {
-          "state": "未取得"
+          "state": "未収録"
         },
         "EURGBP": {
-          "state": "未取得"
+          "state": "ok",
+          "items": {
+            "range_today": 0.00091,
+            "range_vs_adr": 0.288,
+            "spike_flag": false,
+            "updated_at": "2026-11-03T11:04:11+09:00"
+          }
         },
         "XAUUSD": {
-          "state": "未取得"
+          "state": "ok",
+          "items": {
+            "range_today": 25.52,
+            "range_vs_adr": 0.347,
+            "spike_flag": false,
+            "updated_at": "2026-11-03T11:04:11+09:00"
+          }
         }
       }
     }
@@ -520,8 +556,8 @@
         "high": 3956.51
       },
       "worst_entry": 3954.91,
-      "price": 3951.81,
-      "distance_pips": 31,
+      "price": 3943.96,
+      "distance_pips": 109.5,
       "atr_pips": 160.3,
       "adr_used_pct": 34.9,
       "adr_remaining_pips": 476,
@@ -644,8 +680,8 @@
       ],
       "calendar_ok": true,
       "state": {
-        "reached": "失効後到達",
-        "reached_at": "2026-11-03T09:00:00+09:00",
+        "reached": "到達",
+        "reached_at": "2026-11-03T10:00:00+09:00",
         "expired": false,
         "price_in_band": false
       },
