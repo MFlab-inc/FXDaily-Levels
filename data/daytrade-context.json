@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-04T00:23:25+09:00",
+  "as_of": "2026-11-04T00:35:44+09:00",
   "timezone": "Asia/Tokyo",
   "note": "事実データと機械判定のみ。売買推奨は含まない。gateはイベント時間ルール(config/daytrade-rules.json)による判定。",
   "rules_summary": {
@@ -24,13 +24,13 @@
   },
   "pairs": {
     "USDJPY": {
-      "price": 158.563,
-      "price_time_jst": "2026-11-04 00:20",
-      "bar_age_min": 0,
+      "price": 158.531,
+      "price_time_jst": "2026-11-04 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-03 07:00",
-        "high": 158.583,
+        "high": 158.604,
         "low": 157.75
       },
       "sessions_today": {
@@ -75,17 +75,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-04 00:00",
-          "o": 158.285,
-          "h": 158.489,
-          "l": 158.284,
-          "c": 158.483,
+          "time_jst": "2026-11-04 00:15",
+          "o": 158.479,
+          "h": 158.604,
+          "l": 158.461,
+          "c": 158.566,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-04 00:00",
+          "time_jst": "2026-11-04 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -128,20 +128,16 @@
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "00:16 [USD] Congressional Elections（High: 前15分〜後15分停止）"
-        ],
-        "warnings": [
-          "00:00 [USD] JOLTS Job Openings（Medium・参考）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "EURUSD": {
-      "price": 1.11792,
-      "price_time_jst": "2026-11-04 00:20",
-      "bar_age_min": 0,
+      "price": 1.11807,
+      "price_time_jst": "2026-11-04 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-03 07:00",
@@ -190,17 +186,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-04 00:00",
-          "o": 1.11974,
-          "h": 1.11993,
-          "l": 1.11841,
-          "c": 1.11845,
+          "time_jst": "2026-11-04 00:15",
+          "o": 1.11852,
+          "h": 1.11852,
+          "l": 1.11758,
+          "c": 1.11768,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-04 00:00",
+          "time_jst": "2026-11-04 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -243,20 +239,16 @@
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "00:16 [USD] Congressional Elections（High: 前15分〜後15分停止）"
-        ],
-        "warnings": [
-          "00:00 [USD] JOLTS Job Openings（Medium・参考）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "GBPUSD": {
-      "price": 1.34193,
-      "price_time_jst": "2026-11-04 00:20",
-      "bar_age_min": 0,
+      "price": 1.34099,
+      "price_time_jst": "2026-11-04 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-03 07:00",
@@ -305,25 +297,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-04 00:00",
-          "o": 1.3431,
-          "h": 1.34319,
-          "l": 1.34209,
-          "c": 1.34213,
+          "time_jst": "2026-11-04 00:15",
+          "o": 1.34219,
+          "h": 1.34219,
+          "l": 1.34113,
+          "c": 1.34129,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-04 00:00",
+          "time_jst": "2026-11-04 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.34337,
-          "time_jst": "2026-11-03 22:45"
+          "price": 1.3433,
+          "time_jst": "2026-11-03 23:45"
         },
         "swing_low": {
           "price": 1.34032,
@@ -358,20 +350,16 @@
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "00:16 [USD] Congressional Elections（High: 前15分〜後15分停止）"
-        ],
-        "warnings": [
-          "00:00 [USD] JOLTS Job Openings（Medium・参考）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "EURJPY": {
-      "price": 177.237,
-      "price_time_jst": "2026-11-04 00:20",
-      "bar_age_min": 0,
+      "price": 177.238,
+      "price_time_jst": "2026-11-04 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-03 07:00",
@@ -420,17 +408,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-04 00:00",
-          "o": 177.237,
-          "h": 177.378,
-          "l": 177.189,
-          "c": 177.25,
+          "time_jst": "2026-11-04 00:15",
+          "o": 177.263,
+          "h": 177.274,
+          "l": 177.184,
+          "c": 177.223,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-04 00:00",
+          "time_jst": "2026-11-04 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -480,9 +468,9 @@
       }
     },
     "AUDUSD": {
-      "price": 0.69812,
-      "price_time_jst": "2026-11-04 00:20",
-      "bar_age_min": 0,
+      "price": 0.6977,
+      "price_time_jst": "2026-11-04 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-03 07:00",
@@ -531,17 +519,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-04 00:00",
-          "o": 0.69871,
-          "h": 0.69892,
-          "l": 0.69831,
-          "c": 0.69846,
+          "time_jst": "2026-11-04 00:15",
+          "o": 0.69845,
+          "h": 0.69845,
+          "l": 0.69774,
+          "c": 0.69784,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-04 00:00",
+          "time_jst": "2026-11-04 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -584,20 +572,16 @@
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "00:16 [USD] Congressional Elections（High: 前15分〜後15分停止）"
-        ],
-        "warnings": [
-          "00:00 [USD] JOLTS Job Openings（Medium・参考）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "EURGBP": {
-      "price": 0.83312,
-      "price_time_jst": "2026-11-04 00:20",
-      "bar_age_min": 0,
+      "price": 0.83375,
+      "price_time_jst": "2026-11-04 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-03 07:00",
@@ -646,17 +630,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-04 00:00",
-          "o": 0.8337,
-          "h": 0.83385,
-          "l": 0.83323,
-          "c": 0.83331,
+          "time_jst": "2026-11-04 00:15",
+          "o": 0.83336,
+          "h": 0.83342,
+          "l": 0.83292,
+          "c": 0.83335,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-04 00:00",
+          "time_jst": "2026-11-04 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -706,9 +690,9 @@
       }
     },
     "USDCAD": {
-      "price": 1.39932,
-      "price_time_jst": "2026-11-04 00:20",
-      "bar_age_min": 0,
+      "price": 1.39955,
+      "price_time_jst": "2026-11-04 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-03 07:00",
@@ -757,25 +741,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-04 00:00",
-          "o": 1.39886,
-          "h": 1.39943,
+          "time_jst": "2026-11-04 00:15",
+          "o": 1.39897,
+          "h": 1.39985,
           "l": 1.39885,
-          "c": 1.39897,
+          "c": 1.39982,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-04 00:00",
+          "time_jst": "2026-11-04 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.3983,
-          "time_jst": "2026-11-03 21:45"
+          "price": 1.39993,
+          "time_jst": "2026-11-03 23:45"
         },
         "swing_low": {
           "price": 1.39805,
@@ -812,30 +796,20 @@
       "gate": {
         "state": "WAIT",
         "reasons": [
-          "00:16 [USD] Congressional Elections（High: 前15分〜後15分停止）"
+          "01:00 [CAD] BOC Gov Macklem Speaks（central_bank: 前30分〜後60分停止）"
         ],
-        "warnings": [
-          "00:00 [USD] JOLTS Job Openings（Medium・参考）"
-        ],
-        "next_gated_event": {
-          "time_jst": "01:00",
-          "datetime_jst": "2026-11-04T01:00:00+09:00",
-          "currency": "CAD",
-          "impact": "Medium",
-          "event": "BOC Gov Macklem Speaks",
-          "stop_from_jst": "00:30",
-          "stop_until_jst": "02:00"
-        }
+        "warnings": [],
+        "next_gated_event": null
       }
     },
     "USDCHF": {
-      "price": 0.82133,
-      "price_time_jst": "2026-11-04 00:20",
-      "bar_age_min": 0,
+      "price": 0.82157,
+      "price_time_jst": "2026-11-04 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-03 07:00",
-        "high": 0.82153,
+        "high": 0.82168,
         "low": 0.81489
       },
       "sessions_today": {
@@ -880,17 +854,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-04 00:00",
-          "o": 0.82001,
-          "h": 0.82093,
-          "l": 0.81999,
-          "c": 0.82091,
+          "time_jst": "2026-11-04 00:15",
+          "o": 0.82088,
+          "h": 0.82168,
+          "l": 0.82064,
+          "c": 0.82164,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-04 00:00",
+          "time_jst": "2026-11-04 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -933,20 +907,16 @@
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "00:16 [USD] Congressional Elections（High: 前15分〜後15分停止）"
-        ],
-        "warnings": [
-          "00:00 [USD] JOLTS Job Openings（Medium・参考）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "NZDUSD": {
-      "price": 0.56167,
-      "price_time_jst": "2026-11-04 00:20",
-      "bar_age_min": 0,
+      "price": 0.56132,
+      "price_time_jst": "2026-11-04 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-03 07:00",
@@ -995,17 +965,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-04 00:00",
-          "o": 0.56202,
-          "h": 0.5622,
-          "l": 0.56171,
-          "c": 0.56177,
+          "time_jst": "2026-11-04 00:15",
+          "o": 0.56177,
+          "h": 0.56183,
+          "l": 0.56135,
+          "c": 0.56139,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-04 00:00",
+          "time_jst": "2026-11-04 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1016,8 +986,8 @@
           "time_jst": "2026-11-03 22:30"
         },
         "swing_low": {
-          "price": 0.562,
-          "time_jst": "2026-11-03 21:30"
+          "price": 0.56129,
+          "time_jst": "2026-11-03 23:45"
         }
       },
       "h1": {
@@ -1048,13 +1018,9 @@
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "00:16 [USD] Congressional Elections（High: 前15分〜後15分停止）"
-        ],
-        "warnings": [
-          "00:00 [USD] JOLTS Job Openings（Medium・参考）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
+        "warnings": [],
         "next_gated_event": {
           "time_jst": "06:45",
           "datetime_jst": "2026-11-04T06:45:00+09:00",
@@ -1067,9 +1033,9 @@
       }
     },
     "AUDNZD": {
-      "price": 1.24317,
-      "price_time_jst": "2026-11-04 00:20",
-      "bar_age_min": 0,
+      "price": 1.24299,
+      "price_time_jst": "2026-11-04 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-03 07:00",
@@ -1118,25 +1084,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-04 00:00",
-          "o": 1.24322,
-          "h": 1.24345,
-          "l": 1.24285,
-          "c": 1.2434,
+          "time_jst": "2026-11-04 00:15",
+          "o": 1.24332,
+          "h": 1.24344,
+          "l": 1.24283,
+          "c": 1.24305,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-04 00:00",
+          "time_jst": "2026-11-04 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.24475,
-          "time_jst": "2026-11-03 22:45"
+          "price": 1.24402,
+          "time_jst": "2026-11-03 23:45"
         },
         "swing_low": {
           "price": 1.2429,
@@ -1186,9 +1152,9 @@
       }
     },
     "XAUUSD": {
-      "price": 3930.75,
-      "price_time_jst": "2026-11-04 00:20",
-      "bar_age_min": 0,
+      "price": 3924.71,
+      "price_time_jst": "2026-11-04 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-03 07:00",
@@ -1237,17 +1203,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-04 00:00",
-          "o": 3945.04,
-          "h": 3945.04,
-          "l": 3934.5,
-          "c": 3937.69,
+          "time_jst": "2026-11-04 00:15",
+          "o": 3938.44,
+          "h": 3938.44,
+          "l": 3922.95,
+          "c": 3925.67,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-04 00:00",
+          "time_jst": "2026-11-04 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1290,20 +1256,16 @@
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "00:16 [USD] Congressional Elections（High: 前15分〜後15分停止）"
-        ],
-        "warnings": [
-          "00:00 [USD] JOLTS Job Openings（Medium・参考）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "USOIL": {
-      "price": 96.55,
-      "price_time_jst": "2026-11-04 00:20",
-      "bar_age_min": 0,
+      "price": 96.16,
+      "price_time_jst": "2026-11-04 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-03 07:00",
@@ -1352,17 +1314,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-04 00:00",
-          "o": 95.82,
-          "h": 96.34,
-          "l": 95.62,
-          "c": 96.31,
+          "time_jst": "2026-11-04 00:15",
+          "o": 96.38,
+          "h": 96.74,
+          "l": 96.22,
+          "c": 96.42,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-04 00:00",
+          "time_jst": "2026-11-04 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1405,13 +1367,9 @@
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "00:16 [USD] Congressional Elections（High: 前15分〜後15分停止）"
-        ],
-        "warnings": [
-          "00:00 [USD] JOLTS Job Openings（Medium・参考）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
+        "warnings": [],
         "next_gated_event": null
       }
     }
