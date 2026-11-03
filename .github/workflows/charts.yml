@@ -48,7 +48,11 @@ jobs:
           python-version: "3.12"
 
       - name: Install deps
-        run: pip install mplfinance
+        # six を明示する理由: mplfinance 0.12.10b0 は six を import する（mplfinance/_utils.py の
+        # `from six.moves import zip`）が、依存として宣言していない。これまでは python-dateutil（3.x まで
+        # six に依存）経由で入っていたが、python-dateutil 4.0.0 が six への依存を外したため、
+        # 2026-11-03 の実行が ModuleNotFoundError: No module named 'six' で止まりチャートが更新されなかった。
+        run: pip install mplfinance six
 
       - name: Install JP font (チャート内の日本語表示用)
         run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
