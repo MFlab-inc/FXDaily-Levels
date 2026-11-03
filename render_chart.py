@@ -8,7 +8,7 @@
 #   data/h1-bars.json      … 全13銘柄のH1確定足（pairs.{SYMBOL} = [{time_jst,o,h,l,c,v?}...]）
 #   charts/{SYMBOL}.png    … 出力（固定URLでレポートHTMLから参照）
 # 銘柄無指定時は「USDJPY・EURUSD＋前日変動率が最大の候補銘柄」を自動選定
-# 依存: pip install mplfinance   （GitHub Actions では fonts-noto-cjk も apt で導入）
+# 依存: pip install mplfinance six   （GitHub Actions では fonts-noto-cjk も apt で導入。six は mplfinance が import するのに依存宣言していない）
 # ============================================================
 import sys, json, glob, datetime as dt
 from pathlib import Path
