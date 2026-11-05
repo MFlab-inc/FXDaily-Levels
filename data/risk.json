@@ -1,6 +1,6 @@
 {
   "schema": "fxdaily-levels/risk/v1",
-  "as_of": "2026-11-06T00:06:46+09:00",
+  "as_of": "2026-11-06T08:35:48+09:00",
   "timezone": "Asia/Tokyo",
   "vix": {
     "date": "2026-11-04",
@@ -24,7 +24,7 @@
     "source": {
       "url": "https://cdn-api.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",
       "last_modified": "Thu, 05 Nov 2026 02:10:51 GMT",
-      "fetched_at": "2026-11-05T11:35:52+09:00"
+      "fetched_at": "2026-11-06T08:35:48+09:00"
     },
     "history": [
       {
@@ -299,23 +299,18 @@
   },
   "trial": {
     "note": "試し運転（記事にはまだ使わない）。MOVE の代わりの候補を、GPT経由の値と比べるために計算している。",
-    "fetched_at": "2026-11-05T08:35:50+09:00",
+    "fetched_at": "2026-11-06T08:35:48+09:00",
     "attempts": 1,
-    "attempts_for": "us:2026-11-04",
+    "attempts_for": "us:2026-11-05",
     "rates_vol": {
-      "date": "2026-11-04",
-      "rank_pct": 84.1,
-      "count_le": 212,
+      "date": "2026-11-05",
+      "rank_pct": 90.9,
+      "count_le": 229,
       "window": 252,
-      "window_start": "2025-11-03",
+      "window_start": "2025-11-04",
       "threshold_pct": 80,
       "over_threshold": true,
       "history": [
-        {
-          "date": "2026-08-11",
-          "rank_pct": 60.3,
-          "value": 4.35
-        },
         {
           "date": "2026-08-12",
           "rank_pct": 58.7,
@@ -610,9 +605,14 @@
           "date": "2026-11-04",
           "rank_pct": 84.1,
           "value": 5.28
+        },
+        {
+          "date": "2026-11-05",
+          "rank_pct": 90.9,
+          "value": 5.6
         }
       ],
-      "value": 5.28,
+      "value": 5.6,
       "unit": "bp",
       "lookback": 20,
       "tenors": [
@@ -629,7 +629,7 @@
     "status": "ok",
     "errors": [],
     "warnings": [],
-    "run_url": "https://github.com/MFlab-inc/FXDaily-Levels/actions/runs/42051588402"
+    "run_url": "https://github.com/MFlab-inc/FXDaily-Levels/actions/runs/42130569985"
   },
   "citations": {
     "vix": "出典：Cboe「VIX Index Historical Data」（https://www.cboe.com/tradable_products/vix/vix_historical_data）の日次終値。過去1年（252営業日）での順位はMFlab-inc／FXDaily-Levelsが計算",
