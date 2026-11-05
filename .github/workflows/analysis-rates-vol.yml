@@ -1,0 +1,38 @@
+name: Analysis Rates-Vol Threshold
+
+# 一度きりの集計（2026-11-05）。米国債の値動きの順位の基準（80%）を、FRED の公開データ（2007年〜）で確かめる。
+# このブランチ（analysis/rates-vol-threshold）に push したときだけ動き、結果（集計だけ。元データは保存しない）を
+# analysis/out/ に書いて同じブランチへコミットする。main には入れない（マージしない前提のブランチ）。
+on:
+  push:
+    branches: [analysis/rates-vol-threshold]
+    paths:
+      - "analysis/rates_vol_threshold.py"
+      - ".github/workflows/analysis-rates-vol.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: analysis-rates-vol
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run analysis
+        run: python3 analysis/rates_vol_threshold.py analysis/out data/risk.json
+
+      - name: Commit results to this branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add analysis/out
+          git diff --cached --quiet && exit 0
+          git commit -m "analysis: 米国債の値動きの基準の検証結果"
+          git push origin HEAD:${{ github.ref_name }}
