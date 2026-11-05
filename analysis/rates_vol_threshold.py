@@ -47,6 +47,7 @@ HORIZON = 5
 
 
 def fetch(series_id, tries=4):
+    print(f"::notice::{series_id} を取得します")
     last = None
     for k in range(tries):
         try:
@@ -289,4 +290,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:  # noqa: BLE001
+        import traceback
+        tb = traceback.format_exc().strip().splitlines()
+        # Actions のログ本文は外から読めないため、注釈（annotation）に誤りの要点を出す
+        print(f"::error::{type(e).__name__}: {e} | {' / '.join(x.strip() for x in tb[-6:])}"[:3000])
+        sys.exit(1)
