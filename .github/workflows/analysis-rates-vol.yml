@@ -1,6 +1,9 @@
 name: Analysis Rates-Vol Threshold
 
-# 一度きりの集計（2026-11-05）。米国債の値動きの順位の基準（80%）を、FRED の公開データ（2007年〜）で確かめる。
+# 一度きりの集計（2026-11-05）。米国債の値動きの順位の基準（80%）を、公開データ（2005年〜）で確かめる。
+#   ・米国債の金利：米財務省の年別 CSV
+#   ・VIX：Cboe の公開 CSV
+#   ・為替・金の日足：Twelve Data（8銘柄×1回ずつ。本番の取得と重ならないよう mtf/lib/guard.js で待つ）
 # このブランチ（analysis/rates-vol-threshold）に push したときだけ動き、結果（集計だけ。元データは保存しない）を
 # analysis/out/ に書いて同じブランチへコミットする。main には入れない（マージしない前提のブランチ）。
 on:
@@ -8,10 +11,12 @@ on:
     branches: [analysis/rates-vol-threshold]
     paths:
       - "analysis/rates_vol_threshold.py"
+      - "analysis/fetch_fx_daily.js"
       - ".github/workflows/analysis-rates-vol.yml"
 
 permissions:
   contents: write
+  actions: read   # 本番の Daily / Intraday が実行中かを確かめるため
 
 concurrency:
   group: analysis-rates-vol
@@ -20,13 +25,24 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Fetch FX daily bars
+        env:
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node analysis/fetch_fx_daily.js "$RUNNER_TEMP/fx.json"
+
       - name: Run analysis
-        run: python3 analysis/rates_vol_threshold.py analysis/out data/risk.json
+        run: python3 analysis/rates_vol_threshold.py analysis/out "$RUNNER_TEMP/fx.json" data/risk.json
 
       - name: Commit results to this branch
         run: |

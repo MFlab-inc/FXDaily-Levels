@@ -4,26 +4,25 @@
 問い：「米国債の値動き」（risk/SPEC.md 10-1 と同じ定義）の過去1年での順位が高い週は、その後1週間の為替が
 本当に荒れていたか。基準を 80%・85%・90%・95% にしたとき、何が変わるか。参考に VIX の順位（基準70%）も同じ形で見る。
 
-データ（FRED の公開 CSV。https://fred.stlouisfed.org/graph/fredgraph.csv?id=<系列>）：
-  米国債の利回り DGS2・DGS5・DGS10・DGS30（米財務省の国債金利と同じ元データ。30年は 2002-02〜2006-02 に欠けがあるため、
-  順位が出せるのは 2007年から）
-  為替 DEXJPUS（USD/JPY）・DEXUSEU（EUR/USD）・DEXUSUK（GBP/USD）・DEXUSAL（AUD/USD）・DEXCAUS（USD/CAD）。
-  ニューヨーク正午の値（FRB の H.10）。EUR/JPY＝EUR/USD×USD/JPY、EUR/GBP＝EUR/USD÷GBP/USD。XAU/USD は FRED に無いため対象外
-  VIX VIXCLS
+データ：
+  米国債の利回り：米財務省の年ごとの CSV（2・5・10・30年。risk.json の米国債の値動きと同じ取得先）。30年は 2002-02〜2006-02 に
+    欠けがあるため、順位が出せるのは 2007年から
+  為替：Twelve Data の日足（8銘柄、最大5000本＝約19年。記事の価格と同じ配信元。analysis/fetch_fx_daily.js が取得し、
+    一時ファイルに置く。コミットしない）
+  VIX：Cboe「VIX_History.csv」（risk.json の VIX と同じ取得先）
   元データは保存しない（集計の結果だけを書く）。
-
-米国債の利回りは、FRED ではなく米財務省の年ごとの CSV（risk.json の米国債の値動きと同じ取得先）から取る。
+  （最初は FRED を使う予定だったが、GitHub Actions からは長い期間の取得が時間切れになったため、上の取得先に変えた）
 
 決め方（記事と同じ順番）：週の最後の米国の営業日（金曜など）の順位を見て、次の週を見る。
-  ・週の初めの値＝その次の為替の値（翌営業日のニューヨーク正午）
-  ・その後5営業日の、初めの値からの最大の振れ幅（終値どうし。上下どちらでも）を、次の2つの物差しで割る
+  ・週の初めの値＝信号の日（金曜など）の日足の終値（日足は UTC の日付で区切った足）
+  ・その後7暦日（翌週の月〜金）の日足の高値・安値で、初めの値からの最大の振れ幅（上下どちらでも）を、次の2つの物差しで割る
       直近の物差し：直近20営業日の1日の変化（対数）の標準偏差×√5（オプションの想定変動幅が、最近の値動きに合わせて
                     広がる・縮むのに近い）
       1年の物差し ：直近250営業日の同じもの（ふだんの1年に比べて荒れたか）
   ・記事の3案の損切りは、週初の中心から 1.0σ（❸）・1.5σ（❷）・2.0σ（❶）。そこで「直近の物差しで 1.0・1.5・2.0 倍を
     越えて振れた週の割合」を数える（向きは問わない）
 
-使い方：python3 analysis/rates_vol_threshold.py <出力先フォルダ> [risk.json]
+使い方：python3 analysis/rates_vol_threshold.py <出力先フォルダ> <為替の日足 JSON> [risk.json]
 標準ライブラリだけで動く。
 """
 import bisect
@@ -37,10 +36,9 @@ import sys
 import time
 import urllib.request
 
-FRED = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={}"
 TENORS = ["DGS2", "DGS5", "DGS10", "DGS30"]
-FX = {"USDJPY": "DEXJPUS", "EURUSD": "DEXUSEU", "GBPUSD": "DEXUSUK", "AUDUSD": "DEXUSAL", "USDCAD": "DEXCAUS"}
-PAIRS = ["USDJPY", "EURUSD", "GBPUSD", "AUDUSD", "EURJPY", "EURGBP", "USDCAD"]
+PAIRS = ["USDJPY", "EURUSD", "GBPUSD", "AUDUSD", "EURJPY", "EURGBP", "USDCAD", "XAUUSD"]
+CBOE_VIX = "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv"
 LOOKBACK = 20
 WINDOW = 252
 BUCKETS = [(0, 70), (70, 80), (80, 85), (85, 90), (90, 95), (95, 100.01)]
@@ -48,7 +46,7 @@ THRESHOLDS = [70, 80, 85, 90, 95]
 HORIZON = 5
 
 
-UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}   # intraday.js と同じ（FRED は既定の UA だと応答が遅い）
+UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 TREASURY = ("https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/"
             "{y}/all?type=daily_treasury_yield_curve&field_tdr_date_value={y}&page&_format=csv")
 TREASURY_COLS = {"DGS2": "2 Yr", "DGS5": "5 Yr", "DGS10": "10 Yr", "DGS30": "30 Yr"}
@@ -91,27 +89,27 @@ def fetch_treasury(first_year=2005):
     return out
 
 
-def fetch(series_id, tries=4):
-    print(f"{series_id} を取得します")
+def fetch_vix(tries=4):
+    """Cboe の VIX の終値。返り値：{日付: 終値}"""
     last = None
     for k in range(tries):
         try:
-            text = get_text(FRED.format(series_id) + "&cosd=2004-01-01")
+            rows = list(csv.reader(io.StringIO(get_text(CBOE_VIX))))
+            head = [h.strip().upper() for h in rows[0]]
+            i_d, i_c = head.index("DATE"), head.index("CLOSE")
             out = {}
-            for row in csv.reader(io.StringIO(text)):
-                if not row or not row[0][:1].isdigit():
+            for r in rows[1:]:
+                if len(r) <= i_c or not r[i_c].strip():
                     continue
-                v = row[1].strip() if len(row) > 1 else ""
-                if v in ("", "."):
-                    continue
-                out[row[0]] = float(v)
-            if len(out) < 100:
-                raise RuntimeError(f"{series_id}: 行が少なすぎます（{len(out)}）")
+                m, d, y = r[i_d].strip().split("/")
+                out[f"{y}-{int(m):02d}-{int(d):02d}"] = float(r[i_c])
+            if len(out) < 1000:
+                raise RuntimeError(f"VIX の行が少なすぎます（{len(out)}）")
             return out
         except Exception as e:  # noqa: BLE001
             last = e
             time.sleep(5 * (k + 1))
-    raise RuntimeError(f"{series_id} を取得できません：{last}")
+    raise RuntimeError(f"VIX を取得できません：{last}")
 
 
 def rank_at(values, i, window=WINDOW):
@@ -169,31 +167,36 @@ def week_signals(rank_map):
     return [(d, rank_map[d][1]) for _, d in sorted(by_week.items())]
 
 
-def fx_series(raw):
-    s = {p: raw[p] for p in ["USDJPY", "EURUSD", "GBPUSD", "AUDUSD", "USDCAD"]}
-    common = set(s["EURUSD"]) & set(s["USDJPY"])
-    s["EURJPY"] = {d: s["EURUSD"][d] * s["USDJPY"][d] for d in common}
-    common = set(s["EURUSD"]) & set(s["GBPUSD"])
-    s["EURGBP"] = {d: s["EURUSD"][d] / s["GBPUSD"][d] for d in common}
-    return s
+def load_fx(path):
+    """analysis/fetch_fx_daily.js の出力。土日の足は使わない（日曜に少しだけ取引がある日の足など）。"""
+    raw = json.load(open(path, encoding="utf-8"))
+    out = {}
+    for p in PAIRS:
+        bars = [b for b in raw[p] if dt.date.fromisoformat(b["date"]).weekday() < 5]
+        out[p] = sorted(bars, key=lambda b: b["date"])
+    return out
 
 
 def outcomes(fx, signals):
     """各（週, 銘柄）について、翌週の最大の振れ幅を2つの物差しで割った値。返り値：[(順位, 銘柄, 週の日付, 直近比, 1年比)]"""
     rows = []
     for p in PAIRS:
-        dates = sorted(fx[p])
-        px = [fx[p][d] for d in dates]
-        lr = [math.log(px[i] / px[i - 1]) for i in range(1, len(px))]   # lr[i-1] は dates[i] の変化
+        bars = fx[p]
+        dates = [b["date"] for b in bars]
+        closes = [b["close"] for b in bars]
+        lr = [math.log(closes[i] / closes[i - 1]) for i in range(1, len(closes))]   # lr[i-1] は dates[i] の変化
         for sig_date, rank in signals:
-            j = bisect.bisect_right(dates, sig_date)     # 信号の日より後の、最初の為替の日
-            if j + HORIZON >= len(px) or j < 251:
+            j = bisect.bisect_right(dates, sig_date) - 1          # 信号の日（以前で最後）の足＝週の初めの値
+            if j < 251:
                 continue
-            recent = lr[j - 20:j]     # dates[j-19..j] の変化（初めの値までの20個）
-            year = lr[j - 250:j]
-            s_recent = stdev(recent) * math.sqrt(HORIZON)
-            s_year = stdev(year) * math.sqrt(HORIZON)
-            m = max(abs(math.log(px[j + k] / px[j])) for k in range(1, HORIZON + 1))
+            end = (dt.date.fromisoformat(sig_date) + dt.timedelta(days=7)).isoformat()
+            win = [b for b in bars[j + 1:j + 8] if b["date"] <= end]
+            if len(win) < 3:                                       # 翌週の足が少なすぎる（祝日の重なり・データの末尾）
+                continue
+            p0 = closes[j]
+            s_recent = stdev(lr[j - 20:j]) * math.sqrt(HORIZON)
+            s_year = stdev(lr[j - 250:j]) * math.sqrt(HORIZON)
+            m = max(max(math.log(b["high"] / p0), math.log(p0 / b["low"])) for b in win)
             rows.append((rank, p, sig_date, m / s_recent, m / s_year))
     return rows
 
@@ -249,17 +252,18 @@ def run_lengths(rank_map, th):
 
 def main():
     out_dir = sys.argv[1]
-    risk_path = sys.argv[2] if len(sys.argv) > 2 else None
+    fx_path = sys.argv[2]
+    risk_path = sys.argv[3] if len(sys.argv) > 3 else None
     os.makedirs(out_dir, exist_ok=True)
     y = fetch_treasury()
-    raw = {p: fetch(s) for p, s in FX.items()}
-    vix = fetch("VIXCLS")
+    vix = fetch_vix()
     rv = rates_vol_ranks(y)
     vr = simple_ranks(vix)
-    fx = fx_series(raw)
+    fx = load_fx(fx_path)
     md = ["# 米国債の値動きの基準（80%）の検証", "",
-          f"作成：{dt.datetime.utcnow():%Y-%m-%d %H:%M} UTC。データ：米国債の利回りは米財務省（2・5・10・30年）、為替と VIX は FRED（{', '.join(list(FX.values()) + ['VIXCLS'])}）。",
-          f"米国債の値動きの順位がある期間：{min(rv)}〜{max(rv)}（{len(rv)}営業日）。VIX：{min(vr)}〜{max(vr)}。", ""]
+          f"作成：{dt.datetime.utcnow():%Y-%m-%d %H:%M} UTC。データ：米国債の利回りは米財務省（2・5・10・30年）、為替は Twelve Data の日足、VIX は Cboe。",
+          f"米国債の値動きの順位がある期間：{min(rv)}〜{max(rv)}（{len(rv)}営業日）。VIX：{min(vr)}〜{max(vr)}。",
+          "為替の日足：" + "、".join(f"{p} {fx[p][0]['date']}〜（{len(fx[p])}本）" for p in PAIRS), ""]
 
     # 1. 再現の確認：risk.json の最近の値と比べる
     if risk_path and os.path.exists(risk_path):
@@ -290,7 +294,7 @@ def main():
     # 3. 週ごとの比較
     rows_rv = outcomes(fx, week_signals(rv))
     rows_vx = outcomes(fx, week_signals(vr))
-    md += ["## 3. 順位の帯ごとの、翌週の為替の振れ幅（7銘柄。XAU/USD は対象外）", "",
+    md += ["## 3. 順位の帯ごとの、翌週の為替の振れ幅（8銘柄）", "",
            "「直近の物差しで1.5倍超」＝週の初めの値から、直近20営業日の値動きから見込む1週間の幅（σ）の1.5倍を越えて振れた週の割合。"
            "記事の❷通常の損切り（中心から1.5σ）・❶保守的の損切り（2.0σ）の深さに当たる。向きは問わない。"
            "括弧の±は、週の数から見た目安の誤差（銘柄どうしは同じ週に動きやすいため、銘柄×週ではなく週の数で計算）。", ""]
