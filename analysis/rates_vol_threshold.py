@@ -64,7 +64,7 @@ def fetch_treasury(first_year=2005):
     """米財務省の国債金利（risk.json の米国債の値動きと同じ取得先）。返り値：{DGS2: {日付: 値}, ...}"""
     out = {k: {} for k in TREASURY_COLS}
     for y in range(first_year, dt.date.today().year + 1):
-        print(f"::notice::米財務省 {y} 年を取得します")
+        print(f"米財務省 {y} 年を取得します")
         text = None
         for k in range(4):
             try:
@@ -92,7 +92,7 @@ def fetch_treasury(first_year=2005):
 
 
 def fetch(series_id, tries=4):
-    print(f"::notice::{series_id} を取得します")
+    print(f"{series_id} を取得します")
     last = None
     for k in range(tries):
         try:
