@@ -12,6 +12,8 @@
   VIX VIXCLS
   元データは保存しない（集計の結果だけを書く）。
 
+米国債の利回りは、FRED ではなく米財務省の年ごとの CSV（risk.json の米国債の値動きと同じ取得先）から取る。
+
 決め方（記事と同じ順番）：週の最後の米国の営業日（金曜など）の順位を見て、次の週を見る。
   ・週の初めの値＝その次の為替の値（翌営業日のニューヨーク正午）
   ・その後5営業日の、初めの値からの最大の振れ幅（終値どうし。上下どちらでも）を、次の2つの物差しで割る
@@ -46,14 +48,55 @@ THRESHOLDS = [70, 80, 85, 90, 95]
 HORIZON = 5
 
 
+UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}   # intraday.js と同じ（FRED は既定の UA だと応答が遅い）
+TREASURY = ("https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/"
+            "{y}/all?type=daily_treasury_yield_curve&field_tdr_date_value={y}&page&_format=csv")
+TREASURY_COLS = {"DGS2": "2 Yr", "DGS5": "5 Yr", "DGS10": "10 Yr", "DGS30": "30 Yr"}
+
+
+def get_text(url, timeout=120):
+    req = urllib.request.Request(url, headers=UA)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read().decode("utf-8-sig")
+
+
+def fetch_treasury(first_year=2005):
+    """米財務省の国債金利（risk.json の米国債の値動きと同じ取得先）。返り値：{DGS2: {日付: 値}, ...}"""
+    out = {k: {} for k in TREASURY_COLS}
+    for y in range(first_year, dt.date.today().year + 1):
+        print(f"::notice::米財務省 {y} 年を取得します")
+        text = None
+        for k in range(4):
+            try:
+                text = get_text(TREASURY.format(y=y))
+                break
+            except Exception as e:  # noqa: BLE001
+                last = e
+                time.sleep(5 * (k + 1))
+        if text is None:
+            raise RuntimeError(f"米財務省 {y} 年を取得できません：{last}")
+        rows = list(csv.reader(io.StringIO(text)))
+        head = [h.strip() for h in rows[0]]
+        idx = {k: head.index(c) for k, c in TREASURY_COLS.items() if c in head}
+        for r in rows[1:]:
+            if not r:
+                continue
+            m, d, yy = r[0].strip().split("/")
+            date = f"{yy}-{m}-{d}"
+            for k, i in idx.items():
+                v = r[i].strip() if i < len(r) else ""
+                if v not in ("", "N/A"):
+                    out[k][date] = float(v)
+        time.sleep(1)
+    return out
+
+
 def fetch(series_id, tries=4):
     print(f"::notice::{series_id} を取得します")
     last = None
     for k in range(tries):
         try:
-            req = urllib.request.Request(FRED.format(series_id), headers={"User-Agent": "FXDaily-Levels analysis"})
-            with urllib.request.urlopen(req, timeout=60) as r:
-                text = r.read().decode("utf-8")
+            text = get_text(FRED.format(series_id) + "&cosd=2004-01-01")
             out = {}
             for row in csv.reader(io.StringIO(text)):
                 if not row or not row[0][:1].isdigit():
@@ -208,14 +251,14 @@ def main():
     out_dir = sys.argv[1]
     risk_path = sys.argv[2] if len(sys.argv) > 2 else None
     os.makedirs(out_dir, exist_ok=True)
-    y = {t: fetch(t) for t in TENORS}
+    y = fetch_treasury()
     raw = {p: fetch(s) for p, s in FX.items()}
     vix = fetch("VIXCLS")
     rv = rates_vol_ranks(y)
     vr = simple_ranks(vix)
     fx = fx_series(raw)
     md = ["# 米国債の値動きの基準（80%）の検証", "",
-          f"作成：{dt.datetime.utcnow():%Y-%m-%d %H:%M} UTC。データ：FRED（{', '.join(TENORS + list(FX.values()) + ['VIXCLS'])}）。",
+          f"作成：{dt.datetime.utcnow():%Y-%m-%d %H:%M} UTC。データ：米国債の利回りは米財務省（2・5・10・30年）、為替と VIX は FRED（{', '.join(list(FX.values()) + ['VIXCLS'])}）。",
           f"米国債の値動きの順位がある期間：{min(rv)}〜{max(rv)}（{len(rv)}営業日）。VIX：{min(vr)}〜{max(vr)}。", ""]
 
     # 1. 再現の確認：risk.json の最近の値と比べる
@@ -224,12 +267,12 @@ def main():
         hist = ((doc.get("trial") or {}).get("rates_vol") or {}).get("history") or []
         diffs = [(h["date"], h["rank_pct"], rv[h["date"]][1], h.get("value"), round(rv[h["date"]][0], 2))
                  for h in hist if h["date"] in rv]
-        md += ["## 1. 計算の再現（FRED の金利で計算した順位と、risk.json〈米財務省の CSV〉の順位）", ""]
+        md += ["## 1. 計算の再現（この集計で計算した順位と、risk.json の順位。どちらも米財務省の金利）", ""]
         if diffs:
             same80 = sum(1 for _, a, b, *_ in diffs if (a >= 80) == (b >= 80))
             maxd = max(abs(a - b) for _, a, b, *_ in diffs)
             md += [f"比べた日数 {len(diffs)}、順位の差の最大 {maxd:.1f}、80%以上かの判定の一致 {same80}/{len(diffs)}。", "",
-                   "| 日付 | risk.json | FRED で計算 | 値（risk.json） | 値（FRED） |", "|---|---:|---:|---:|---:|"]
+                   "| 日付 | risk.json | この集計 | 値（risk.json） | 値（この集計） |", "|---|---:|---:|---:|---:|"]
             md += [f"| {d} | {a} | {b} | {v} | {w} |" for d, a, b, v, w in diffs[-10:]]
         md.append("")
 
