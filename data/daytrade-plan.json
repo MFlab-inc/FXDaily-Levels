@@ -6,38 +6,38 @@
   },
   "plan_date": "2026-11-06",
   "run": "status",
-  "status_updated_at": "2026-11-07T00:06:00+09:00",
+  "status_updated_at": "2026-11-07T01:05:55+09:00",
   "expires_at": "2026-11-07T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-11-07T00:05:27+09:00",
-        "age_min": 1,
+        "as_of": "2026-11-07T01:05:27+09:00",
+        "age_min": 0,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-11-07T00:05:32+09:00",
+        "as_of": "2026-11-07T01:05:31+09:00",
         "age_min": 0,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-11-07T00:05:32+09:00",
+        "as_of": "2026-11-07T01:05:31+09:00",
         "age_min": 0,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-11-06 23:45",
-      "newest_last_closed": "2026-11-06 23:45",
+      "oldest_last_closed": "2026-11-07 00:45",
+      "newest_last_closed": "2026-11-07 00:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-11-06 23:00",
-      "newest": "2026-11-06 23:00"
+      "oldest": "2026-11-07 00:00",
+      "newest": "2026-11-07 00:00"
     },
     "stale": false,
     "daily": {
@@ -67,7 +67,7 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-11-07T00:05:27+09:00",
+    "as_of": "2026-11-07T01:05:27+09:00",
     "date": "2026-11-07",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
@@ -448,17 +448,17 @@
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-11-07T00:05:32+09:00",
+      "as_of": "2026-11-07T01:05:31+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
-        "USDJPY": "TRADE_OK",
+        "USDJPY": "WAIT",
         "EURUSD": "TRADE_OK",
         "GBPUSD": "TRADE_OK",
         "AUDUSD": "TRADE_OK",
         "NZDUSD": "TRADE_OK",
         "USDCAD": "TRADE_OK",
         "USDCHF": "TRADE_OK",
-        "EURJPY": "TRADE_OK",
+        "EURJPY": "WAIT",
         "EURGBP": "TRADE_OK",
         "XAUUSD": "TRADE_OK"
       }
@@ -467,8 +467,8 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-11-06T23:37:13+09:00",
-        "age_min": 29
+        "generated_intraday": "2026-11-07T00:59:12+09:00",
+        "age_min": 7
       },
       "pairs": {
         "USDJPY": {
@@ -477,7 +477,7 @@
             "range_today": 1.343,
             "range_vs_adr": 1.569,
             "spike_flag": true,
-            "updated_at": "2026-11-06T23:37:13+09:00"
+            "updated_at": "2026-11-07T00:59:12+09:00"
           }
         },
         "EURUSD": {
@@ -486,7 +486,7 @@
             "range_today": 0.01027,
             "range_vs_adr": 1.612,
             "spike_flag": true,
-            "updated_at": "2026-11-06T23:37:13+09:00"
+            "updated_at": "2026-11-07T00:59:12+09:00"
           }
         },
         "GBPUSD": {
@@ -498,7 +498,7 @@
             "range_today": 0.0092,
             "range_vs_adr": 1.957,
             "spike_flag": true,
-            "updated_at": "2026-11-06T23:37:13+09:00"
+            "updated_at": "2026-11-07T00:59:12+09:00"
           }
         },
         "NZDUSD": {
@@ -510,7 +510,7 @@
             "range_today": 0.01298,
             "range_vs_adr": 2.006,
             "spike_flag": true,
-            "updated_at": "2026-11-06T23:37:13+09:00"
+            "updated_at": "2026-11-07T00:59:12+09:00"
           }
         },
         "USDCHF": {
@@ -525,7 +525,7 @@
             "range_today": 0.0029,
             "range_vs_adr": 0.915,
             "spike_flag": false,
-            "updated_at": "2026-11-06T23:37:13+09:00"
+            "updated_at": "2026-11-07T00:59:12+09:00"
           }
         },
         "XAUUSD": {
@@ -534,7 +534,7 @@
             "range_today": 87.23,
             "range_vs_adr": 1.118,
             "spike_flag": false,
-            "updated_at": "2026-11-06T23:37:13+09:00"
+            "updated_at": "2026-11-07T00:59:12+09:00"
           }
         }
       }
