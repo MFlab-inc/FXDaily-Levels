@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-07T00:23:27+09:00",
+  "as_of": "2026-11-07T00:35:32+09:00",
   "timezone": "Asia/Tokyo",
   "note": "事実データと機械判定のみ。売買推奨は含まない。gateはイベント時間ルール(config/daytrade-rules.json)による判定。",
   "rules_summary": {
@@ -24,9 +24,9 @@
   },
   "pairs": {
     "USDJPY": {
-      "price": 158.278,
-      "price_time_jst": "2026-11-07 00:20",
-      "bar_age_min": 0,
+      "price": 158.173,
+      "price_time_jst": "2026-11-07 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-06 07:00",
@@ -75,25 +75,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-07 00:00",
-          "o": 158.32,
-          "h": 158.32,
-          "l": 158.212,
-          "c": 158.261,
+          "time_jst": "2026-11-07 00:15",
+          "o": 158.252,
+          "h": 158.282,
+          "l": 158.16,
+          "c": 158.181,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-07 00:00",
+          "time_jst": "2026-11-07 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 158.614,
-          "time_jst": "2026-11-06 22:30"
+          "price": 158.476,
+          "time_jst": "2026-11-06 23:45"
         },
         "swing_low": {
           "price": 158.264,
@@ -128,27 +128,18 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
-        "warnings": [
-          "00:00 [USD] Prelim UoM Consumer Sentiment（Medium・参考）",
-          "00:00 [USD] Prelim UoM Inflation Expectations（Medium・参考）"
+        "state": "WAIT",
+        "reasons": [
+          "01:00 [JPY] BOJ Gov Ueda Speaks（central_bank: 前30分〜後60分停止）"
         ],
-        "next_gated_event": {
-          "time_jst": "01:00",
-          "datetime_jst": "2026-11-07T01:00:00+09:00",
-          "currency": "JPY",
-          "impact": "High",
-          "event": "BOJ Gov Ueda Speaks",
-          "stop_from_jst": "00:30",
-          "stop_until_jst": "02:00"
-        }
+        "warnings": [],
+        "next_gated_event": null
       }
     },
     "EURUSD": {
-      "price": 1.11554,
-      "price_time_jst": "2026-11-07 00:20",
-      "bar_age_min": 0,
+      "price": 1.11549,
+      "price_time_jst": "2026-11-07 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-06 07:00",
@@ -197,17 +188,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-07 00:00",
-          "o": 1.11498,
-          "h": 1.11567,
-          "l": 1.11462,
-          "c": 1.11563,
+          "time_jst": "2026-11-07 00:15",
+          "o": 1.11555,
+          "h": 1.11596,
+          "l": 1.11549,
+          "c": 1.11594,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-07 00:00",
+          "time_jst": "2026-11-07 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -252,17 +243,14 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [
-          "00:00 [USD] Prelim UoM Consumer Sentiment（Medium・参考）",
-          "00:00 [USD] Prelim UoM Inflation Expectations（Medium・参考）"
-        ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "GBPUSD": {
-      "price": 1.33742,
-      "price_time_jst": "2026-11-07 00:20",
-      "bar_age_min": 0,
+      "price": 1.33719,
+      "price_time_jst": "2026-11-07 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-06 07:00",
@@ -311,17 +299,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-07 00:00",
-          "o": 1.33636,
-          "h": 1.33714,
-          "l": 1.33579,
-          "c": 1.33711,
+          "time_jst": "2026-11-07 00:15",
+          "o": 1.33702,
+          "h": 1.33776,
+          "l": 1.337,
+          "c": 1.33752,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-07 00:00",
+          "time_jst": "2026-11-07 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -366,17 +354,14 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [
-          "00:00 [USD] Prelim UoM Consumer Sentiment（Medium・参考）",
-          "00:00 [USD] Prelim UoM Inflation Expectations（Medium・参考）"
-        ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "EURJPY": {
-      "price": 176.561,
-      "price_time_jst": "2026-11-07 00:20",
-      "bar_age_min": 0,
+      "price": 176.442,
+      "price_time_jst": "2026-11-07 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-06 07:00",
@@ -425,25 +410,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-07 00:00",
-          "o": 176.522,
-          "h": 176.564,
-          "l": 176.452,
-          "c": 176.556,
+          "time_jst": "2026-11-07 00:15",
+          "o": 176.539,
+          "h": 176.616,
+          "l": 176.495,
+          "c": 176.517,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-07 00:00",
+          "time_jst": "2026-11-07 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 176.951,
-          "time_jst": "2026-11-06 21:45"
+          "price": 176.644,
+          "time_jst": "2026-11-06 23:45"
         },
         "swing_low": {
           "price": 176.341,
@@ -478,24 +463,18 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "01:00 [JPY] BOJ Gov Ueda Speaks（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "01:00",
-          "datetime_jst": "2026-11-07T01:00:00+09:00",
-          "currency": "JPY",
-          "impact": "High",
-          "event": "BOJ Gov Ueda Speaks",
-          "stop_from_jst": "00:30",
-          "stop_until_jst": "02:00"
-        }
+        "next_gated_event": null
       }
     },
     "AUDUSD": {
-      "price": 0.68866,
-      "price_time_jst": "2026-11-07 00:20",
-      "bar_age_min": 0,
+      "price": 0.68786,
+      "price_time_jst": "2026-11-07 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-06 07:00",
@@ -544,25 +523,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-07 00:00",
-          "o": 0.68926,
-          "h": 0.68926,
-          "l": 0.68869,
-          "c": 0.68899,
+          "time_jst": "2026-11-07 00:15",
+          "o": 0.68895,
+          "h": 0.68925,
+          "l": 0.6883,
+          "c": 0.68839,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-07 00:00",
+          "time_jst": "2026-11-07 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 0.6882,
-          "time_jst": "2026-11-06 21:30"
+          "price": 0.68931,
+          "time_jst": "2026-11-06 23:45"
         },
         "swing_low": {
           "price": 0.68547,
@@ -599,17 +578,14 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [
-          "00:00 [USD] Prelim UoM Consumer Sentiment（Medium・参考）",
-          "00:00 [USD] Prelim UoM Inflation Expectations（Medium・参考）"
-        ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "EURGBP": {
-      "price": 0.83411,
-      "price_time_jst": "2026-11-07 00:20",
-      "bar_age_min": 0,
+      "price": 0.83427,
+      "price_time_jst": "2026-11-07 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-06 07:00",
@@ -658,17 +634,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-07 00:00",
-          "o": 0.83433,
-          "h": 0.83457,
-          "l": 0.83412,
-          "c": 0.83431,
+          "time_jst": "2026-11-07 00:15",
+          "o": 0.83435,
+          "h": 0.83447,
+          "l": 0.83405,
+          "c": 0.83432,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-07 00:00",
+          "time_jst": "2026-11-07 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -679,8 +655,8 @@
           "time_jst": "2026-11-06 23:15"
         },
         "swing_low": {
-          "price": 0.83233,
-          "time_jst": "2026-11-06 22:30"
+          "price": 0.83385,
+          "time_jst": "2026-11-06 23:45"
         }
       },
       "h1": {
@@ -718,9 +694,9 @@
       }
     },
     "USDCAD": {
-      "price": 1.40992,
-      "price_time_jst": "2026-11-07 00:20",
-      "bar_age_min": 0,
+      "price": 1.41037,
+      "price_time_jst": "2026-11-07 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-06 07:00",
@@ -769,17 +745,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-07 00:00",
-          "o": 1.40989,
-          "h": 1.41089,
-          "l": 1.40949,
-          "c": 1.40953,
+          "time_jst": "2026-11-07 00:15",
+          "o": 1.4096,
+          "h": 1.40997,
+          "l": 1.40909,
+          "c": 1.40994,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-07 00:00",
+          "time_jst": "2026-11-07 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -824,18 +800,14 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [
-          "00:00 [CAD] Ivey PMI（Medium・参考）",
-          "00:00 [USD] Prelim UoM Consumer Sentiment（Medium・参考）",
-          "00:00 [USD] Prelim UoM Inflation Expectations（Medium・参考）"
-        ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "USDCHF": {
-      "price": 0.82008,
-      "price_time_jst": "2026-11-07 00:20",
-      "bar_age_min": 0,
+      "price": 0.81979,
+      "price_time_jst": "2026-11-07 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-06 07:00",
@@ -884,17 +856,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-07 00:00",
-          "o": 0.82065,
-          "h": 0.82095,
-          "l": 0.82021,
-          "c": 0.82042,
+          "time_jst": "2026-11-07 00:15",
+          "o": 0.8204,
+          "h": 0.8204,
+          "l": 0.81943,
+          "c": 0.81947,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-07 00:00",
+          "time_jst": "2026-11-07 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -939,17 +911,14 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [
-          "00:00 [USD] Prelim UoM Consumer Sentiment（Medium・参考）",
-          "00:00 [USD] Prelim UoM Inflation Expectations（Medium・参考）"
-        ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "NZDUSD": {
-      "price": 0.55517,
-      "price_time_jst": "2026-11-07 00:20",
-      "bar_age_min": 0,
+      "price": 0.55478,
+      "price_time_jst": "2026-11-07 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-06 07:00",
@@ -998,17 +967,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-07 00:00",
-          "o": 0.55476,
-          "h": 0.55524,
-          "l": 0.55459,
-          "c": 0.55517,
+          "time_jst": "2026-11-07 00:15",
+          "o": 0.55504,
+          "h": 0.55556,
+          "l": 0.55504,
+          "c": 0.55528,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-07 00:00",
+          "time_jst": "2026-11-07 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1053,10 +1022,7 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [
-          "00:00 [USD] Prelim UoM Consumer Sentiment（Medium・参考）",
-          "00:00 [USD] Prelim UoM Inflation Expectations（Medium・参考）"
-        ],
+        "warnings": [],
         "next_gated_event": {
           "time_jst": "06:45",
           "datetime_jst": "2026-11-07T06:45:00+09:00",
@@ -1069,9 +1035,9 @@
       }
     },
     "AUDNZD": {
-      "price": 1.24041,
-      "price_time_jst": "2026-11-07 00:20",
-      "bar_age_min": 0,
+      "price": 1.23985,
+      "price_time_jst": "2026-11-07 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-06 07:00",
@@ -1120,25 +1086,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-07 00:00",
-          "o": 1.24245,
-          "h": 1.2425,
-          "l": 1.24088,
-          "c": 1.24137,
+          "time_jst": "2026-11-07 00:15",
+          "o": 1.2413,
+          "h": 1.2413,
+          "l": 1.23967,
+          "c": 1.23972,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-07 00:00",
+          "time_jst": "2026-11-07 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.2412,
-          "time_jst": "2026-11-06 22:30"
+          "price": 1.24302,
+          "time_jst": "2026-11-06 23:45"
         },
         "swing_low": {
           "price": 1.23937,
@@ -1188,9 +1154,9 @@
       }
     },
     "XAUUSD": {
-      "price": 4052.52,
-      "price_time_jst": "2026-11-07 00:20",
-      "bar_age_min": 0,
+      "price": 4044.9,
+      "price_time_jst": "2026-11-07 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-06 07:00",
@@ -1239,17 +1205,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-07 00:00",
-          "o": 4048.76,
-          "h": 4055.37,
-          "l": 4043.92,
-          "c": 4055.21,
+          "time_jst": "2026-11-07 00:15",
+          "o": 4054.75,
+          "h": 4057.29,
+          "l": 4048.55,
+          "c": 4049.06,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-07 00:00",
+          "time_jst": "2026-11-07 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1294,17 +1260,14 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [
-          "00:00 [USD] Prelim UoM Consumer Sentiment（Medium・参考）",
-          "00:00 [USD] Prelim UoM Inflation Expectations（Medium・参考）"
-        ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "USOIL": {
-      "price": 90.42,
-      "price_time_jst": "2026-11-07 00:20",
-      "bar_age_min": 0,
+      "price": 90.17,
+      "price_time_jst": "2026-11-07 00:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-06 07:00",
@@ -1353,25 +1316,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-07 00:00",
-          "o": 90.5,
-          "h": 90.85,
-          "l": 90.43,
-          "c": 90.57,
+          "time_jst": "2026-11-07 00:15",
+          "o": 90.58,
+          "h": 90.7,
+          "l": 89.78,
+          "c": 89.97,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-07 00:00",
+          "time_jst": "2026-11-07 00:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 91.3,
-          "time_jst": "2026-11-06 22:30"
+          "price": 91.07,
+          "time_jst": "2026-11-06 23:45"
         },
         "swing_low": {
           "price": 89.68,
@@ -1408,10 +1371,7 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [
-          "00:00 [USD] Prelim UoM Consumer Sentiment（Medium・参考）",
-          "00:00 [USD] Prelim UoM Inflation Expectations（Medium・参考）"
-        ],
+        "warnings": [],
         "next_gated_event": null
       }
     }
