@@ -9,6 +9,8 @@ const L = require("../log");
 const { makeScenario, snapshot } = require("./scenario");
 const { rm, toH1Json } = require("./helpers");
 const J = require("../jst");
+// この試験は、銘柄を問わないライブの規則の試験。模擬の場面で XAUUSD もライブの候補になる前提で書かれているので、pairs.js の live:false を外した状態（＝今までと同じ出力）で動かす（helpers.js の setXauLive）
+require("./helpers").setXauLive(true);
 
 const INPUTS = ["intraday.json", "daily-levels.json", "h1-bars.json", "daytrade-context.json", "mtf-feed.json", "economic-calendar.json"];
 const quiet = () => { const out = []; return { out, io: { log: (m) => out.push(String(m)) } }; };

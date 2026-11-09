@@ -66,8 +66,8 @@ function barsProblem(bars, cand, planDate) {
  *    判定し直せない（足が設計時刻・取消の時刻まで届いていない・足が古くなって落ちた）ものは、何もしない（黙って飛ばす）。
  * 返り値: { newRows, held, details }。details は書いた行ごとの説明（ログ出力用）。
  */
-function scoreRows({ rows, barsByCode, nowMs }) {
-  const lives = V.lastLifeByKey(rows);
+function scoreRows({ rows, barsByCode, nowMs, variant = null }) {
+  const lives = V.lastLifeByKey(rows, variant); // variant の行だけを採点する（shadow-log.csv は variant ごとに独立に採点する）[Q85]
   const newRows = [];
   const held = [];
   const details = [];

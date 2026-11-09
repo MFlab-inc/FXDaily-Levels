@@ -2,7 +2,7 @@
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { pairOf } = require("../pairs");
+const { pairOf, PAIRS } = require("../pairs");
 const { jstAt, parseIso, HR, jstIso } = require("../jst");
 
 /**
@@ -50,4 +50,19 @@ const toH1Json = (barsByCode) => Object.fromEntries(Object.entries(barsByCode).m
   time_jst: jstIso(b.t).slice(0, 16).replace("T", " "), o: b.o, h: b.h, l: b.l, c: b.c,
 }))]));
 
-module.exports = { tmpDir, rm, DAILY, NO_GROUPS, OK_DIR, evalCtx, stairBars, toH1Json, jstAt, parseIso, HR };
+/**
+ * 発注の対象外の銘柄（pairs.js の live:false。今は XAUUSD）をライブに戻す／対象外にする（試験用。この関数が直接書き換えるのは PAIRS の1項目だけ）。
+ * 『銘柄を問わないライブの規則』の試験（候補・ログ・通知・Issue など）は、模擬の場面で XAUUSD もライブの候補になる前提（4件の候補など）で書かれているので、
+ * ファイルの先頭で setXauLive(true) として、live:false を外した状態（＝今までと同じ出力）で動かす。その状態で今までの期待値が変わらないことが、
+ * 『live を戻せば元どおり』の確認を兼ねる。既定（XAUUSD が対象外）の動きは xau-paper.test.js。
+ * node --test はファイルごとに別のプロセスで動くので、ほかのファイルには影響しない。元に戻す関数を返す。
+ */
+function setXauLive(live) {
+  const p = PAIRS.find((x) => x.code === "XAUUSD");
+  const had = Object.prototype.hasOwnProperty.call(p, "live");
+  const prev = p.live;
+  if (live) delete p.live; else p.live = false;
+  return () => { if (had) p.live = prev; else delete p.live; };
+}
+
+module.exports = { tmpDir, rm, DAILY, NO_GROUPS, OK_DIR, evalCtx, stairBars, toH1Json, jstAt, parseIso, HR, setXauLive };

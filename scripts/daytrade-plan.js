@@ -8,6 +8,7 @@
  *   --resolve   種類を決めて key=value を出力するだけ（GITHUB_OUTPUT 用）
  *   --force     済み・同じ時間内の判定・設計①の入力待ちを無視して必ず実行（手動の試験用）
  *   --now=<ISO> 現在時刻を指定（試験用）  --data-dir=<dir>  --no-risk-feed  --dry-run（書き込まない）
+ * 発注の対象外の銘柄（pairs.js の live:false。今は XAUUSD）の案は、ライブの候補・log.csv・通知には出さず、shadow-log.csv の variant=xau_paper にだけ記録する（plan.json の paper）。
  * 既存のファイル（fetch.js・daytrade.js・intraday.json など）は読むだけで、変更しない。
  */
 const fs = require("fs");
@@ -39,7 +40,7 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
   // log.csv が壊れていても生成は止めない（追記だけ行わず、バナーで知らせる）。壊れたファイルを上書きしない
   let logRows = [], logBroken = null;
   try { logRows = logText ? L.parseLog(logText) : []; } catch (e) { logBroken = String(e.message || e).slice(0, 160); }
-  // 並行記録（参考。SL下限 (b) の案）も同じ。読めなければ追記だけ行わず、ライブの計画・log.csv には影響させない
+  // 並行記録（参考。SL下限 (b) の案 sl_floor_b と、発注の対象外の XAUUSD の案 xau_paper）も同じ。読めなければ追記だけ行わず、ライブの計画・log.csv には影響させない
   const shadowPath = path.join(dataDir, "daytrade", "shadow-log.csv");
   const shadowText = fs.existsSync(shadowPath) ? fs.readFileSync(shadowPath, "utf8") : "";
   let shadowRows = [], shadowBroken = null;
@@ -96,7 +97,7 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
 
   // 4) 組み立て
   const { plan, logAppend, shadowAppend } = action === "design"
-    ? buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows, shadowLogRows: shadowRows })
+    ? buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows, shadowLogRows: shadowRows, shadowReadable: !shadowBroken })
     : buildStatus({ inputs, riskFeed, nowMs, prevPlan, logRows, shadowLogRows: shadowBroken ? null : shadowRows });
   if (logBroken) plan.banners.push(`log.csv を読めないため、ログの追記を行っていません（${logBroken}）`);
   if (shadowBroken) io.log(`[daytrade] shadow-log.csv を読めないため、並行記録の追記を行っていません（${shadowBroken}）`); // 参考の記録なので、計画のバナーには出さない

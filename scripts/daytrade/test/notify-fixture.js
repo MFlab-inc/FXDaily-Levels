@@ -5,7 +5,9 @@ const { loadInputs } = require("../inputs");
 const { buildDesign } = require("../plan");
 const D = require("../notify/detect");
 const J = require("../jst");
-const { rm } = require("./helpers");
+const { rm, setXauLive } = require("./helpers");
+// 模擬の設計②が、AUDUSD・EURUSD・XAUUSD・GBPUSD の4件の候補になる前提（下の BASE を作る前に、pairs.js の live:false を外す。helpers.js の setXauLive）
+setXauLive(true);
 
 /**
  * Issue 通知の試験の共通部品。模擬データ: 2026-10-08（木）の設計②（15:30）= AUDUSD 買い・EURUSD 売り・XAUUSD 買い・GBPUSD 売り（型A）の4件。
