@@ -12,6 +12,8 @@ const L = require("../log");
 const { candRow } = require("../plan");
 const J = require("../jst");
 const { iso, plan, by, vOf, intraday, clone } = require("./notify-fixture");
+// この試験は、銘柄を問わないライブの規則の試験。模擬の場面で XAUUSD もライブの候補になる前提で書かれているので、pairs.js の live:false を外した状態（＝今までと同じ出力）で動かす（helpers.js の setXauLive）
+require("./helpers").setXauLive(true);
 
 /**
  * ■2 通知の1回分（run.js）を、メモリ上の Issue に対して順に動かす。実データと同じファイル（計画・intraday・ログ）を一時フォルダに置く。

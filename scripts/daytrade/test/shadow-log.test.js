@@ -19,6 +19,8 @@ const { createMemoryClient } = require("../notify/github");
 const F = require("../notify/format");
 const { makeScenario } = require("./scenario");
 const { rm, jstAt } = require("./helpers");
+// この試験は、銘柄を問わないライブの規則の試験。模擬の場面で XAUUSD もライブの候補になる前提で書かれているので、pairs.js の live:false を外した状態（＝今までと同じ出力）で動かす（helpers.js の setXauLive）
+require("./helpers").setXauLive(true);
 
 /**
  * ■4 並行記録（参考の案。発注の対象外）。ライブ（SL下限 (a)）では不採用だが、SL下限 (b)（SL＝max(k×ATR, 10pips)）なら通る案を

@@ -6,7 +6,7 @@
 |---|---|---|
 | `accounts.json` | **本人が手で更新** | 口座のラベルと役割（`A`＝デイトレ専用、`B`＝スイング＋デイトレ）、`commission_per_lot_jpy`、`risk_pct`（0 超 5 以下）、`daily_loss_pct`。**口座番号と資金（`equity_jpy`）は書かない**（このリポジトリは公開されるため。資金は下の Variables から読む）。生成器は読むだけ。JSON にコメントは書けないので、先頭の `_comment` に説明を入れてある |
 | `log.csv` | 生成器（`daytrade.yml`、`daytrade-score.js`） | 案の記録。追記のみ（仕様 5節・6-1）。`run` は design（設計）／design-b（状態更新で追加した型B）／status（取消・採点の結果）。口座の列は `lot_cap_a_A`・`lot_cap_b_A`・`lot_cap_a_B`・`lot_cap_b_B`（上限ロット）と `filled_ticket_A`・`filled_ticket_B`。`filled_ticket_*` は本人が週1回、MT4の取引記録と照合して手で埋める（bot は書き換えない）。<br>**取消と採点**：消えた版は `status` の行（`reached`）で取消を記録する。取消の時刻までに H1 足で到達していれば `取消(到達後)`（`reached_at`＝到達した足）、していなければ `取消(再設計)`。`取消(到達後)` の版は、有効期限（翌3:00）の後の採点（`daytrade-score.js`）で SL/TP1 の先着まで追った行を足す（`reached` は `取消(到達後)` のまま、`first_hit_a/b` が入る）。`取消(再設計)` の版も採点のたびに H1 で判定し直す（取消の時に H1 足が届かなかった分と、過去分の移行）。<br>**損益の列**（末尾の6列）：採点の行（`reached`＝`到達`／先着まで追った `取消(到達後)`）にだけ、案ごとの `exit_a`・`exit_b`（決済の価格）、`pips_a`・`pips_b`（最悪Entry 基準・コスト0）、`r_a`・`r_b`（pips÷SL幅）。未決は有効期限の直前の足の終値。円の金額は書かない。古い行は空のまま |
-| `shadow-log.csv` | 生成器（`daytrade.yml`、`daytrade-score.js`） | **参考の並行記録（発注の対象外）**。ライブの規則（SL下限 (a)）では不採用だが、SL下限 (b)（SL＝max(k×ATR, 10pips)）なら通る案を、設計①②③・型Bの追加のたびに記録する。列は `log.csv` と同じで、先頭に `variant`（`sl_floor_b`）を足してある。版の作り方・取消（`取消(到達後)` を含む）・採点・同じ水準の抑え（ライブの `log.csv` の履歴とは独立）は `log.csv` と同じ規則。`daytrade-plan.txt` の候補の欄・Issue には出さない（3項目目の末尾に件数だけ） |
+| `shadow-log.csv` | 生成器（`daytrade.yml`、`daytrade-score.js`） | **参考の並行記録（発注の対象外）**。ライブの規則（SL下限 (a)）では不採用だが、SL下限 (b)（SL＝max(k×ATR, 10pips)）なら通る案を、設計①②③・型Bの追加のたびに記録する。列は `log.csv` と同じで、先頭に `variant` を足してある。`variant` は **`sl_floor_b`**（SL下限 (b) の参考の案）と **`xau_paper`**（XAUUSD の案。下の「XAUUSD は発注の対象外」）。**版・取消・採点・同じ水準の判定は variant ごとに独立**（同じ版が両方に入っていても影響しない）。版の作り方・取消（`取消(到達後)` を含む）・採点・同じ水準の抑え（ライブの `log.csv` の履歴とは独立）は `log.csv` と同じ規則。`sl_floor_b` は `daytrade-plan.txt` の3項目目の末尾に件数だけ（候補の欄・Issue には出さない）。`xau_paper` は2項目目（候補）の末尾に1行だけ（価格・ロットなし。Issue には出さない） |
 | `backtest-<日付>.md` / `.csv` | `daytrade-backtest.js`（手動） | バックテストの集計（仕様 6-2）。CSV の先頭2列は比較軸: `sl_floor`＝SL下限方式（`a_reject`＝丸め後10pips未満は不採用〔ライブの規則〕、`b_widen`＝max(k×ATR, 10pips) で採用）、`obstacle`＝障害の定義（`a_both`＝TP1の障害に日次レベル7本＋H1高値群・安値群の両方〔ライブの規則〕、`b_forward`＝日次レベル7本＋進行方向側の群だけ）。2×2の4通りを別々に集計 |
 
 ## 口座の資金（Secrets／Variables）の設定方法と、資金を更新する手順
@@ -58,3 +58,14 @@
 ## 設計①の入力待ち
 
 設計①の窓（NY 夏時間 06:00〜08:59、冬時間 07:00〜09:59）の中で、発注不可の理由が「日次レベルの日付が古い」「MTF の日付が古い」だけのとき、生成器は**計画もログも書かず**（コミットなし）、次の実行を待つ（実行ログに `入力待ち:` と出る）。日次レベルと MTF は `daily.yml`（Daily FX Data）が1回で更新し、その完了 → Intraday Snapshot → Daytrade Plan の連鎖で数分後に動くので、入力がそろった最初の実行が設計①になる。採点（`daytrade-score.js`）は入力待ちでも動く。窓の終わりまでそろわなければ、窓の後の状態更新が「設計なし」の計画を書き、Issue に「設計①がありません」が通知される。手動の実行（`run` を指定）と `--force` は待たない。
+
+## XAUUSD は発注の対象外（並行記録のみ）
+
+2026-11-09 の論点 c（本人決定）で、XAUUSD の案は発注の対象外になりました（`scripts/daytrade/pairs.js` の XAUUSD の `live: false`。戻すときはこの1か所を消す）。
+
+- 案はこれまでどおり同じ規則（SL下限 (a)・障害 (a)）で作り、`shadow-log.csv` の **`variant=xau_paper`** に記録・採点します（版・取消〔`取消(再設計)`／`取消(到達後)`〕・採点・損益の列は `log.csv` と同じ規則）。
+- ライブの候補には出ません（`daytrade-plan.json` の `candidates`・`daytrade-plan.txt` の「2. 候補」・Issue の通知・`log.csv`）。上限ロットも計算しません。`daytrade-plan.json` の **`paper`** に案の一覧（価格あり・ロットなし）、`paper_status` に状態が入ります。`daytrade-plan.txt` には候補の後に『参考：XAUUSD は発注の対象外（並行記録のみ。今回 n 件記録）』の1行だけが出ます。
+- `log.csv` の切替前の XAUUSD の行はそのまま残ります（書き換えません）。採点待ちの行は今までどおり `log.csv` で採点されます。切替前から有効だった版（その計画日のもの）は、`plan.json` から外れる最初の実行（状態更新か設計）で、通常の取消の行が `log.csv` に追記されます（到達済みなら `取消(到達後)`。Issue に通知済みなら『案を取消しました』が出ます）。最後の設計③のあとに切り替えた場合などは、その計画日の版は有効期限後に `log.csv` で通常どおり採点されます。
+- **切替の日時**：マージ後に最初に動いた設計の時刻。`git log --reverse --format='%h %aI %s' --grep='^daytrade: design' <マージのコミット>..origin/main | head -1` で分かる（マージ後に追記する）。マージ後の最初の実行は状態更新のことが多く、`daytrade-plan.json` の `paper_status` はそこで先に付く。`xau_paper` の型Aの記録は最初の設計から始まる。
+- 集計：XAUUSD は `shadow-log.csv` の `variant=xau_paper` から、ライブ（`log.csv`）とは分けて見る。バックテスト（`backtest-*.md`）は XAUUSD を含めたまま。
+- 戻すかどうかは、ルール見直し（12/19 以降）で、並行記録の到達件数・勝率・実現R を見て相談する。

@@ -3,7 +3,7 @@ name: Daytrade Plan
 # デイトレプラン自動生成（仕様 docs/daytrade-plan-spec.md 7節・10節）。daily.yml・intraday.yml とは別のワークフローで、
 # 失敗してもそれらには影響しない。既存のフィード（intraday.json・h1-bars.json・daily-levels.json・mtf-feed.json・
 # economic-calendar.json・daytrade-context.json）は読むだけで、書くのは次の4ファイルだけ:
-#   data/daytrade-plan.txt / data/daytrade-plan.json / data/daytrade/log.csv / data/daytrade/shadow-log.csv（参考の並行記録。SL下限 (b) の案。発注の対象外）
+#   data/daytrade-plan.txt / data/daytrade-plan.json / data/daytrade/log.csv / data/daytrade/shadow-log.csv（参考の並行記録。SL下限 (b) の案（sl_floor_b）と、発注の対象外の XAUUSD の案（xau_paper））
 # 外部のAPIキー（secrets）は使わない（risk-feed.json は公開URLから読む）。
 # 口座の資金（円・整数）は、リポジトリの Secrets（運用）または Variables の DAYTRADE_EQUITY_A（デイトレ専用口座）・DAYTRADE_EQUITY_B（スイング＋デイトレ口座）から読む。
 # 同名が両方にあれば Secrets が優先。ファイル（accounts.json・計画・log.csv）には書かない。未設定なら『上限ロット 未設定・発注不可』になる。設定方法は data/daytrade/README.md。

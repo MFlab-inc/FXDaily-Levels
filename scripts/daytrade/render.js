@@ -132,6 +132,12 @@ function render(plan, accountsParam = {}) {
   else if (!plan.candidates.length) L.push("  条件を満たす案はありません。");
   for (const c of plan.candidates) { L.push(candidateBlock(c, accts)); L.push(""); }
   if (plan.candidates.length) L.pop();
+  // 発注の対象外の銘柄（pairs.js の live:false。今は XAUUSD）: 案は並行記録（shadow-log.csv の xau_paper）にだけ記録する。ここには件数だけ（価格・ロットは出さない。見て発注してしまわないように）[Q87]
+  const ps = plan.paper_status;
+  if (ps && ps.symbols?.length) {
+    if (plan.candidates.length) L.push("");
+    L.push(`  参考：${ps.symbols.join("・")} は発注の対象外（並行記録のみ。${ps.recording === "ok" ? `今回 ${ps.recorded ?? (plan.paper || []).length} 件記録` : "並行記録を読めないため、今回は記録なし"}）`);
+  }
 
   // 3. 不採用の理由（1案1行）＋参考情報
   L.push("");

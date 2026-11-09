@@ -12,6 +12,8 @@ const J = require("../jst");
  * 模擬データ: 2026-10-08（木）の設計②（15:30）= AUDUSD 買い・EURUSD 売り・XAUUSD 買い・GBPUSD 売り（型A）の4件。EURUSD に 15:25〜16:10 のイベント停止。
  */
 const { iso, BASE, basePlan, plan, by, vOf, intraday } = require("./notify-fixture");
+// この試験は、銘柄を問わないライブの規則の試験。模擬の場面で XAUUSD もライブの候補になる前提で書かれているので、pairs.js の live:false を外した状態（＝今までと同じ出力）で動かす（helpers.js の setXauLive）
+require("./helpers").setXauLive(true);
 const NOW = iso("2026-10-08T16:30:00+09:00");
 
 test("マーカー: 鍵は本文の隠しコメントに残り、書いた順に読める。'--' は壊れないよう置き換える", () => {

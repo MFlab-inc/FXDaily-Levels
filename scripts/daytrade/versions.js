@@ -28,11 +28,11 @@ function candFromRow(row) {
   };
 }
 
-// 行を古い順に見て、版の一生を作る（status の行だけで design の行が無いものは無視する）
-function livesOf(rows) {
+// 行を古い順に見て、版の一生を作る（status の行だけで design の行が無いものは無視する）。variant の行だけを見る（既定は log.csv＝variant なし）[Q85]
+function livesOf(allRows, variant = null) {
   const lives = [];
   const current = new Map();
-  for (const r of rows) {
+  for (const r of L.forVariant(allRows, variant)) {
     const k = L.keyOf(r);
     if (isDesignRow(r)) { const life = { key: k, design: r, status: [], last: r }; lives.push(life); current.set(k, life); }
     else { const life = current.get(k); if (life) { life.status.push(r); life.last = r; } }
@@ -40,9 +40,9 @@ function livesOf(rows) {
   return lives;
 }
 // 版ごとの最後の一生
-function lastLifeByKey(rows) {
+function lastLifeByKey(rows, variant = null) {
   const m = new Map();
-  for (const life of livesOf(rows)) m.set(life.key, life);
+  for (const life of livesOf(rows, variant)) m.set(life.key, life);
   return m;
 }
 // 一生の取消の時刻（最初の status の行が取消のときだけ）。無ければ NaN
@@ -77,16 +77,16 @@ const ideaKeyOfRow = (r) => levelKey({ plan_date: r.plan_date, setup: r.setup, s
 const ideaKeyOfCand = (c) => levelKey({ plan_date: c.plan_date, setup: c.setup, symbol: c.symbol, side: c.side, level: c.side === "sell" ? c.band.low : c.band.high });
 
 /**
- * その計画日に、すでに到達している（到達／取消(到達後)）基準水準の一覧。ライブ（log.csv）と並行記録（shadow-log.csv）で、それぞれの行から独立に作る。
+ * その計画日に、すでに到達している（到達／取消(到達後)）基準水準の一覧。ライブ（log.csv）と並行記録（shadow-log.csv の variant ごと）で、それぞれの行から独立に作る。
  *  到達の判定: 一生の最後の行が 取消(到達後)・到達 なら到達済み。取消(再設計) は H1 足で取消の時刻まで判定し直す（取消の時に足が届いていなかった分）。
  *  まだ有効な版（最後の行が design／design-b）は、いまの H1 足で判定する。
  * openKeys = いま有効な版の鍵。同じ版が続くだけの候補（鍵が同じ）は『出し直し』ではないので、抑えない [Q79]。
  */
-function reachedIdeas({ rows, planDate, barsByCode, nowMs }) {
+function reachedIdeas({ rows, planDate, barsByCode, nowMs, variant = null }) {
   const ideas = new Set();
   const openKeys = new Set();
   void nowMs;
-  for (const life of livesOf(rows)) {
+  for (const life of livesOf(rows, variant)) {
     const d = life.design;
     if (d.plan_date !== planDate) continue;
     const idea = ideaKeyOfRow(d);

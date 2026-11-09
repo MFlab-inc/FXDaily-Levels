@@ -37,6 +37,8 @@ const eu = (plan) => plan.candidates.find((c) => c.symbol === "EURUSD");
 test("■3 実データの例: 2026-10-27 EURJPY 売り — 06:22 の版（基準水準 176.075）が 08:00 に到達済みなら、21:05 の設計③の版（同じ 176.075）は出さない", () => {
   // ログの行と H1 足は実データ（fixtures/cancelled-versions-2026-10.json）。21:05 の版の候補は、実データの plan.json の通りに作る代わりに、同じ水準の版として判定する
   const fx = require("./fixtures/cancelled-versions-2026-10.json").versions.find((v) => v.design.plan_date === "2026-10-27" && v.design.symbol === "EURJPY");
+// この試験は、銘柄を問わないライブの規則の試験。模擬の場面で XAUUSD もライブの候補になる前提で書かれているので、pairs.js の live:false を外した状態（＝今までと同じ出力）で動かす（helpers.js の setXauLive）
+require("./helpers").setXauLive(true);
   const bars = fx.bars.map(([t, o, h, l, c]) => ({ t: J.parseJstLabel(t), o, h, l, c }));
   const rows = [fx.design, fx.cancel]; // 06:22 の版（15:05 に 取消(再設計) の行）
   const hist = V.reachedIdeas({ rows, planDate: "2026-10-27", barsByCode: { EURJPY: bars }, nowMs: J.parseIso("2026-10-27T21:05:52+09:00") });

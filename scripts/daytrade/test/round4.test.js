@@ -13,6 +13,8 @@ const { main } = require("../../daytrade-plan");
 const { makeScenario } = require("./scenario");
 const { rm } = require("./helpers");
 const J = require("../jst");
+// この試験は、銘柄を問わないライブの規則の試験。模擬の場面で XAUUSD もライブの候補になる前提で書かれているので、pairs.js の live:false を外した状態（＝今までと同じ出力）で動かす（helpers.js の setXauLive）
+require("./helpers").setXauLive(true);
 
 /**
  * 独立レビュー（第4回）で見つかった不具合の回帰試験と、変異試験で生き残った箇所の試験。

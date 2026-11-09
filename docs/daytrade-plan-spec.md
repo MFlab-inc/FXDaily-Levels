@@ -73,7 +73,7 @@ risk-feed.json はイベント源として**使わない**（12ペア固定で G
 
 ### 2-4. 銘柄
 - 対象10銘柄（USDJPY, EURUSD, GBPUSD, AUDUSD, NZDUSD, USDCAD, USDCHF, EURJPY, EURGBP, XAUUSD）。
-- 優先順位の表示：AUDUSD・EURJPY ＞ GBPUSD・EURUSD ＞ その他。USDJPY・XAUUSDは「過去の実績が悪い」の注記を付けて出す（落とさない）。
+- 優先順位の表示：AUDUSD・EURJPY ＞ GBPUSD・EURUSD ＞ その他。USDJPYは「過去の実績が悪い」の注記を付けて出す（落とさない）。XAUUSDはマージした日から発注の対象外（並行記録のみ。論点 c、2026-11-09 本人決定）。案はこれまでどおり同じ規則で作って記録・採点するが、ライブの候補（`candidates`・txt の候補・通知・`log.csv`）には出さず、上限ロットも計算しない。
 
 ## 3. 型（セットアップ）：v1.0 は2つ
 
@@ -141,6 +141,7 @@ risk-feed.json はイベント源として**使わない**（12ペア固定で G
 3. バックテスト：過去1年・Twelve Data（2026-10-08 本人承認）。
 4. 2口座は独立。口座をまたぐルールは設けない。
 5. 候補数の上限・診断文は設けない。数字だけ出す。
+6. XAUUSD はマージした日から発注の対象外（並行記録 `shadow-log.csv` の `variant=xau_paper` のみ。論点 c、2026-11-09 本人決定。ルール見直しの1回で変えるのはこの1つだけ）。バックテストは XAUUSD を含めたまま。戻すときは `scripts/daytrade/pairs.js` の XAUUSD の `live: false` を消す1か所。実装メモ Q85〜Q91。
 
 ## 9. 実装時の補足（Claude Code からの質問への回答、2026-10-08）
 1. **既存の `daytrade.js`・`config/daytrade-rules.json`・`data/daytrade-context.json` との関係：併用。** 既存の3つは intraday の手順が使っているので**変更しない**。新しい生成器は `scripts/daytrade-plan.js` として別に作り、`daytrade-context.json`・`economic-calendar.json`・`daytrade-rules.json`（`pair_currencies` のみ）は読むだけ。既存の `daytrade.js` のゲート（窓の長さ・Medium の扱い）と本仕様の停止ルールが違うのは承知の上で、本仕様の停止ルール（High・Medium、前15分〜後30分）を生成器の中で別に計算する。既存ルールと重なる定義があれば、PR の説明に差分を列挙するだけでよい（統合しない）。
