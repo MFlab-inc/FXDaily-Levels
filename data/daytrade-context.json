@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-10T18:50:27+09:00",
+  "as_of": "2026-11-10T19:05:23+09:00",
   "timezone": "Asia/Tokyo",
   "note": "事実データと機械判定のみ。売買推奨は含まない。gateはイベント時間ルール(config/daytrade-rules.json)による判定。",
   "rules_summary": {
@@ -24,8 +24,8 @@
   },
   "pairs": {
     "USDJPY": {
-      "price": 158.119,
-      "price_time_jst": "2026-11-10 18:45",
+      "price": 158.128,
+      "price_time_jst": "2026-11-10 19:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -75,17 +75,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-10 18:30",
-          "o": 158.068,
-          "h": 158.135,
-          "l": 158.005,
-          "c": 158.131,
+          "time_jst": "2026-11-10 18:45",
+          "o": 158.127,
+          "h": 158.137,
+          "l": 158.104,
+          "c": 158.109,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 18:30",
+          "time_jst": "2026-11-10 18:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -102,17 +102,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-10 17:00",
-          "o": 157.982,
-          "h": 158.069,
-          "l": 157.904,
-          "c": 157.95,
+          "time_jst": "2026-11-10 18:00",
+          "o": 157.948,
+          "h": 158.162,
+          "l": 157.934,
+          "c": 158.109,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 17:00",
+          "time_jst": "2026-11-10 18:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -123,15 +123,13 @@
           "time_jst": "2026-11-10 15:00"
         },
         "swing_low": {
-          "price": 157.921,
-          "time_jst": "2026-11-10 12:00"
+          "price": 157.871,
+          "time_jst": "2026-11-10 16:00"
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "18:00 [USD] FOMC Member Waller Speaks（central_bank: 前30分〜後60分停止）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
         "warnings": [],
         "next_gated_event": {
           "time_jst": "22:30",
@@ -145,8 +143,8 @@
       }
     },
     "EURUSD": {
-      "price": 1.1227,
-      "price_time_jst": "2026-11-10 18:45",
+      "price": 1.12257,
+      "price_time_jst": "2026-11-10 19:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -163,7 +161,7 @@
         },
         "london": {
           "high": 1.12513,
-          "low": 1.1225,
+          "low": 1.1224,
           "status": "open",
           "window_jst": "17:00-02:00"
         },
@@ -196,17 +194,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-10 18:30",
-          "o": 1.12331,
-          "h": 1.12331,
-          "l": 1.1226,
-          "c": 1.12262,
+          "time_jst": "2026-11-10 18:45",
+          "o": 1.12265,
+          "h": 1.12276,
+          "l": 1.1224,
+          "c": 1.12274,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 18:30",
+          "time_jst": "2026-11-10 18:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -223,17 +221,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-10 17:00",
-          "o": 1.12415,
-          "h": 1.12511,
-          "l": 1.12364,
-          "c": 1.12509,
+          "time_jst": "2026-11-10 18:00",
+          "o": 1.12504,
+          "h": 1.12513,
+          "l": 1.1224,
+          "c": 1.12274,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 17:00",
+          "time_jst": "2026-11-10 18:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -249,10 +247,8 @@
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "18:00 [USD] FOMC Member Waller Speaks（central_bank: 前30分〜後60分停止）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
         "warnings": [],
         "next_gated_event": {
           "time_jst": "22:30",
@@ -266,14 +262,14 @@
       }
     },
     "GBPUSD": {
-      "price": 1.34251,
-      "price_time_jst": "2026-11-10 18:45",
+      "price": 1.34281,
+      "price_time_jst": "2026-11-10 19:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-10 07:00",
         "high": 1.34604,
-        "low": 1.3425
+        "low": 1.34232
       },
       "sessions_today": {
         "tokyo": {
@@ -284,7 +280,7 @@
         },
         "london": {
           "high": 1.34604,
-          "low": 1.3425,
+          "low": 1.34232,
           "status": "open",
           "window_jst": "17:00-02:00"
         },
@@ -317,17 +313,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-10 18:30",
-          "o": 1.34334,
-          "h": 1.34342,
-          "l": 1.34282,
-          "c": 1.34283,
+          "time_jst": "2026-11-10 18:45",
+          "o": 1.34285,
+          "h": 1.34286,
+          "l": 1.34232,
+          "c": 1.34254,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 18:30",
+          "time_jst": "2026-11-10 18:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -344,17 +340,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-10 17:00",
-          "o": 1.34523,
-          "h": 1.34604,
-          "l": 1.34498,
-          "c": 1.34541,
+          "time_jst": "2026-11-10 18:00",
+          "o": 1.34528,
+          "h": 1.34553,
+          "l": 1.34232,
+          "c": 1.34254,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 17:00",
+          "time_jst": "2026-11-10 18:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -370,10 +366,8 @@
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "18:00 [USD] FOMC Member Waller Speaks（central_bank: 前30分〜後60分停止）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
         "warnings": [],
         "next_gated_event": {
           "time_jst": "22:30",
@@ -387,8 +381,8 @@
       }
     },
     "EURJPY": {
-      "price": 177.52,
-      "price_time_jst": "2026-11-10 18:45",
+      "price": 177.495,
+      "price_time_jst": "2026-11-10 19:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -438,17 +432,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-10 18:30",
-          "o": 177.557,
-          "h": 177.557,
-          "l": 177.451,
-          "c": 177.524,
+          "time_jst": "2026-11-10 18:45",
+          "o": 177.521,
+          "h": 177.531,
+          "l": 177.459,
+          "c": 177.517,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 18:30",
+          "time_jst": "2026-11-10 18:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -465,17 +459,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-10 17:00",
-          "o": 177.592,
-          "h": 177.712,
-          "l": 177.527,
-          "c": 177.702,
+          "time_jst": "2026-11-10 18:00",
+          "o": 177.698,
+          "h": 177.72,
+          "l": 177.445,
+          "c": 177.517,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 17:00",
+          "time_jst": "2026-11-10 18:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -498,8 +492,8 @@
       }
     },
     "AUDUSD": {
-      "price": 0.69146,
-      "price_time_jst": "2026-11-10 18:45",
+      "price": 0.69128,
+      "price_time_jst": "2026-11-10 19:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -549,17 +543,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-10 18:30",
-          "o": 0.69149,
-          "h": 0.69154,
-          "l": 0.69129,
+          "time_jst": "2026-11-10 18:45",
+          "o": 0.69143,
+          "h": 0.69149,
+          "l": 0.6911,
           "c": 0.6914,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 18:30",
+          "time_jst": "2026-11-10 18:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -576,17 +570,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-10 17:00",
-          "o": 0.69213,
-          "h": 0.69306,
-          "l": 0.69177,
-          "c": 0.6928,
+          "time_jst": "2026-11-10 18:00",
+          "o": 0.69281,
+          "h": 0.69292,
+          "l": 0.69106,
+          "c": 0.6914,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 17:00",
+          "time_jst": "2026-11-10 18:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -602,10 +596,8 @@
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "18:00 [USD] FOMC Member Waller Speaks（central_bank: 前30分〜後60分停止）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
         "warnings": [],
         "next_gated_event": {
           "time_jst": "22:30",
@@ -619,8 +611,8 @@
       }
     },
     "EURGBP": {
-      "price": 0.83627,
-      "price_time_jst": "2026-11-10 18:45",
+      "price": 0.83597,
+      "price_time_jst": "2026-11-10 19:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -670,17 +662,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-10 18:30",
-          "o": 0.8362,
-          "h": 0.83625,
-          "l": 0.83591,
-          "c": 0.83603,
+          "time_jst": "2026-11-10 18:45",
+          "o": 0.83602,
+          "h": 0.83635,
+          "l": 0.83585,
+          "c": 0.83632,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 18:30",
+          "time_jst": "2026-11-10 18:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -697,17 +689,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-10 17:00",
-          "o": 0.83565,
-          "h": 0.83636,
-          "l": 0.83531,
-          "c": 0.83629,
+          "time_jst": "2026-11-10 18:00",
+          "o": 0.83628,
+          "h": 0.83666,
+          "l": 0.83497,
+          "c": 0.83632,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 17:00",
+          "time_jst": "2026-11-10 18:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -730,13 +722,13 @@
       }
     },
     "USDCAD": {
-      "price": 1.41373,
-      "price_time_jst": "2026-11-10 18:45",
+      "price": 1.41362,
+      "price_time_jst": "2026-11-10 19:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-10 07:00",
-        "high": 1.41375,
+        "high": 1.41397,
         "low": 1.4106
       },
       "sessions_today": {
@@ -747,7 +739,7 @@
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": 1.41375,
+          "high": 1.41397,
           "low": 1.41083,
           "status": "open",
           "window_jst": "17:00-02:00"
@@ -781,17 +773,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-10 18:30",
-          "o": 1.41294,
-          "h": 1.41355,
-          "l": 1.41287,
-          "c": 1.41351,
+          "time_jst": "2026-11-10 18:45",
+          "o": 1.41346,
+          "h": 1.41397,
+          "l": 1.41346,
+          "c": 1.41385,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 18:30",
+          "time_jst": "2026-11-10 18:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -808,17 +800,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-10 17:00",
-          "o": 1.41107,
-          "h": 1.41182,
-          "l": 1.41083,
-          "c": 1.4115,
+          "time_jst": "2026-11-10 18:00",
+          "o": 1.41147,
+          "h": 1.41397,
+          "l": 1.41113,
+          "c": 1.41385,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 17:00",
+          "time_jst": "2026-11-10 18:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -829,15 +821,13 @@
           "time_jst": "2026-11-10 14:00"
         },
         "swing_low": {
-          "price": 1.41096,
-          "time_jst": "2026-11-10 07:00"
+          "price": 1.4106,
+          "time_jst": "2026-11-10 16:00"
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "18:00 [USD] FOMC Member Waller Speaks（central_bank: 前30分〜後60分停止）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
         "warnings": [],
         "next_gated_event": {
           "time_jst": "22:30",
@@ -851,13 +841,13 @@
       }
     },
     "USDCHF": {
-      "price": 0.82083,
-      "price_time_jst": "2026-11-10 18:45",
+      "price": 0.82069,
+      "price_time_jst": "2026-11-10 19:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-10 07:00",
-        "high": 0.82104,
+        "high": 0.82112,
         "low": 0.8175
       },
       "sessions_today": {
@@ -868,7 +858,7 @@
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": 0.82104,
+          "high": 0.82112,
           "low": 0.81783,
           "status": "open",
           "window_jst": "17:00-02:00"
@@ -902,17 +892,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-10 18:30",
-          "o": 0.82012,
-          "h": 0.82101,
-          "l": 0.82012,
-          "c": 0.821,
+          "time_jst": "2026-11-10 18:45",
+          "o": 0.82098,
+          "h": 0.82112,
+          "l": 0.82081,
+          "c": 0.82085,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 18:30",
+          "time_jst": "2026-11-10 18:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -929,17 +919,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-10 17:00",
-          "o": 0.8183,
-          "h": 0.81864,
-          "l": 0.81783,
-          "c": 0.81841,
+          "time_jst": "2026-11-10 18:00",
+          "o": 0.8184,
+          "h": 0.82112,
+          "l": 0.81836,
+          "c": 0.82085,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 17:00",
+          "time_jst": "2026-11-10 18:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -950,15 +940,13 @@
           "time_jst": "2026-11-10 11:00"
         },
         "swing_low": {
-          "price": 0.81912,
-          "time_jst": "2026-11-10 10:00"
+          "price": 0.8175,
+          "time_jst": "2026-11-10 16:00"
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "18:00 [USD] FOMC Member Waller Speaks（central_bank: 前30分〜後60分停止）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
         "warnings": [],
         "next_gated_event": {
           "time_jst": "22:30",
@@ -972,8 +960,8 @@
       }
     },
     "NZDUSD": {
-      "price": 0.56331,
-      "price_time_jst": "2026-11-10 18:45",
+      "price": 0.56316,
+      "price_time_jst": "2026-11-10 19:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -990,7 +978,7 @@
         },
         "london": {
           "high": 0.56497,
-          "low": 0.56315,
+          "low": 0.56296,
           "status": "open",
           "window_jst": "17:00-02:00"
         },
@@ -1023,17 +1011,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-10 18:30",
-          "o": 0.56357,
-          "h": 0.56357,
-          "l": 0.56315,
-          "c": 0.56321,
+          "time_jst": "2026-11-10 18:45",
+          "o": 0.56323,
+          "h": 0.56332,
+          "l": 0.56296,
+          "c": 0.56319,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 18:30",
+          "time_jst": "2026-11-10 18:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1050,17 +1038,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-10 17:00",
-          "o": 0.56415,
-          "h": 0.56497,
-          "l": 0.56373,
-          "c": 0.56459,
+          "time_jst": "2026-11-10 18:00",
+          "o": 0.56462,
+          "h": 0.56472,
+          "l": 0.56296,
+          "c": 0.56319,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 17:00",
+          "time_jst": "2026-11-10 18:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -1076,10 +1064,8 @@
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "18:00 [USD] FOMC Member Waller Speaks（central_bank: 前30分〜後60分停止）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
         "warnings": [],
         "next_gated_event": {
           "time_jst": "22:30",
@@ -1093,8 +1079,8 @@
       }
     },
     "AUDNZD": {
-      "price": 1.22749,
-      "price_time_jst": "2026-11-10 18:45",
+      "price": 1.22758,
+      "price_time_jst": "2026-11-10 19:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -1144,17 +1130,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-10 18:30",
-          "o": 1.22701,
-          "h": 1.22779,
-          "l": 1.22696,
-          "c": 1.2276,
+          "time_jst": "2026-11-10 18:45",
+          "o": 1.22761,
+          "h": 1.22778,
+          "l": 1.22725,
+          "c": 1.22773,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 18:30",
+          "time_jst": "2026-11-10 18:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1171,17 +1157,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-10 17:00",
-          "o": 1.22686,
-          "h": 1.22732,
-          "l": 1.22613,
-          "c": 1.2271,
+          "time_jst": "2026-11-10 18:00",
+          "o": 1.22703,
+          "h": 1.22779,
+          "l": 1.22622,
+          "c": 1.22773,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 17:00",
+          "time_jst": "2026-11-10 18:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -1204,14 +1190,14 @@
       }
     },
     "XAUUSD": {
-      "price": 4084.57,
-      "price_time_jst": "2026-11-10 18:45",
+      "price": 4083.89,
+      "price_time_jst": "2026-11-10 19:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-10 07:00",
         "high": 4146.8,
-        "low": 4082.8
+        "low": 4082.13
       },
       "sessions_today": {
         "tokyo": {
@@ -1222,7 +1208,7 @@
         },
         "london": {
           "high": 4121.5,
-          "low": 4082.8,
+          "low": 4082.13,
           "status": "open",
           "window_jst": "17:00-02:00"
         },
@@ -1255,17 +1241,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-10 18:30",
-          "o": 4091.63,
-          "h": 4091.63,
-          "l": 4083.13,
-          "c": 4083.9,
+          "time_jst": "2026-11-10 18:45",
+          "o": 4084.36,
+          "h": 4087.97,
+          "l": 4082.13,
+          "c": 4087.89,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 18:30",
+          "time_jst": "2026-11-10 18:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1282,25 +1268,25 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-10 17:00",
-          "o": 4113.98,
-          "h": 4121.5,
-          "l": 4112.34,
-          "c": 4114.12,
+          "time_jst": "2026-11-10 18:00",
+          "o": 4114.54,
+          "h": 4119.62,
+          "l": 4082.13,
+          "c": 4087.89,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 17:00",
+          "time_jst": "2026-11-10 18:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 4146.8,
-          "time_jst": "2026-11-10 08:00"
+          "price": 4127.68,
+          "time_jst": "2026-11-10 16:00"
         },
         "swing_low": {
           "price": 4108.13,
@@ -1308,10 +1294,8 @@
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "18:00 [USD] FOMC Member Waller Speaks（central_bank: 前30分〜後60分停止）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
         "warnings": [],
         "next_gated_event": {
           "time_jst": "22:30",
@@ -1325,14 +1309,14 @@
       }
     },
     "USOIL": {
-      "price": 83.96,
-      "price_time_jst": "2026-11-10 18:45",
+      "price": 84.52,
+      "price_time_jst": "2026-11-10 19:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-10 07:00",
         "high": 86.87,
-        "low": 83.89
+        "low": 83.86
       },
       "sessions_today": {
         "tokyo": {
@@ -1343,7 +1327,7 @@
         },
         "london": {
           "high": 85.49,
-          "low": 83.89,
+          "low": 83.86,
           "status": "open",
           "window_jst": "17:00-02:00"
         },
@@ -1376,17 +1360,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-10 18:30",
-          "o": 84.78,
-          "h": 84.97,
-          "l": 84.2,
-          "c": 84.25,
+          "time_jst": "2026-11-10 18:45",
+          "o": 84.28,
+          "h": 84.4,
+          "l": 83.86,
+          "c": 84.4,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 18:30",
+          "time_jst": "2026-11-10 18:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1403,17 +1387,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-10 17:00",
-          "o": 85.36,
-          "h": 85.49,
-          "l": 84.11,
-          "c": 84.68,
+          "time_jst": "2026-11-10 18:00",
+          "o": 84.75,
+          "h": 85.35,
+          "l": 83.86,
+          "c": 84.4,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-10 17:00",
+          "time_jst": "2026-11-10 18:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -1429,10 +1413,8 @@
         }
       },
       "gate": {
-        "state": "WAIT",
-        "reasons": [
-          "18:00 [USD] FOMC Member Waller Speaks（central_bank: 前30分〜後60分停止）"
-        ],
+        "state": "TRADE_OK",
+        "reasons": [],
         "warnings": [],
         "next_gated_event": {
           "time_jst": "22:30",
