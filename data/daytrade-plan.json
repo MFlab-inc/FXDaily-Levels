@@ -6,38 +6,38 @@
   },
   "plan_date": "2026-11-12",
   "run": "status",
-  "status_updated_at": "2026-11-12T16:05:44+09:00",
+  "status_updated_at": "2026-11-12T17:05:52+09:00",
   "expires_at": "2026-11-13T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-11-12T16:05:17+09:00",
-        "age_min": 0,
+        "as_of": "2026-11-12T17:05:18+09:00",
+        "age_min": 1,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-11-12T16:05:21+09:00",
-        "age_min": 0,
+        "as_of": "2026-11-12T17:05:22+09:00",
+        "age_min": 1,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-11-12T16:05:21+09:00",
-        "age_min": 0,
+        "as_of": "2026-11-12T17:05:22+09:00",
+        "age_min": 1,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-11-12 15:45",
-      "newest_last_closed": "2026-11-12 15:45",
+      "oldest_last_closed": "2026-11-12 16:45",
+      "newest_last_closed": "2026-11-12 16:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-11-12 15:00",
-      "newest": "2026-11-12 15:00"
+      "oldest": "2026-11-12 16:00",
+      "newest": "2026-11-12 16:00"
     },
     "stale": false,
     "daily": {
@@ -67,7 +67,7 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-11-12T16:05:17+09:00",
+    "as_of": "2026-11-12T17:05:18+09:00",
     "date": "2026-11-12",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
@@ -356,18 +356,18 @@
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-11-12T16:05:21+09:00",
+      "as_of": "2026-11-12T17:05:22+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "TRADE_OK",
         "EURUSD": "TRADE_OK",
-        "GBPUSD": "WAIT",
+        "GBPUSD": "TRADE_OK",
         "AUDUSD": "TRADE_OK",
         "NZDUSD": "TRADE_OK",
         "USDCAD": "TRADE_OK",
         "USDCHF": "TRADE_OK",
         "EURJPY": "TRADE_OK",
-        "EURGBP": "WAIT",
+        "EURGBP": "TRADE_OK",
         "XAUUSD": "TRADE_OK"
       }
     },
@@ -375,17 +375,17 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-11-12T16:04:10+09:00",
+        "generated_intraday": "2026-11-12T17:04:11+09:00",
         "age_min": 2
       },
       "pairs": {
         "USDJPY": {
           "state": "ok",
           "items": {
-            "range_today": 0.408,
-            "range_vs_adr": 0.439,
+            "range_today": 0.463,
+            "range_vs_adr": 0.498,
             "spike_flag": false,
-            "updated_at": "2026-11-12T16:04:10+09:00"
+            "updated_at": "2026-11-12T17:04:11+09:00"
           }
         },
         "EURUSD": {
@@ -394,7 +394,7 @@
             "range_today": 0.00336,
             "range_vs_adr": 0.486,
             "spike_flag": false,
-            "updated_at": "2026-11-12T16:04:10+09:00"
+            "updated_at": "2026-11-12T17:04:11+09:00"
           }
         },
         "GBPUSD": {
@@ -403,10 +403,10 @@
         "AUDUSD": {
           "state": "ok",
           "items": {
-            "range_today": 0.00306,
-            "range_vs_adr": 0.587,
+            "range_today": 0.00405,
+            "range_vs_adr": 0.777,
             "spike_flag": false,
-            "updated_at": "2026-11-12T16:04:10+09:00"
+            "updated_at": "2026-11-12T17:04:11+09:00"
           }
         },
         "NZDUSD": {
@@ -418,7 +418,7 @@
             "range_today": 0.00813,
             "range_vs_adr": 1.217,
             "spike_flag": false,
-            "updated_at": "2026-11-12T16:04:10+09:00"
+            "updated_at": "2026-11-12T17:04:11+09:00"
           }
         },
         "USDCHF": {
@@ -433,16 +433,16 @@
             "range_today": 0.00174,
             "range_vs_adr": 0.556,
             "spike_flag": false,
-            "updated_at": "2026-11-12T16:04:10+09:00"
+            "updated_at": "2026-11-12T17:04:11+09:00"
           }
         },
         "XAUUSD": {
           "state": "ok",
           "items": {
-            "range_today": 38.81,
-            "range_vs_adr": 0.468,
+            "range_today": 45.24,
+            "range_vs_adr": 0.545,
             "spike_flag": false,
-            "updated_at": "2026-11-12T16:04:10+09:00"
+            "updated_at": "2026-11-12T17:04:11+09:00"
           }
         }
       }
@@ -1176,14 +1176,187 @@
       "pass": 0
     }
   },
-  "paper": [],
+  "paper": [
+    {
+      "id": "2026-11-12:B:XAUUSD:sell",
+      "plan_date": "2026-11-12",
+      "setup": "B",
+      "symbol": "XAUUSD",
+      "side": "sell",
+      "strength": 3,
+      "alignment": "3/3 Down",
+      "dirs": [
+        "↓",
+        "↓",
+        "↓"
+      ],
+      "note": "過去の実績が悪い",
+      "ref": {
+        "label": "東京レンジ安値",
+        "price": 3969.04
+      },
+      "band": {
+        "low": 3969.04,
+        "high": 3970.37
+      },
+      "worst_entry": 3969.04,
+      "price": 3963,
+      "distance_pips": 60.4,
+      "atr_pips": 133.3,
+      "adr_used_pct": 54.8,
+      "adr_remaining_pips": 373.1,
+      "obstacle": {
+        "label": "S1",
+        "price": 3957.94
+      },
+      "pip_value_jpy": 1597,
+      "schemes": {
+        "A": {
+          "pass": true,
+          "reason": null,
+          "reason_text": null,
+          "k": 0.5,
+          "sl": 3975.75,
+          "sl_pips": 67.1,
+          "tp1": 3958,
+          "profit_pips": 110.4,
+          "rr": 1.65,
+          "cost_cap_pips": 3.9,
+          "cost_threshold_pips": 1.2
+        },
+        "B": {
+          "pass": false,
+          "reason": "rr_low",
+          "reason_text": "RR不足",
+          "k": 1,
+          "sl": 3982.4,
+          "sl_pips": 133.6,
+          "tp1": 3958,
+          "profit_pips": 110.4,
+          "rr": 0.83,
+          "cost_cap_pips": -36,
+          "cost_threshold_pips": 1.2
+        }
+      },
+      "levels": {
+        "daily": {
+          "Pivot": 4012.24,
+          "R1": 4042.3,
+          "R2": 4096.59,
+          "S1": 3957.94,
+          "S2": 3927.88,
+          "前日高値": 4066.53,
+          "前日安値": 3982.17
+        },
+        "h1_high_groups": [
+          {
+            "min": 3981.84,
+            "max": 3990.9,
+            "count": 9
+          },
+          {
+            "min": 3994.89,
+            "max": 3995.21,
+            "count": 3
+          },
+          {
+            "min": 4007.2,
+            "max": 4007.69,
+            "count": 2
+          },
+          {
+            "min": 4046.78,
+            "max": 4047.27,
+            "count": 2
+          },
+          {
+            "min": 4055.85,
+            "max": 4056.46,
+            "count": 2
+          },
+          {
+            "min": 4059.76,
+            "max": 4061.92,
+            "count": 2
+          }
+        ],
+        "h1_low_groups": [
+          {
+            "min": 3969.04,
+            "max": 3970.25,
+            "count": 2
+          },
+          {
+            "min": 3973.46,
+            "max": 3978.52,
+            "count": 5
+          },
+          {
+            "min": 3982.17,
+            "max": 3982.95,
+            "count": 3
+          },
+          {
+            "min": 3986.56,
+            "max": 3987.4,
+            "count": 2
+          },
+          {
+            "min": 3998.88,
+            "max": 4000.8,
+            "count": 2
+          },
+          {
+            "min": 4046.13,
+            "max": 4047.27,
+            "count": 3
+          }
+        ],
+        "h1_window": 24,
+        "atr_pips": 133.3,
+        "tokyo": {
+          "high": 4000.94,
+          "low": 3969.04
+        }
+      },
+      "confirm": "帯に到達したあと、M15がレンジ安値（3969.04）より下で陰線確定",
+      "run": "design-b",
+      "added_by": "status",
+      "generated_at": "2026-11-12T17:05:52+09:00",
+      "design_slot": null,
+      "expires_at": "2026-11-13T03:00:00+09:00",
+      "entry_state": {
+        "ok": true,
+        "reasons": []
+      },
+      "stops": [
+        {
+          "time_jst": "22:30",
+          "currency": "USD",
+          "impact": "Medium",
+          "event": "Unemployment Claims",
+          "start": "2026-11-12T22:15:00+09:00",
+          "end": "2026-11-12T23:00:00+09:00"
+        }
+      ],
+      "calendar_ok": true,
+      "state": {
+        "reached": "未到達",
+        "reached_at": null,
+        "expired": false,
+        "price_in_band": false
+      },
+      "variant": "xau_paper",
+      "same_direction_group": ""
+    }
+  ],
   "paper_status": {
     "variant": "xau_paper",
     "symbols": [
       "XAUUSD"
     ],
     "recording": "ok",
-    "recorded": 0
+    "recorded": 1
   },
   "additions_b": []
 }
