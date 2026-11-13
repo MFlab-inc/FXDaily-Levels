@@ -1,15 +1,15 @@
 {
   "schema": "fxdaily-levels/risk/v1",
-  "as_of": "2026-11-13T08:35:55+09:00",
+  "as_of": "2026-11-13T11:23:40+09:00",
   "timezone": "Asia/Tokyo",
   "vix": {
-    "date": "2026-11-11",
-    "rank_pct": 56,
-    "count_le": 141,
+    "date": "2026-11-12",
+    "rank_pct": 70.6,
+    "count_le": 178,
     "window": 252,
-    "window_start": "2025-11-11",
+    "window_start": "2025-11-12",
     "threshold_pct": 70,
-    "over_threshold": false,
+    "over_threshold": true,
     "excluded_closed_days": [
       "2025-11-27",
       "2026-01-19",
@@ -23,14 +23,10 @@
     "warnings": [],
     "source": {
       "url": "https://cdn-api.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",
-      "last_modified": "Thu, 12 Nov 2026 02:21:03 GMT",
-      "fetched_at": "2026-11-13T08:35:55+09:00"
+      "last_modified": "Fri, 13 Nov 2026 02:11:03 GMT",
+      "fetched_at": "2026-11-13T11:23:40+09:00"
     },
     "history": [
-      {
-        "date": "2026-08-19",
-        "rank_pct": 8.3
-      },
       {
         "date": "2026-08-20",
         "rank_pct": 26.2
@@ -266,6 +262,10 @@
       {
         "date": "2026-11-11",
         "rank_pct": 56
+      },
+      {
+        "date": "2026-11-12",
+        "rank_pct": 70.6
       }
     ]
   },
@@ -616,7 +616,7 @@
     "status": "ok",
     "errors": [],
     "warnings": [],
-    "run_url": "https://github.com/MFlab-inc/FXDaily-Levels/actions/runs/43330176756"
+    "run_url": "https://github.com/MFlab-inc/FXDaily-Levels/actions/runs/43351839249"
   },
   "citations": {
     "vix": "出典：Cboe「VIX Index Historical Data」（https://www.cboe.com/tradable_products/vix/vix_historical_data）の日次終値。過去1年（252営業日）での順位はMFlab-inc／FXDaily-Levelsが計算",
