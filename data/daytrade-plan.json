@@ -5,39 +5,39 @@
     "note": "未確定の判断はありません（確定した解釈は docs/daytrade-plan-spec.md 10節、経緯は docs/daytrade-plan-impl-notes.md）"
   },
   "plan_date": "2026-11-16",
-  "run": "design",
-  "status_updated_at": "2026-11-16T22:05:52+09:00",
+  "run": "status",
+  "status_updated_at": "2026-11-16T23:05:52+09:00",
   "expires_at": "2026-11-17T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-11-16T22:05:21+09:00",
+        "as_of": "2026-11-16T23:05:20+09:00",
         "age_min": 1,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-11-16T22:05:26+09:00",
+        "as_of": "2026-11-16T23:05:24+09:00",
         "age_min": 0,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-11-16T22:05:26+09:00",
+        "as_of": "2026-11-16T23:05:24+09:00",
         "age_min": 0,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-11-16 21:45",
-      "newest_last_closed": "2026-11-16 21:45",
+      "oldest_last_closed": "2026-11-16 22:45",
+      "newest_last_closed": "2026-11-16 22:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-11-16 21:00",
-      "newest": "2026-11-16 21:00"
+      "oldest": "2026-11-16 22:00",
+      "newest": "2026-11-16 22:00"
     },
     "stale": false,
     "daily": {
@@ -67,7 +67,7 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-11-16T22:05:21+09:00",
+    "as_of": "2026-11-16T23:05:20+09:00",
     "date": "2026-11-16",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
@@ -288,7 +288,7 @@
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-11-16T22:05:26+09:00",
+      "as_of": "2026-11-16T23:05:24+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "TRADE_OK",
@@ -296,7 +296,7 @@
         "GBPUSD": "TRADE_OK",
         "AUDUSD": "TRADE_OK",
         "NZDUSD": "TRADE_OK",
-        "USDCAD": "WAIT",
+        "USDCAD": "TRADE_OK",
         "USDCHF": "TRADE_OK",
         "EURJPY": "TRADE_OK",
         "EURGBP": "TRADE_OK",
@@ -307,7 +307,7 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-11-16T22:04:11+09:00",
+        "generated_intraday": "2026-11-16T23:04:12+09:00",
         "age_min": 2
       },
       "pairs": {
@@ -317,7 +317,7 @@
             "range_today": 0.77,
             "range_vs_adr": 0.839,
             "spike_flag": false,
-            "updated_at": "2026-11-16T22:04:11+09:00"
+            "updated_at": "2026-11-16T23:04:12+09:00"
           }
         },
         "EURUSD": {
@@ -326,7 +326,7 @@
             "range_today": 0.00301,
             "range_vs_adr": 0.449,
             "spike_flag": false,
-            "updated_at": "2026-11-16T22:04:11+09:00"
+            "updated_at": "2026-11-16T23:04:12+09:00"
           }
         },
         "GBPUSD": {
@@ -338,7 +338,7 @@
             "range_today": 0.00432,
             "range_vs_adr": 0.855,
             "spike_flag": false,
-            "updated_at": "2026-11-16T22:04:11+09:00"
+            "updated_at": "2026-11-16T23:04:12+09:00"
           }
         },
         "NZDUSD": {
@@ -347,10 +347,10 @@
         "USDCAD": {
           "state": "ok",
           "items": {
-            "range_today": 0.00403,
-            "range_vs_adr": 0.611,
+            "range_today": 0.00537,
+            "range_vs_adr": 0.814,
             "spike_flag": false,
-            "updated_at": "2026-11-16T22:04:11+09:00"
+            "updated_at": "2026-11-16T23:04:12+09:00"
           }
         },
         "USDCHF": {
@@ -365,7 +365,7 @@
             "range_today": 0.00147,
             "range_vs_adr": 0.488,
             "spike_flag": false,
-            "updated_at": "2026-11-16T22:04:11+09:00"
+            "updated_at": "2026-11-16T23:04:12+09:00"
           }
         },
         "XAUUSD": {
@@ -374,7 +374,7 @@
             "range_today": 67.56,
             "range_vs_adr": 0.779,
             "spike_flag": false,
-            "updated_at": "2026-11-16T22:04:11+09:00"
+            "updated_at": "2026-11-16T23:04:12+09:00"
           }
         }
       }
@@ -454,156 +454,6 @@
   "banners": [],
   "design_missing": false,
   "candidates": [],
-  "paper": [
-    {
-      "id": "2026-11-16:A:XAUUSD:sell",
-      "plan_date": "2026-11-16",
-      "setup": "A",
-      "symbol": "XAUUSD",
-      "side": "sell",
-      "strength": 3,
-      "alignment": "3/3 Down",
-      "dirs": [
-        "↓",
-        "↓",
-        "↓"
-      ],
-      "note": "過去の実績が悪い",
-      "ref": {
-        "label": "H1高値群の上端",
-        "price": 3882.14
-      },
-      "band": {
-        "low": 3882.14,
-        "high": 3883.79
-      },
-      "worst_entry": 3882.14,
-      "price": 3868.78,
-      "distance_pips": 133.6,
-      "atr_pips": 164.6,
-      "adr_used_pct": 78.3,
-      "adr_remaining_pips": 186.9,
-      "obstacle": {
-        "label": "前日安値",
-        "price": 3868.62
-      },
-      "pip_value_jpy": 1595,
-      "schemes": {
-        "A": {
-          "pass": true,
-          "reason": null,
-          "reason_text": null,
-          "k": 0.5,
-          "sl": 3890.4,
-          "sl_pips": 82.6,
-          "tp1": 3868.7,
-          "profit_pips": 134.4,
-          "rr": 1.63,
-          "cost_cap_pips": 4.2,
-          "cost_threshold_pips": 1.2
-        },
-        "B": {
-          "pass": false,
-          "reason": "rr_low",
-          "reason_text": "RR不足",
-          "k": 1,
-          "sl": 3898.6,
-          "sl_pips": 164.6,
-          "tp1": 3868.7,
-          "profit_pips": 134.4,
-          "rr": 0.82,
-          "cost_cap_pips": -45,
-          "cost_threshold_pips": 1.2
-        }
-      },
-      "levels": {
-        "daily": {
-          "Pivot": 3890.37,
-          "R1": 3912.13,
-          "R2": 3945.67,
-          "S1": 3856.83,
-          "S2": 3835.07,
-          "前日高値": 3923.92,
-          "前日安値": 3868.62
-        },
-        "h1_high_groups": [
-          {
-            "min": 3860.85,
-            "max": 3865.58,
-            "count": 4
-          },
-          {
-            "min": 3874.25,
-            "max": 3882.14,
-            "count": 10
-          },
-          {
-            "min": 3886.36,
-            "max": 3888.3,
-            "count": 3
-          },
-          {
-            "min": 3892.15,
-            "max": 3896.03,
-            "count": 3
-          },
-          {
-            "min": 3900.92,
-            "max": 3901.7,
-            "count": 3
-          }
-        ],
-        "h1_low_groups": [
-          {
-            "min": 3833.62,
-            "max": 3834.8,
-            "count": 2
-          },
-          {
-            "min": 3851.53,
-            "max": 3854.32,
-            "count": 3
-          },
-          {
-            "min": 3863.99,
-            "max": 3883.5,
-            "count": 18
-          }
-        ],
-        "h1_window": 24,
-        "atr_pips": 164.6,
-        "tokyo": null
-      },
-      "confirm": "帯に到達したあと、M15が基準価格（3882.14）より下で陰線確定",
-      "run": "design",
-      "added_by": null,
-      "generated_at": "2026-11-16T22:05:52+09:00",
-      "design_slot": 3,
-      "expires_at": "2026-11-17T03:00:00+09:00",
-      "entry_state": {
-        "ok": true,
-        "reasons": []
-      },
-      "stops": [],
-      "calendar_ok": true,
-      "state": {
-        "reached": "未到達",
-        "reached_at": null,
-        "expired": false,
-        "price_in_band": false
-      },
-      "variant": "xau_paper",
-      "same_direction_group": ""
-    }
-  ],
-  "paper_status": {
-    "variant": "xau_paper",
-    "symbols": [
-      "XAUUSD"
-    ],
-    "recording": "ok",
-    "recorded": 1
-  },
   "summary": {
     "candidate_rows": 0,
     "scheme_pass": {
@@ -1528,5 +1378,156 @@
     "sl_floor_b": {
       "pass": 0
     }
-  }
+  },
+  "paper": [
+    {
+      "id": "2026-11-16:A:XAUUSD:sell",
+      "plan_date": "2026-11-16",
+      "setup": "A",
+      "symbol": "XAUUSD",
+      "side": "sell",
+      "strength": 3,
+      "alignment": "3/3 Down",
+      "dirs": [
+        "↓",
+        "↓",
+        "↓"
+      ],
+      "note": "過去の実績が悪い",
+      "ref": {
+        "label": "H1高値群の上端",
+        "price": 3882.14
+      },
+      "band": {
+        "low": 3882.14,
+        "high": 3883.79
+      },
+      "worst_entry": 3882.14,
+      "price": 3864.68,
+      "distance_pips": 174.6,
+      "atr_pips": 164.6,
+      "adr_used_pct": 78.3,
+      "adr_remaining_pips": 186.9,
+      "obstacle": {
+        "label": "前日安値",
+        "price": 3868.62
+      },
+      "pip_value_jpy": 1595,
+      "schemes": {
+        "A": {
+          "pass": true,
+          "reason": null,
+          "reason_text": null,
+          "k": 0.5,
+          "sl": 3890.4,
+          "sl_pips": 82.6,
+          "tp1": 3868.7,
+          "profit_pips": 134.4,
+          "rr": 1.63,
+          "cost_cap_pips": 4.2,
+          "cost_threshold_pips": 1.2
+        },
+        "B": {
+          "pass": false,
+          "reason": "rr_low",
+          "reason_text": "RR不足",
+          "k": 1,
+          "sl": 3898.6,
+          "sl_pips": 164.6,
+          "tp1": 3868.7,
+          "profit_pips": 134.4,
+          "rr": 0.82,
+          "cost_cap_pips": -45,
+          "cost_threshold_pips": 1.2
+        }
+      },
+      "levels": {
+        "daily": {
+          "Pivot": 3890.37,
+          "R1": 3912.13,
+          "R2": 3945.67,
+          "S1": 3856.83,
+          "S2": 3835.07,
+          "前日高値": 3923.92,
+          "前日安値": 3868.62
+        },
+        "h1_high_groups": [
+          {
+            "min": 3860.85,
+            "max": 3865.58,
+            "count": 4
+          },
+          {
+            "min": 3874.25,
+            "max": 3882.14,
+            "count": 10
+          },
+          {
+            "min": 3886.36,
+            "max": 3888.3,
+            "count": 3
+          },
+          {
+            "min": 3892.15,
+            "max": 3896.03,
+            "count": 3
+          },
+          {
+            "min": 3900.92,
+            "max": 3901.7,
+            "count": 3
+          }
+        ],
+        "h1_low_groups": [
+          {
+            "min": 3833.62,
+            "max": 3834.8,
+            "count": 2
+          },
+          {
+            "min": 3851.53,
+            "max": 3854.32,
+            "count": 3
+          },
+          {
+            "min": 3863.99,
+            "max": 3883.5,
+            "count": 18
+          }
+        ],
+        "h1_window": 24,
+        "atr_pips": 164.6,
+        "tokyo": null
+      },
+      "confirm": "帯に到達したあと、M15が基準価格（3882.14）より下で陰線確定",
+      "run": "design",
+      "added_by": null,
+      "generated_at": "2026-11-16T22:05:52+09:00",
+      "design_slot": 3,
+      "expires_at": "2026-11-17T03:00:00+09:00",
+      "entry_state": {
+        "ok": true,
+        "reasons": []
+      },
+      "stops": [],
+      "calendar_ok": true,
+      "state": {
+        "reached": "未到達",
+        "reached_at": null,
+        "expired": false,
+        "price_in_band": false
+      },
+      "variant": "xau_paper",
+      "same_direction_group": ""
+    }
+  ],
+  "paper_status": {
+    "variant": "xau_paper",
+    "symbols": [
+      "XAUUSD"
+    ],
+    "recording": "ok",
+    "recorded": 1
+  },
+  "additions_b": []
 }
