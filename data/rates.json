@@ -1,41 +1,41 @@
 {
   "schema": "fxdaily-levels/rates/v1",
-  "as_of": "2026-11-17T09:50:58+09:00",
+  "as_of": "2026-11-18T09:50:55+09:00",
   "timezone": "Asia/Tokyo",
   "us2y": {
-    "date": "2026-11-16",
-    "value": 4.83,
+    "date": "2026-11-17",
+    "value": 4.8,
     "unit": "%",
     "source": "treasury_csv",
     "source_url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2026/all?type=daily_treasury_yield_curve&field_tdr_date_value=2026&page&_format=csv",
     "xml_check": {
       "status": "match",
-      "compared": 219,
+      "compared": 220,
       "mismatches": []
     },
-    "fetched_at": "2026-11-17T09:50:58+09:00",
+    "fetched_at": "2026-11-18T09:50:55+09:00",
     "stale": false,
-    "expected_date": "2026-11-16",
-    "required_date": "2026-11-16",
+    "expected_date": "2026-11-17",
+    "required_date": "2026-11-17",
     "fresh": true
   },
   "jp2y": {
-    "date": "2026-11-16",
+    "date": "2026-11-17",
     "value": 1.878,
     "unit": "%",
     "source": "mof_jgbcm_csv",
     "source_url": "https://www.mof.go.jp/jgbs/reference/interest_rate/jgbcm.csv",
     "published_hint": "翌営業日午前9時30分頃（財務省FAQ）",
-    "last_modified": "Mon, 16 Nov 2026 23:30:12 GMT",
-    "fetched_at": "2026-11-17T09:50:58+09:00",
+    "last_modified": "Tue, 17 Nov 2026 23:30:11 GMT",
+    "fetched_at": "2026-11-18T09:50:55+09:00",
     "stale": false,
-    "expected_date": "2026-11-16",
-    "required_date": "2026-11-16",
+    "expected_date": "2026-11-17",
+    "required_date": "2026-11-17",
     "fresh": true
   },
   "spread": {
-    "date": "2026-11-16",
-    "value": 2.952,
+    "date": "2026-11-17",
+    "value": 2.922,
     "unit": "%pt",
     "definition": "米2年 − 日2年（両方に値がある日だけ）"
   },
@@ -43,25 +43,25 @@
     "unit": "bp",
     "business_days": 5,
     "us": {
-      "value_bp": 32,
-      "date": "2026-11-16",
-      "base_date": "2026-11-06",
-      "value": 4.83,
-      "base_value": 4.51
+      "value_bp": 24,
+      "date": "2026-11-17",
+      "base_date": "2026-11-09",
+      "value": 4.8,
+      "base_value": 4.56
     },
     "jp": {
-      "value_bp": 10,
-      "date": "2026-11-16",
-      "base_date": "2026-11-09",
+      "value_bp": 9.4,
+      "date": "2026-11-17",
+      "base_date": "2026-11-10",
       "value": 1.878,
-      "base_value": 1.778
+      "base_value": 1.784
     },
     "spread": {
-      "value_bp": 17.4,
-      "date": "2026-11-16",
-      "base_date": "2026-11-06",
-      "value": 2.952,
-      "base_value": 2.778
+      "value_bp": 14,
+      "date": "2026-11-17",
+      "base_date": "2026-11-09",
+      "value": 2.922,
+      "base_value": 2.782
     }
   },
   "judgment": {
@@ -71,9 +71,9 @@
     "rule": "金利差（米2年 − 日2年。両方に値がある日だけ）の5営業日差が −10bp 以下なら「円高方向」、+10bp 以上なら「円安方向」、その間は「はっきりしない」（境界を含む）。米・日のどちらかが最新でない／取得できていないときは「判定できません」",
     "basis": {
       "metric": "金利差の5営業日差",
-      "value_bp": 17.4,
-      "date": "2026-11-16",
-      "base_date": "2026-11-06"
+      "value_bp": 14,
+      "date": "2026-11-17",
+      "base_date": "2026-11-09"
     },
     "reason": null
   },
@@ -83,7 +83,7 @@
     "errors": [],
     "retry_expected": false,
     "retry_note": "取得・照合の問題はなく、米・日とも最新。再試行は不要",
-    "run_url": "https://github.com/MFlab-inc/FXDaily-Levels/actions/runs/43990913214"
+    "run_url": "https://github.com/MFlab-inc/FXDaily-Levels/actions/runs/44211138023"
   },
   "calendar_source": "cao_live+bundled",
   "citations": {
