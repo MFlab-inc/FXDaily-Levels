@@ -5,39 +5,39 @@
     "note": "未確定の判断はありません（確定した解釈は docs/daytrade-plan-spec.md 10節、経緯は docs/daytrade-plan-impl-notes.md）"
   },
   "plan_date": "2026-11-18",
-  "run": "design",
-  "status_updated_at": "2026-11-18T15:05:46+09:00",
+  "run": "status",
+  "status_updated_at": "2026-11-18T16:05:46+09:00",
   "expires_at": "2026-11-19T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-11-18T15:05:17+09:00",
+        "as_of": "2026-11-18T16:05:17+09:00",
         "age_min": 0,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-11-18T15:05:21+09:00",
+        "as_of": "2026-11-18T16:05:21+09:00",
         "age_min": 0,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-11-18T15:05:21+09:00",
+        "as_of": "2026-11-18T16:05:21+09:00",
         "age_min": 0,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-11-18 14:45",
-      "newest_last_closed": "2026-11-18 14:45",
+      "oldest_last_closed": "2026-11-18 15:45",
+      "newest_last_closed": "2026-11-18 15:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-11-18 14:00",
-      "newest": "2026-11-18 14:00"
+      "oldest": "2026-11-18 15:00",
+      "newest": "2026-11-18 15:00"
     },
     "stale": false,
     "daily": {
@@ -67,7 +67,7 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-11-18T15:05:17+09:00",
+    "as_of": "2026-11-18T16:05:17+09:00",
     "date": "2026-11-18",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
@@ -366,18 +366,18 @@
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-11-18T15:05:21+09:00",
+      "as_of": "2026-11-18T16:05:21+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "TRADE_OK",
         "EURUSD": "TRADE_OK",
-        "GBPUSD": "TRADE_OK",
+        "GBPUSD": "WAIT",
         "AUDUSD": "TRADE_OK",
         "NZDUSD": "TRADE_OK",
         "USDCAD": "TRADE_OK",
         "USDCHF": "TRADE_OK",
         "EURJPY": "TRADE_OK",
-        "EURGBP": "TRADE_OK",
+        "EURGBP": "WAIT",
         "XAUUSD": "TRADE_OK"
       }
     },
@@ -385,8 +385,8 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-11-18T15:04:19+09:00",
-        "age_min": 1
+        "generated_intraday": "2026-11-18T16:04:11+09:00",
+        "age_min": 2
       },
       "pairs": {
         "USDJPY": {
@@ -395,16 +395,16 @@
             "range_today": 0.503,
             "range_vs_adr": 0.551,
             "spike_flag": false,
-            "updated_at": "2026-11-18T15:04:19+09:00"
+            "updated_at": "2026-11-18T16:04:11+09:00"
           }
         },
         "EURUSD": {
           "state": "ok",
           "items": {
-            "range_today": 0.0029,
-            "range_vs_adr": 0.445,
+            "range_today": 0.00312,
+            "range_vs_adr": 0.479,
             "spike_flag": false,
-            "updated_at": "2026-11-18T15:04:19+09:00"
+            "updated_at": "2026-11-18T16:04:11+09:00"
           }
         },
         "GBPUSD": {
@@ -413,10 +413,10 @@
         "AUDUSD": {
           "state": "ok",
           "items": {
-            "range_today": 0.00242,
-            "range_vs_adr": 0.479,
+            "range_today": 0.00245,
+            "range_vs_adr": 0.485,
             "spike_flag": false,
-            "updated_at": "2026-11-18T15:04:19+09:00"
+            "updated_at": "2026-11-18T16:04:11+09:00"
           }
         },
         "NZDUSD": {
@@ -425,10 +425,10 @@
         "USDCAD": {
           "state": "ok",
           "items": {
-            "range_today": 0.00387,
-            "range_vs_adr": 0.608,
+            "range_today": 0.00452,
+            "range_vs_adr": 0.711,
             "spike_flag": false,
-            "updated_at": "2026-11-18T15:04:19+09:00"
+            "updated_at": "2026-11-18T16:04:11+09:00"
           }
         },
         "USDCHF": {
@@ -443,16 +443,16 @@
             "range_today": 0.00138,
             "range_vs_adr": 0.507,
             "spike_flag": false,
-            "updated_at": "2026-11-18T15:04:19+09:00"
+            "updated_at": "2026-11-18T16:04:11+09:00"
           }
         },
         "XAUUSD": {
           "state": "ok",
           "items": {
-            "range_today": 78.94,
-            "range_vs_adr": 0.897,
+            "range_today": 83.92,
+            "range_vs_adr": 0.954,
             "spike_flag": false,
-            "updated_at": "2026-11-18T15:04:19+09:00"
+            "updated_at": "2026-11-18T16:04:11+09:00"
           }
         }
       }
@@ -527,15 +527,6 @@
   "banners": [],
   "design_missing": false,
   "candidates": [],
-  "paper": [],
-  "paper_status": {
-    "variant": "xau_paper",
-    "symbols": [
-      "XAUUSD"
-    ],
-    "recording": "ok",
-    "recorded": 0
-  },
   "summary": {
     "candidate_rows": 0,
     "scheme_pass": {
@@ -1244,5 +1235,15 @@
     "sl_floor_b": {
       "pass": 0
     }
-  }
+  },
+  "paper": [],
+  "paper_status": {
+    "variant": "xau_paper",
+    "symbols": [
+      "XAUUSD"
+    ],
+    "recording": "ok",
+    "recorded": 0
+  },
+  "additions_b": []
 }
