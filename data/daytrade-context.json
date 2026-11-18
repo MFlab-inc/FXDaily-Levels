@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-18T22:50:26+09:00",
+  "as_of": "2026-11-18T23:05:24+09:00",
   "timezone": "Asia/Tokyo",
   "note": "事実データと機械判定のみ。売買推奨は含まない。gateはイベント時間ルール(config/daytrade-rules.json)による判定。",
   "rules_summary": {
@@ -24,8 +24,8 @@
   },
   "pairs": {
     "USDJPY": {
-      "price": 159.351,
-      "price_time_jst": "2026-11-18 22:45",
+      "price": 159.378,
+      "price_time_jst": "2026-11-18 23:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -48,7 +48,7 @@
         },
         "ny": {
           "high": 159.462,
-          "low": 159.343,
+          "low": 159.335,
           "status": "open",
           "window_jst": "22:00-07:00"
         }
@@ -75,17 +75,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-18 22:30",
-          "o": 159.424,
-          "h": 159.442,
-          "l": 159.374,
-          "c": 159.376,
+          "time_jst": "2026-11-18 22:45",
+          "o": 159.381,
+          "h": 159.401,
+          "l": 159.335,
+          "c": 159.377,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 22:30",
+          "time_jst": "2026-11-18 22:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -102,17 +102,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-18 21:00",
-          "o": 159.383,
-          "h": 159.48,
-          "l": 159.346,
-          "c": 159.466,
+          "time_jst": "2026-11-18 22:00",
+          "o": 159.462,
+          "h": 159.462,
+          "l": 159.335,
+          "c": 159.377,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 21:00",
+          "time_jst": "2026-11-18 22:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -135,8 +135,8 @@
       }
     },
     "EURUSD": {
-      "price": 1.09739,
-      "price_time_jst": "2026-11-18 22:45",
+      "price": 1.09694,
+      "price_time_jst": "2026-11-18 23:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -158,7 +158,7 @@
           "window_jst": "17:00-02:00"
         },
         "ny": {
-          "high": 1.09747,
+          "high": 1.09749,
           "low": 1.09627,
           "status": "open",
           "window_jst": "22:00-07:00"
@@ -186,17 +186,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-18 22:30",
-          "o": 1.09703,
-          "h": 1.09747,
-          "l": 1.09674,
-          "c": 1.09725,
+          "time_jst": "2026-11-18 22:45",
+          "o": 1.09727,
+          "h": 1.09749,
+          "l": 1.09691,
+          "c": 1.09693,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 22:30",
+          "time_jst": "2026-11-18 22:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -213,17 +213,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-18 21:00",
-          "o": 1.0962,
-          "h": 1.09672,
-          "l": 1.09537,
-          "c": 1.09634,
+          "time_jst": "2026-11-18 22:00",
+          "o": 1.09627,
+          "h": 1.09749,
+          "l": 1.09627,
+          "c": 1.09693,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 21:00",
+          "time_jst": "2026-11-18 22:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -239,23 +239,17 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "23:25 [EUR] ECB President Lagarde Speaks（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "23:25",
-          "datetime_jst": "2026-11-18T23:25:00+09:00",
-          "currency": "EUR",
-          "impact": "Medium",
-          "event": "ECB President Lagarde Speaks",
-          "stop_from_jst": "22:55",
-          "stop_until_jst": "00:25"
-        }
+        "next_gated_event": null
       }
     },
     "GBPUSD": {
-      "price": 1.31716,
-      "price_time_jst": "2026-11-18 22:45",
+      "price": 1.31668,
+      "price_time_jst": "2026-11-18 23:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -277,7 +271,7 @@
           "window_jst": "17:00-02:00"
         },
         "ny": {
-          "high": 1.31728,
+          "high": 1.31735,
           "low": 1.31605,
           "status": "open",
           "window_jst": "22:00-07:00"
@@ -305,17 +299,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-18 22:30",
-          "o": 1.31649,
-          "h": 1.31708,
-          "l": 1.31605,
-          "c": 1.31706,
+          "time_jst": "2026-11-18 22:45",
+          "o": 1.31704,
+          "h": 1.31735,
+          "l": 1.31653,
+          "c": 1.31656,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 22:30",
+          "time_jst": "2026-11-18 22:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -332,17 +326,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-18 21:00",
-          "o": 1.3158,
-          "h": 1.31676,
-          "l": 1.3151,
-          "c": 1.31617,
+          "time_jst": "2026-11-18 22:00",
+          "o": 1.3161,
+          "h": 1.31735,
+          "l": 1.31605,
+          "c": 1.31656,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 21:00",
+          "time_jst": "2026-11-18 22:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -365,8 +359,8 @@
       }
     },
     "EURJPY": {
-      "price": 174.865,
-      "price_time_jst": "2026-11-18 22:45",
+      "price": 174.832,
+      "price_time_jst": "2026-11-18 23:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -416,17 +410,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-18 22:30",
-          "o": 174.892,
-          "h": 174.92,
-          "l": 174.865,
-          "c": 174.88,
+          "time_jst": "2026-11-18 22:45",
+          "o": 174.882,
+          "h": 174.897,
+          "l": 174.804,
+          "c": 174.829,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 22:30",
+          "time_jst": "2026-11-18 22:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -443,17 +437,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-18 21:00",
-          "o": 174.716,
-          "h": 174.823,
-          "l": 174.665,
-          "c": 174.82,
+          "time_jst": "2026-11-18 22:00",
+          "o": 174.811,
+          "h": 174.92,
+          "l": 174.786,
+          "c": 174.829,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 21:00",
+          "time_jst": "2026-11-18 22:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -469,23 +463,17 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "23:25 [EUR] ECB President Lagarde Speaks（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "23:25",
-          "datetime_jst": "2026-11-18T23:25:00+09:00",
-          "currency": "EUR",
-          "impact": "Medium",
-          "event": "ECB President Lagarde Speaks",
-          "stop_from_jst": "22:55",
-          "stop_until_jst": "00:25"
-        }
+        "next_gated_event": null
       }
     },
     "AUDUSD": {
-      "price": 0.67332,
-      "price_time_jst": "2026-11-18 22:45",
+      "price": 0.67301,
+      "price_time_jst": "2026-11-18 23:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -535,17 +523,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-18 22:30",
-          "o": 0.67306,
-          "h": 0.67369,
-          "l": 0.67283,
-          "c": 0.67367,
+          "time_jst": "2026-11-18 22:45",
+          "o": 0.67364,
+          "h": 0.67364,
+          "l": 0.67318,
+          "c": 0.67322,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 22:30",
+          "time_jst": "2026-11-18 22:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -562,17 +550,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-18 21:00",
-          "o": 0.6728,
-          "h": 0.67334,
-          "l": 0.67227,
-          "c": 0.67285,
+          "time_jst": "2026-11-18 22:00",
+          "o": 0.67281,
+          "h": 0.67369,
+          "l": 0.67281,
+          "c": 0.67322,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 21:00",
+          "time_jst": "2026-11-18 22:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -595,8 +583,8 @@
       }
     },
     "EURGBP": {
-      "price": 0.83321,
-      "price_time_jst": "2026-11-18 22:45",
+      "price": 0.83308,
+      "price_time_jst": "2026-11-18 23:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -646,17 +634,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-18 22:30",
-          "o": 0.8333,
-          "h": 0.83349,
-          "l": 0.8331,
-          "c": 0.83312,
+          "time_jst": "2026-11-18 22:45",
+          "o": 0.83313,
+          "h": 0.83327,
+          "l": 0.83291,
+          "c": 0.83322,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 22:30",
+          "time_jst": "2026-11-18 22:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -673,17 +661,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-18 21:00",
-          "o": 0.83311,
-          "h": 0.83336,
-          "l": 0.83261,
-          "c": 0.83301,
+          "time_jst": "2026-11-18 22:00",
+          "o": 0.83297,
+          "h": 0.83349,
+          "l": 0.83266,
+          "c": 0.83322,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 21:00",
+          "time_jst": "2026-11-18 22:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -694,28 +682,22 @@
           "time_jst": "2026-11-18 18:00"
         },
         "swing_low": {
-          "price": 0.83228,
-          "time_jst": "2026-11-18 15:00"
+          "price": 0.83256,
+          "time_jst": "2026-11-18 20:00"
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "23:25 [EUR] ECB President Lagarde Speaks（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "23:25",
-          "datetime_jst": "2026-11-18T23:25:00+09:00",
-          "currency": "EUR",
-          "impact": "Medium",
-          "event": "ECB President Lagarde Speaks",
-          "stop_from_jst": "22:55",
-          "stop_until_jst": "00:25"
-        }
+        "next_gated_event": null
       }
     },
     "USDCAD": {
-      "price": 1.43041,
-      "price_time_jst": "2026-11-18 22:45",
+      "price": 1.43126,
+      "price_time_jst": "2026-11-18 23:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -737,7 +719,7 @@
           "window_jst": "17:00-02:00"
         },
         "ny": {
-          "high": 1.43092,
+          "high": 1.43128,
           "low": 1.43008,
           "status": "open",
           "window_jst": "22:00-07:00"
@@ -765,17 +747,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-18 22:30",
-          "o": 1.43083,
-          "h": 1.43086,
+          "time_jst": "2026-11-18 22:45",
+          "o": 1.4302,
+          "h": 1.43108,
           "l": 1.43008,
-          "c": 1.43019,
+          "c": 1.43093,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 22:30",
+          "time_jst": "2026-11-18 22:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -792,17 +774,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-18 21:00",
-          "o": 1.43093,
+          "time_jst": "2026-11-18 22:00",
+          "o": 1.43052,
           "h": 1.43108,
-          "l": 1.43032,
-          "c": 1.43051,
+          "l": 1.43008,
+          "c": 1.43093,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 21:00",
+          "time_jst": "2026-11-18 22:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -826,7 +808,7 @@
     },
     "USDCHF": {
       "price": 0.84254,
-      "price_time_jst": "2026-11-18 22:45",
+      "price_time_jst": "2026-11-18 23:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -849,7 +831,7 @@
         },
         "ny": {
           "high": 0.8433,
-          "low": 0.84248,
+          "low": 0.84241,
           "status": "open",
           "window_jst": "22:00-07:00"
         }
@@ -876,17 +858,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-18 22:30",
-          "o": 0.84281,
-          "h": 0.84292,
-          "l": 0.84268,
-          "c": 0.84272,
+          "time_jst": "2026-11-18 22:45",
+          "o": 0.84271,
+          "h": 0.84281,
+          "l": 0.84241,
+          "c": 0.84254,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 22:30",
+          "time_jst": "2026-11-18 22:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -903,17 +885,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-18 21:00",
-          "o": 0.8428,
-          "h": 0.84357,
-          "l": 0.84252,
-          "c": 0.84325,
+          "time_jst": "2026-11-18 22:00",
+          "o": 0.84327,
+          "h": 0.8433,
+          "l": 0.84241,
+          "c": 0.84254,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 21:00",
+          "time_jst": "2026-11-18 22:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -936,8 +918,8 @@
       }
     },
     "NZDUSD": {
-      "price": 0.55,
-      "price_time_jst": "2026-11-18 22:45",
+      "price": 0.54966,
+      "price_time_jst": "2026-11-18 23:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -987,17 +969,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-18 22:30",
-          "o": 0.5497,
-          "h": 0.55015,
-          "l": 0.54949,
-          "c": 0.55014,
+          "time_jst": "2026-11-18 22:45",
+          "o": 0.55012,
+          "h": 0.55025,
+          "l": 0.54976,
+          "c": 0.54977,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 22:30",
+          "time_jst": "2026-11-18 22:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1014,17 +996,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-18 21:00",
-          "o": 0.54948,
-          "h": 0.54968,
-          "l": 0.54897,
-          "c": 0.54939,
+          "time_jst": "2026-11-18 22:00",
+          "o": 0.54936,
+          "h": 0.55025,
+          "l": 0.54936,
+          "c": 0.54977,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 21:00",
+          "time_jst": "2026-11-18 22:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -1047,8 +1029,8 @@
       }
     },
     "AUDNZD": {
-      "price": 1.22431,
-      "price_time_jst": "2026-11-18 22:45",
+      "price": 1.2244,
+      "price_time_jst": "2026-11-18 23:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -1098,17 +1080,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-18 22:30",
-          "o": 1.22442,
-          "h": 1.22463,
-          "l": 1.22413,
-          "c": 1.22454,
+          "time_jst": "2026-11-18 22:45",
+          "o": 1.22452,
+          "h": 1.22472,
+          "l": 1.2239,
+          "c": 1.22445,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 22:30",
+          "time_jst": "2026-11-18 22:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1125,17 +1107,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-18 21:00",
-          "o": 1.22444,
-          "h": 1.22523,
-          "l": 1.2242,
-          "c": 1.22462,
+          "time_jst": "2026-11-18 22:00",
+          "o": 1.22471,
+          "h": 1.22482,
+          "l": 1.2239,
+          "c": 1.22445,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 21:00",
+          "time_jst": "2026-11-18 22:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -1146,8 +1128,8 @@
           "time_jst": "2026-11-18 18:00"
         },
         "swing_low": {
-          "price": 1.22305,
-          "time_jst": "2026-11-18 17:00"
+          "price": 1.22383,
+          "time_jst": "2026-11-18 20:00"
         }
       },
       "gate": {
@@ -1158,8 +1140,8 @@
       }
     },
     "XAUUSD": {
-      "price": 3786.4,
-      "price_time_jst": "2026-11-18 22:45",
+      "price": 3783.67,
+      "price_time_jst": "2026-11-18 23:00",
       "bar_age_min": 0,
       "data_status": "OK",
       "today": {
@@ -1175,13 +1157,13 @@
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": 3787.12,
+          "high": 3789.1,
           "low": 3742.26,
           "status": "open",
           "window_jst": "17:00-02:00"
         },
         "ny": {
-          "high": 3787.12,
+          "high": 3789.1,
           "low": 3743.77,
           "status": "open",
           "window_jst": "22:00-07:00"
@@ -1209,17 +1191,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-18 22:30",
-          "o": 3772.98,
-          "h": 3784.8,
-          "l": 3770.03,
-          "c": 3783.66,
+          "time_jst": "2026-11-18 22:45",
+          "o": 3783.88,
+          "h": 3789.1,
+          "l": 3782.87,
+          "c": 3783.35,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 22:30",
+          "time_jst": "2026-11-18 22:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1236,17 +1218,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-18 21:00",
-          "o": 3763.52,
-          "h": 3773.41,
-          "l": 3742.26,
-          "c": 3746.12,
+          "time_jst": "2026-11-18 22:00",
+          "o": 3745.5,
+          "h": 3789.1,
+          "l": 3743.77,
+          "c": 3783.35,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 21:00",
+          "time_jst": "2026-11-18 22:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -1269,8 +1251,8 @@
       }
     },
     "USOIL": {
-      "price": 85.11,
-      "price_time_jst": "2026-11-18 22:40",
+      "price": 85.03,
+      "price_time_jst": "2026-11-18 22:55",
       "bar_age_min": 5,
       "data_status": "OK",
       "today": {
@@ -1293,7 +1275,7 @@
         },
         "ny": {
           "high": 85.91,
-          "low": 85.03,
+          "low": 84.88,
           "status": "open",
           "window_jst": "22:00-07:00"
         }
@@ -1320,17 +1302,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-18 22:30",
-          "o": 85.08,
-          "h": 85.32,
-          "l": 85.06,
-          "c": 85.11,
+          "time_jst": "2026-11-18 22:45",
+          "o": 85.12,
+          "h": 85.19,
+          "l": 84.88,
+          "c": 85.03,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 22:30",
+          "time_jst": "2026-11-18 22:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1347,17 +1329,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-18 21:00",
-          "o": 85.12,
-          "h": 85.67,
-          "l": 85.02,
-          "c": 85.48,
+          "time_jst": "2026-11-18 22:00",
+          "o": 85.47,
+          "h": 85.91,
+          "l": 84.88,
+          "c": 85.03,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-18 21:00",
+          "time_jst": "2026-11-18 22:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
