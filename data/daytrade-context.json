@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-19T03:23:25+09:00",
+  "as_of": "2026-11-19T03:35:33+09:00",
   "timezone": "Asia/Tokyo",
   "note": "事実データと機械判定のみ。売買推奨は含まない。gateはイベント時間ルール(config/daytrade-rules.json)による判定。",
   "rules_summary": {
@@ -24,9 +24,9 @@
   },
   "pairs": {
     "USDJPY": {
-      "price": 159.303,
-      "price_time_jst": "2026-11-19 03:20",
-      "bar_age_min": 0,
+      "price": 159.32,
+      "price_time_jst": "2026-11-19 03:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-18 07:00",
@@ -75,17 +75,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-19 03:00",
-          "o": 159.279,
-          "h": 159.28,
-          "l": 159.245,
-          "c": 159.262,
+          "time_jst": "2026-11-19 03:15",
+          "o": 159.256,
+          "h": 159.309,
+          "l": 159.256,
+          "c": 159.301,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-19 03:00",
+          "time_jst": "2026-11-19 03:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -128,24 +128,18 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "04:00 [USD] FOMC Meeting Minutes（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "04:00",
-          "datetime_jst": "2026-11-19T04:00:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "FOMC Meeting Minutes",
-          "stop_from_jst": "03:30",
-          "stop_until_jst": "05:00"
-        }
+        "next_gated_event": null
       }
     },
     "EURUSD": {
       "price": 1.09781,
-      "price_time_jst": "2026-11-19 03:20",
-      "bar_age_min": 0,
+      "price_time_jst": "2026-11-19 03:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-18 07:00",
@@ -194,17 +188,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-19 03:00",
-          "o": 1.09759,
-          "h": 1.0981,
-          "l": 1.09759,
-          "c": 1.0978,
+          "time_jst": "2026-11-19 03:15",
+          "o": 1.09784,
+          "h": 1.098,
+          "l": 1.09761,
+          "c": 1.09799,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-19 03:00",
+          "time_jst": "2026-11-19 03:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -215,8 +209,8 @@
           "time_jst": "2026-11-18 23:45"
         },
         "swing_low": {
-          "price": 1.09605,
-          "time_jst": "2026-11-19 01:30"
+          "price": 1.09713,
+          "time_jst": "2026-11-19 02:45"
         }
       },
       "h1": {
@@ -247,24 +241,18 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "04:00 [USD] FOMC Meeting Minutes（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "04:00",
-          "datetime_jst": "2026-11-19T04:00:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "FOMC Meeting Minutes",
-          "stop_from_jst": "03:30",
-          "stop_until_jst": "05:00"
-        }
+        "next_gated_event": null
       }
     },
     "GBPUSD": {
-      "price": 1.31541,
-      "price_time_jst": "2026-11-19 03:20",
-      "bar_age_min": 0,
+      "price": 1.31562,
+      "price_time_jst": "2026-11-19 03:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-18 07:00",
@@ -313,17 +301,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-19 03:00",
-          "o": 1.31506,
-          "h": 1.31583,
-          "l": 1.31506,
-          "c": 1.3154,
+          "time_jst": "2026-11-19 03:15",
+          "o": 1.31542,
+          "h": 1.31569,
+          "l": 1.3152,
+          "c": 1.31568,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-19 03:00",
+          "time_jst": "2026-11-19 03:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -334,8 +322,8 @@
           "time_jst": "2026-11-18 23:45"
         },
         "swing_low": {
-          "price": 1.31368,
-          "time_jst": "2026-11-19 01:15"
+          "price": 1.31481,
+          "time_jst": "2026-11-19 02:45"
         }
       },
       "h1": {
@@ -366,24 +354,18 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "04:00 [USD] FOMC Meeting Minutes（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "04:00",
-          "datetime_jst": "2026-11-19T04:00:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "FOMC Meeting Minutes",
-          "stop_from_jst": "03:30",
-          "stop_until_jst": "05:00"
-        }
+        "next_gated_event": null
       }
     },
     "EURJPY": {
-      "price": 174.886,
-      "price_time_jst": "2026-11-19 03:20",
-      "bar_age_min": 0,
+      "price": 174.895,
+      "price_time_jst": "2026-11-19 03:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-18 07:00",
@@ -432,17 +414,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-19 03:00",
-          "o": 174.821,
-          "h": 174.875,
-          "l": 174.818,
-          "c": 174.844,
+          "time_jst": "2026-11-19 03:15",
+          "o": 174.841,
+          "h": 174.906,
+          "l": 174.819,
+          "c": 174.904,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-19 03:00",
+          "time_jst": "2026-11-19 03:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -492,9 +474,9 @@
       }
     },
     "AUDUSD": {
-      "price": 0.672,
-      "price_time_jst": "2026-11-19 03:20",
-      "bar_age_min": 0,
+      "price": 0.6722,
+      "price_time_jst": "2026-11-19 03:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-18 07:00",
@@ -543,17 +525,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-19 03:00",
-          "o": 0.67192,
-          "h": 0.67221,
-          "l": 0.67188,
-          "c": 0.67189,
+          "time_jst": "2026-11-19 03:15",
+          "o": 0.67191,
+          "h": 0.6722,
+          "l": 0.67182,
+          "c": 0.67219,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-19 03:00",
+          "time_jst": "2026-11-19 03:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -596,24 +578,26 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "04:00 [USD] FOMC Meeting Minutes（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
         "next_gated_event": {
-          "time_jst": "04:00",
-          "datetime_jst": "2026-11-19T04:00:00+09:00",
-          "currency": "USD",
+          "time_jst": "09:30",
+          "datetime_jst": "2026-11-19T09:30:00+09:00",
+          "currency": "AUD",
           "impact": "High",
-          "event": "FOMC Meeting Minutes",
-          "stop_from_jst": "03:30",
-          "stop_until_jst": "05:00"
+          "event": "Employment Change",
+          "stop_from_jst": "09:15",
+          "stop_until_jst": "09:45"
         }
       }
     },
     "EURGBP": {
-      "price": 0.83463,
-      "price_time_jst": "2026-11-19 03:20",
-      "bar_age_min": 0,
+      "price": 0.83447,
+      "price_time_jst": "2026-11-19 03:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-18 07:00",
@@ -662,17 +646,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-19 03:00",
-          "o": 0.83463,
-          "h": 0.83474,
-          "l": 0.83446,
-          "c": 0.83459,
+          "time_jst": "2026-11-19 03:15",
+          "o": 0.8346,
+          "h": 0.83464,
+          "l": 0.83444,
+          "c": 0.83457,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-19 03:00",
+          "time_jst": "2026-11-19 03:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -722,9 +706,9 @@
       }
     },
     "USDCAD": {
-      "price": 1.43296,
-      "price_time_jst": "2026-11-19 03:20",
-      "bar_age_min": 0,
+      "price": 1.43263,
+      "price_time_jst": "2026-11-19 03:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-18 07:00",
@@ -773,17 +757,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-19 03:00",
-          "o": 1.43349,
-          "h": 1.43352,
-          "l": 1.43292,
-          "c": 1.4332,
+          "time_jst": "2026-11-19 03:15",
+          "o": 1.43315,
+          "h": 1.43321,
+          "l": 1.43258,
+          "c": 1.43262,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-19 03:00",
+          "time_jst": "2026-11-19 03:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -826,24 +810,18 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "04:00 [USD] FOMC Meeting Minutes（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "04:00",
-          "datetime_jst": "2026-11-19T04:00:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "FOMC Meeting Minutes",
-          "stop_from_jst": "03:30",
-          "stop_until_jst": "05:00"
-        }
+        "next_gated_event": null
       }
     },
     "USDCHF": {
-      "price": 0.84288,
-      "price_time_jst": "2026-11-19 03:20",
-      "bar_age_min": 0,
+      "price": 0.84282,
+      "price_time_jst": "2026-11-19 03:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-18 07:00",
@@ -892,17 +870,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-19 03:00",
-          "o": 0.84296,
-          "h": 0.84296,
-          "l": 0.8424,
-          "c": 0.84273,
+          "time_jst": "2026-11-19 03:15",
+          "o": 0.84269,
+          "h": 0.84289,
+          "l": 0.84267,
+          "c": 0.84279,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-19 03:00",
+          "time_jst": "2026-11-19 03:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -945,24 +923,18 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "04:00 [USD] FOMC Meeting Minutes（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "04:00",
-          "datetime_jst": "2026-11-19T04:00:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "FOMC Meeting Minutes",
-          "stop_from_jst": "03:30",
-          "stop_until_jst": "05:00"
-        }
+        "next_gated_event": null
       }
     },
     "NZDUSD": {
-      "price": 0.54946,
-      "price_time_jst": "2026-11-19 03:20",
-      "bar_age_min": 0,
+      "price": 0.54954,
+      "price_time_jst": "2026-11-19 03:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-18 07:00",
@@ -1011,17 +983,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-19 03:00",
-          "o": 0.54928,
-          "h": 0.5497,
-          "l": 0.54928,
-          "c": 0.54949,
+          "time_jst": "2026-11-19 03:15",
+          "o": 0.54951,
+          "h": 0.54958,
+          "l": 0.54937,
+          "c": 0.54958,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-19 03:00",
+          "time_jst": "2026-11-19 03:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1066,24 +1038,17 @@
       "gate": {
         "state": "WAIT",
         "reasons": [
-          "03:00 [NZD] RBNZ Gov Breman Speaks（central_bank: 前30分〜後60分停止）"
+          "03:00 [NZD] RBNZ Gov Breman Speaks（central_bank: 前30分〜後60分停止）",
+          "04:00 [USD] FOMC Meeting Minutes（central_bank: 前30分〜後60分停止）"
         ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "04:00",
-          "datetime_jst": "2026-11-19T04:00:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "FOMC Meeting Minutes",
-          "stop_from_jst": "03:30",
-          "stop_until_jst": "05:00"
-        }
+        "next_gated_event": null
       }
     },
     "AUDNZD": {
-      "price": 1.2231,
-      "price_time_jst": "2026-11-19 03:20",
-      "bar_age_min": 0,
+      "price": 1.22314,
+      "price_time_jst": "2026-11-19 03:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-18 07:00",
@@ -1132,17 +1097,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-19 03:00",
-          "o": 1.22327,
-          "h": 1.2235,
-          "l": 1.2226,
-          "c": 1.22264,
+          "time_jst": "2026-11-19 03:15",
+          "o": 1.22273,
+          "h": 1.22317,
+          "l": 1.22263,
+          "c": 1.22315,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-19 03:00",
+          "time_jst": "2026-11-19 03:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1202,9 +1167,9 @@
       }
     },
     "XAUUSD": {
-      "price": 3738.52,
-      "price_time_jst": "2026-11-19 03:20",
-      "bar_age_min": 0,
+      "price": 3740.86,
+      "price_time_jst": "2026-11-19 03:30",
+      "bar_age_min": 1,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-18 07:00",
@@ -1253,17 +1218,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-19 03:00",
-          "o": 3734.1,
-          "h": 3742.74,
-          "l": 3734.1,
-          "c": 3736.14,
+          "time_jst": "2026-11-19 03:15",
+          "o": 3736.48,
+          "h": 3740.42,
+          "l": 3734.69,
+          "c": 3739.96,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-19 03:00",
+          "time_jst": "2026-11-19 03:15",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1274,8 +1239,8 @@
           "time_jst": "2026-11-19 02:15"
         },
         "swing_low": {
-          "price": 3734.22,
-          "time_jst": "2026-11-19 01:30"
+          "price": 3729.4,
+          "time_jst": "2026-11-19 02:45"
         }
       },
       "h1": {
@@ -1306,24 +1271,18 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
+        "state": "WAIT",
+        "reasons": [
+          "04:00 [USD] FOMC Meeting Minutes（central_bank: 前30分〜後60分停止）"
+        ],
         "warnings": [],
-        "next_gated_event": {
-          "time_jst": "04:00",
-          "datetime_jst": "2026-11-19T04:00:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "FOMC Meeting Minutes",
-          "stop_from_jst": "03:30",
-          "stop_until_jst": "05:00"
-        }
+        "next_gated_event": null
       }
     },
     "USOIL": {
-      "price": 82.37,
-      "price_time_jst": "2026-11-19 03:00",
-      "bar_age_min": 18,
+      "price": 82.19,
+      "price_time_jst": "2026-11-19 03:15",
+      "bar_age_min": 16,
       "data_status": "DEGRADED",
       "today": {
         "session_start_jst": "2026-11-18 07:00",
@@ -1372,28 +1331,28 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-19 02:45",
-          "o": 82.53,
-          "h": 82.59,
-          "l": 81.99,
-          "c": 82.18,
+          "time_jst": "2026-11-19 03:00",
+          "o": 82.17,
+          "h": 82.46,
+          "l": 81.92,
+          "c": 82.27,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-19 03:00",
+          "time_jst": "2026-11-19 03:15",
           "source_m5_count": 1,
           "expected_m5_count": 3,
           "missing_m5_times": [
-            "2026-11-19 03:05",
-            "2026-11-19 03:10"
+            "2026-11-19 03:20",
+            "2026-11-19 03:25"
           ],
           "complete": false
         },
         "swing_high": {
-          "price": 85.47,
-          "time_jst": "2026-11-18 23:15"
+          "price": 82.79,
+          "time_jst": "2026-11-19 02:30"
         },
         "swing_low": {
           "price": 82.18,
@@ -1428,20 +1387,14 @@
         }
       },
       "gate": {
-        "state": "TRADE_OK",
-        "reasons": [],
-        "warnings": [
-          "最新M15 1/3本（欠損: 2026-11-19 03:05,2026-11-19 03:10）"
+        "state": "WAIT",
+        "reasons": [
+          "04:00 [USD] FOMC Meeting Minutes（central_bank: 前30分〜後60分停止）"
         ],
-        "next_gated_event": {
-          "time_jst": "04:00",
-          "datetime_jst": "2026-11-19T04:00:00+09:00",
-          "currency": "USD",
-          "impact": "High",
-          "event": "FOMC Meeting Minutes",
-          "stop_from_jst": "03:30",
-          "stop_until_jst": "05:00"
-        }
+        "warnings": [
+          "最新M15 1/3本（欠損: 2026-11-19 03:20,2026-11-19 03:25）"
+        ],
+        "next_gated_event": null
       }
     }
   },
