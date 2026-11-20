@@ -6,38 +6,38 @@
   },
   "plan_date": "2026-11-20",
   "run": "status",
-  "status_updated_at": "2026-11-20T23:05:53+09:00",
+  "status_updated_at": "2026-11-21T00:06:02+09:00",
   "expires_at": "2026-11-21T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-11-20T23:05:22+09:00",
+        "as_of": "2026-11-21T00:05:29+09:00",
         "age_min": 1,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-11-20T23:05:27+09:00",
+        "as_of": "2026-11-21T00:05:34+09:00",
         "age_min": 0,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-11-20T23:05:27+09:00",
+        "as_of": "2026-11-21T00:05:34+09:00",
         "age_min": 0,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-11-20 22:45",
-      "newest_last_closed": "2026-11-20 22:45",
+      "oldest_last_closed": "2026-11-20 23:45",
+      "newest_last_closed": "2026-11-20 23:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-11-20 22:00",
-      "newest": "2026-11-20 22:00"
+      "oldest": "2026-11-20 23:00",
+      "newest": "2026-11-20 23:00"
     },
     "stale": false,
     "daily": {
@@ -67,37 +67,67 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-11-20T23:05:22+09:00",
-    "date": "2026-11-20",
+    "as_of": "2026-11-21T00:05:29+09:00",
+    "date": "2026-11-21",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
   },
   "events_today": [
     {
-      "time_jst": "16:00",
-      "datetime_jst": "2026-11-20T16:00:00+09:00",
-      "currency": "GBP",
+      "time_jst": "00:00",
+      "datetime_jst": "2026-11-21T00:00:00+09:00",
+      "currency": "USD",
       "impact": "Medium",
-      "event": "Retail Sales m/m",
-      "start": "2026-11-20T15:45:00+09:00",
-      "end": "2026-11-20T16:30:00+09:00",
+      "event": "Revised UoM Consumer Sentiment",
+      "start": "2026-11-20T23:45:00+09:00",
+      "end": "2026-11-21T00:30:00+09:00",
       "symbols": [
+        "USDJPY",
+        "EURUSD",
         "GBPUSD",
-        "EURGBP"
+        "AUDUSD",
+        "NZDUSD",
+        "USDCAD",
+        "USDCHF",
+        "XAUUSD"
       ]
     },
     {
-      "time_jst": "17:15",
-      "datetime_jst": "2026-11-20T17:15:00+09:00",
-      "currency": "EUR",
+      "time_jst": "00:00",
+      "datetime_jst": "2026-11-21T00:00:00+09:00",
+      "currency": "USD",
       "impact": "Medium",
-      "event": "ECB President Lagarde Speaks",
-      "start": "2026-11-20T17:00:00+09:00",
-      "end": "2026-11-20T17:45:00+09:00",
+      "event": "Revised UoM Inflation Expectations",
+      "start": "2026-11-20T23:45:00+09:00",
+      "end": "2026-11-21T00:30:00+09:00",
       "symbols": [
+        "USDJPY",
         "EURUSD",
-        "EURJPY",
-        "EURGBP"
+        "GBPUSD",
+        "AUDUSD",
+        "NZDUSD",
+        "USDCAD",
+        "USDCHF",
+        "XAUUSD"
+      ]
+    },
+    {
+      "time_jst": "02:00",
+      "datetime_jst": "2026-11-21T02:00:00+09:00",
+      "currency": "USD",
+      "impact": "Medium",
+      "event": "President Trump Speaks",
+      "start": "2026-11-21T01:45:00+09:00",
+      "end": "2026-11-21T02:30:00+09:00",
+      "symbols": [
+        "USDJPY",
+        "EURUSD",
+        "GBPUSD",
+        "AUDUSD",
+        "NZDUSD",
+        "USDCAD",
+        "USDCHF",
+        "XAUUSD"
       ]
     }
   ],
@@ -221,64 +251,220 @@
     }
   },
   "stop_windows": {
-    "USDJPY": [],
+    "USDJPY": [
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Revised UoM Consumer Sentiment",
+        "start": "2026-11-20T23:45:00+09:00",
+        "end": "2026-11-21T00:30:00+09:00"
+      },
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Revised UoM Inflation Expectations",
+        "start": "2026-11-20T23:45:00+09:00",
+        "end": "2026-11-21T00:30:00+09:00"
+      },
+      {
+        "time_jst": "02:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "President Trump Speaks",
+        "start": "2026-11-21T01:45:00+09:00",
+        "end": "2026-11-21T02:30:00+09:00"
+      }
+    ],
     "EURUSD": [
       {
-        "time_jst": "17:15",
-        "currency": "EUR",
+        "time_jst": "00:00",
+        "currency": "USD",
         "impact": "Medium",
-        "event": "ECB President Lagarde Speaks",
-        "start": "2026-11-20T17:00:00+09:00",
-        "end": "2026-11-20T17:45:00+09:00"
+        "event": "Revised UoM Consumer Sentiment",
+        "start": "2026-11-20T23:45:00+09:00",
+        "end": "2026-11-21T00:30:00+09:00"
+      },
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Revised UoM Inflation Expectations",
+        "start": "2026-11-20T23:45:00+09:00",
+        "end": "2026-11-21T00:30:00+09:00"
+      },
+      {
+        "time_jst": "02:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "President Trump Speaks",
+        "start": "2026-11-21T01:45:00+09:00",
+        "end": "2026-11-21T02:30:00+09:00"
       }
     ],
     "GBPUSD": [
       {
-        "time_jst": "16:00",
-        "currency": "GBP",
+        "time_jst": "00:00",
+        "currency": "USD",
         "impact": "Medium",
-        "event": "Retail Sales m/m",
-        "start": "2026-11-20T15:45:00+09:00",
-        "end": "2026-11-20T16:30:00+09:00"
-      }
-    ],
-    "AUDUSD": [],
-    "NZDUSD": [],
-    "USDCAD": [],
-    "USDCHF": [],
-    "EURJPY": [
-      {
-        "time_jst": "17:15",
-        "currency": "EUR",
-        "impact": "Medium",
-        "event": "ECB President Lagarde Speaks",
-        "start": "2026-11-20T17:00:00+09:00",
-        "end": "2026-11-20T17:45:00+09:00"
-      }
-    ],
-    "EURGBP": [
-      {
-        "time_jst": "16:00",
-        "currency": "GBP",
-        "impact": "Medium",
-        "event": "Retail Sales m/m",
-        "start": "2026-11-20T15:45:00+09:00",
-        "end": "2026-11-20T16:30:00+09:00"
+        "event": "Revised UoM Consumer Sentiment",
+        "start": "2026-11-20T23:45:00+09:00",
+        "end": "2026-11-21T00:30:00+09:00"
       },
       {
-        "time_jst": "17:15",
-        "currency": "EUR",
+        "time_jst": "00:00",
+        "currency": "USD",
         "impact": "Medium",
-        "event": "ECB President Lagarde Speaks",
-        "start": "2026-11-20T17:00:00+09:00",
-        "end": "2026-11-20T17:45:00+09:00"
+        "event": "Revised UoM Inflation Expectations",
+        "start": "2026-11-20T23:45:00+09:00",
+        "end": "2026-11-21T00:30:00+09:00"
+      },
+      {
+        "time_jst": "02:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "President Trump Speaks",
+        "start": "2026-11-21T01:45:00+09:00",
+        "end": "2026-11-21T02:30:00+09:00"
       }
     ],
-    "XAUUSD": []
+    "AUDUSD": [
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Revised UoM Consumer Sentiment",
+        "start": "2026-11-20T23:45:00+09:00",
+        "end": "2026-11-21T00:30:00+09:00"
+      },
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Revised UoM Inflation Expectations",
+        "start": "2026-11-20T23:45:00+09:00",
+        "end": "2026-11-21T00:30:00+09:00"
+      },
+      {
+        "time_jst": "02:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "President Trump Speaks",
+        "start": "2026-11-21T01:45:00+09:00",
+        "end": "2026-11-21T02:30:00+09:00"
+      }
+    ],
+    "NZDUSD": [
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Revised UoM Consumer Sentiment",
+        "start": "2026-11-20T23:45:00+09:00",
+        "end": "2026-11-21T00:30:00+09:00"
+      },
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Revised UoM Inflation Expectations",
+        "start": "2026-11-20T23:45:00+09:00",
+        "end": "2026-11-21T00:30:00+09:00"
+      },
+      {
+        "time_jst": "02:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "President Trump Speaks",
+        "start": "2026-11-21T01:45:00+09:00",
+        "end": "2026-11-21T02:30:00+09:00"
+      }
+    ],
+    "USDCAD": [
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Revised UoM Consumer Sentiment",
+        "start": "2026-11-20T23:45:00+09:00",
+        "end": "2026-11-21T00:30:00+09:00"
+      },
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Revised UoM Inflation Expectations",
+        "start": "2026-11-20T23:45:00+09:00",
+        "end": "2026-11-21T00:30:00+09:00"
+      },
+      {
+        "time_jst": "02:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "President Trump Speaks",
+        "start": "2026-11-21T01:45:00+09:00",
+        "end": "2026-11-21T02:30:00+09:00"
+      }
+    ],
+    "USDCHF": [
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Revised UoM Consumer Sentiment",
+        "start": "2026-11-20T23:45:00+09:00",
+        "end": "2026-11-21T00:30:00+09:00"
+      },
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Revised UoM Inflation Expectations",
+        "start": "2026-11-20T23:45:00+09:00",
+        "end": "2026-11-21T00:30:00+09:00"
+      },
+      {
+        "time_jst": "02:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "President Trump Speaks",
+        "start": "2026-11-21T01:45:00+09:00",
+        "end": "2026-11-21T02:30:00+09:00"
+      }
+    ],
+    "EURJPY": [],
+    "EURGBP": [],
+    "XAUUSD": [
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Revised UoM Consumer Sentiment",
+        "start": "2026-11-20T23:45:00+09:00",
+        "end": "2026-11-21T00:30:00+09:00"
+      },
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Revised UoM Inflation Expectations",
+        "start": "2026-11-20T23:45:00+09:00",
+        "end": "2026-11-21T00:30:00+09:00"
+      },
+      {
+        "time_jst": "02:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "President Trump Speaks",
+        "start": "2026-11-21T01:45:00+09:00",
+        "end": "2026-11-21T02:30:00+09:00"
+      }
+    ]
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-11-20T23:05:27+09:00",
+      "as_of": "2026-11-21T00:05:34+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "TRADE_OK",
@@ -297,7 +483,7 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-11-20T23:04:11+09:00",
+        "generated_intraday": "2026-11-21T00:04:12+09:00",
         "age_min": 2
       },
       "pairs": {
@@ -307,7 +493,7 @@
             "range_today": 1.301,
             "range_vs_adr": 1.501,
             "spike_flag": true,
-            "updated_at": "2026-11-20T23:04:11+09:00"
+            "updated_at": "2026-11-21T00:04:12+09:00"
           }
         },
         "EURUSD": {
@@ -316,7 +502,7 @@
             "range_today": 0.00421,
             "range_vs_adr": 0.637,
             "spike_flag": false,
-            "updated_at": "2026-11-20T23:04:11+09:00"
+            "updated_at": "2026-11-21T00:04:12+09:00"
           }
         },
         "GBPUSD": {
@@ -328,7 +514,7 @@
             "range_today": 0.00355,
             "range_vs_adr": 0.677,
             "spike_flag": false,
-            "updated_at": "2026-11-20T23:04:11+09:00"
+            "updated_at": "2026-11-21T00:04:12+09:00"
           }
         },
         "NZDUSD": {
@@ -340,7 +526,7 @@
             "range_today": 0.00515,
             "range_vs_adr": 0.784,
             "spike_flag": false,
-            "updated_at": "2026-11-20T23:04:11+09:00"
+            "updated_at": "2026-11-21T00:04:12+09:00"
           }
         },
         "USDCHF": {
@@ -355,7 +541,7 @@
             "range_today": 0.00257,
             "range_vs_adr": 0.924,
             "spike_flag": false,
-            "updated_at": "2026-11-20T23:04:11+09:00"
+            "updated_at": "2026-11-21T00:04:12+09:00"
           }
         },
         "XAUUSD": {
@@ -364,7 +550,7 @@
             "range_today": 158.04,
             "range_vs_adr": 1.724,
             "spike_flag": true,
-            "updated_at": "2026-11-20T23:04:11+09:00"
+            "updated_at": "2026-11-21T00:04:12+09:00"
           }
         }
       }
@@ -467,8 +653,8 @@
         "high": 1.31498
       },
       "worst_entry": 1.31484,
-      "price": 1.31158,
-      "distance_pips": 32.6,
+      "price": 1.3107,
+      "distance_pips": 41.4,
       "atr_pips": 14.4,
       "adr_used_pct": 64.9,
       "adr_remaining_pips": 26.4,
@@ -566,17 +752,37 @@
       "design_slot": 3,
       "expires_at": "2026-11-21T03:00:00+09:00",
       "entry_state": {
-        "ok": true,
-        "reasons": []
+        "ok": false,
+        "reasons": [
+          "土曜0:00以降",
+          "停止中: 00:00 [USD] Revised UoM Consumer Sentiment",
+          "停止中: 00:00 [USD] Revised UoM Inflation Expectations"
+        ]
       },
       "stops": [
         {
-          "time_jst": "16:00",
-          "currency": "GBP",
+          "time_jst": "00:00",
+          "currency": "USD",
           "impact": "Medium",
-          "event": "Retail Sales m/m",
-          "start": "2026-11-20T15:45:00+09:00",
-          "end": "2026-11-20T16:30:00+09:00"
+          "event": "Revised UoM Consumer Sentiment",
+          "start": "2026-11-20T23:45:00+09:00",
+          "end": "2026-11-21T00:30:00+09:00"
+        },
+        {
+          "time_jst": "00:00",
+          "currency": "USD",
+          "impact": "Medium",
+          "event": "Revised UoM Inflation Expectations",
+          "start": "2026-11-20T23:45:00+09:00",
+          "end": "2026-11-21T00:30:00+09:00"
+        },
+        {
+          "time_jst": "02:00",
+          "currency": "USD",
+          "impact": "Medium",
+          "event": "President Trump Speaks",
+          "start": "2026-11-21T01:45:00+09:00",
+          "end": "2026-11-21T02:30:00+09:00"
         }
       ],
       "calendar_ok": true,
