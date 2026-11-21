@@ -138,6 +138,10 @@ function render(plan, accountsParam = {}) {
     if (plan.candidates.length) L.push("");
     L.push(`  参考：${ps.symbols.join("・")} は発注の対象外（並行記録のみ。${ps.recording === "ok" ? `今回 ${ps.recorded ?? (plan.paper || []).length} 件記録` : "並行記録を読めないため、今回は記録なし"}）`);
   }
+  // 型×SL案ごとの対象外（evaluate.js の SCHEME_LIVE。今は型B×A案）: 件数だけ（価格・ロットは出さない）[Q95]
+  const pss = (plan.paper_schemes || []);
+  if (pss.length && !ps?.symbols?.length && plan.candidates.length) L.push("");
+  for (const x of pss) L.push(`  参考：型${x.setup}×${x.scheme}案は発注の対象外（並行記録のみ。${x.recording === "ok" ? `今回 ${x.recorded} 件記録` : "並行記録を読めないため、今回は記録なし"}）`);
 
   // 3. 不採用の理由（1案1行）＋参考情報
   L.push("");

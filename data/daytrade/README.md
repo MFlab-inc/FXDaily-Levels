@@ -6,7 +6,7 @@
 |---|---|---|
 | `accounts.json` | **本人が手で更新** | 口座のラベルと役割（`A`＝デイトレ専用、`B`＝スイング＋デイトレ）、`commission_per_lot_jpy`、`risk_pct`（0 超 5 以下）、`daily_loss_pct`。**口座番号と資金（`equity_jpy`）は書かない**（このリポジトリは公開されるため。資金は下の Variables から読む）。生成器は読むだけ。JSON にコメントは書けないので、先頭の `_comment` に説明を入れてある |
 | `log.csv` | 生成器（`daytrade.yml`、`daytrade-score.js`） | 案の記録。追記のみ（仕様 5節・6-1）。`run` は design（設計）／design-b（状態更新で追加した型B）／status（取消・採点の結果）。口座の列は `lot_cap_a_A`・`lot_cap_b_A`・`lot_cap_a_B`・`lot_cap_b_B`（上限ロット）と `filled_ticket_A`・`filled_ticket_B`。`filled_ticket_*` は本人が週1回、MT4の取引記録と照合して手で埋める（bot は書き換えない）。<br>**取消と採点**：消えた版は `status` の行（`reached`）で取消を記録する。取消の時刻までに H1 足で到達していれば `取消(到達後)`（`reached_at`＝到達した足）、していなければ `取消(再設計)`。`取消(到達後)` の版は、有効期限（翌3:00）の後の採点（`daytrade-score.js`）で SL/TP1 の先着まで追った行を足す（`reached` は `取消(到達後)` のまま、`first_hit_a/b` が入る）。`取消(再設計)` の版も採点のたびに H1 で判定し直す（取消の時に H1 足が届かなかった分と、過去分の移行）。<br>**損益の列**（末尾の6列）：採点の行（`reached`＝`到達`／先着まで追った `取消(到達後)`）にだけ、案ごとの `exit_a`・`exit_b`（決済の価格）、`pips_a`・`pips_b`（最悪Entry 基準・コスト0）、`r_a`・`r_b`（pips÷SL幅）。未決は有効期限の直前の足の終値。円の金額は書かない。古い行は空のまま |
-| `shadow-log.csv` | 生成器（`daytrade.yml`、`daytrade-score.js`） | **参考の並行記録（発注の対象外）**。ライブの規則（SL下限 (a)）では不採用だが、SL下限 (b)（SL＝max(k×ATR, 10pips)）なら通る案を、設計①②③・型Bの追加のたびに記録する。列は `log.csv` と同じで、先頭に `variant` を足してある。`variant` は **`sl_floor_b`**（SL下限 (b) の参考の案）と **`xau_paper`**（XAUUSD の案。下の「XAUUSD は発注の対象外」）。**版・取消・採点・同じ水準の判定は variant ごとに独立**（同じ版が両方に入っていても影響しない）。版の作り方・取消（`取消(到達後)` を含む）・採点・同じ水準の抑え（ライブの `log.csv` の履歴とは独立）は `log.csv` と同じ規則。`sl_floor_b` は `daytrade-plan.txt` の3項目目の末尾に件数だけ（候補の欄・Issue には出さない）。`xau_paper` は2項目目（候補）の末尾に1行だけ（価格・ロットなし。Issue には出さない） |
+| `shadow-log.csv` | 生成器（`daytrade.yml`、`daytrade-score.js`） | **参考の並行記録（発注の対象外）**。ライブの規則（SL下限 (a)）では不採用だが、SL下限 (b)（SL＝max(k×ATR, 10pips)）なら通る案を、設計①②③・型Bの追加のたびに記録する。列は `log.csv` と同じで、先頭に `variant` を足してある。`variant` は **`sl_floor_b`**（SL下限 (b) の参考の案）と **`xau_paper`**（XAUUSD の案。下の「XAUUSD は発注の対象外」）と **`typeb_a_paper`**（型B×A案＝型BのA案。下の「型B×A案は発注の対象外」）。**版・取消・採点・同じ水準の判定は variant ごとに独立**（同じ版がどの variant に入っていても、互いに影響しない）。版の作り方・取消（`取消(到達後)` を含む）・採点・同じ水準の抑え（ライブの `log.csv` の履歴とは独立）は `log.csv` と同じ規則。`sl_floor_b` は `daytrade-plan.txt` の3項目目の末尾に件数だけ（候補の欄・Issue には出さない）。`xau_paper` は2項目目（候補）の末尾に1行だけ（価格・ロットなし。Issue には出さない）。`typeb_a_paper` も2項目目の末尾に1行だけ（『参考：型B×A案は発注の対象外（並行記録のみ。今回 n 件記録）』。価格・ロットなし。Issue には出さない） |
 | `backtest-<日付>.md` / `.csv` | `daytrade-backtest.js`（手動） | バックテストの集計（仕様 6-2）。CSV の先頭2列は比較軸: `sl_floor`＝SL下限方式（`a_reject`＝丸め後10pips未満は不採用〔ライブの規則〕、`b_widen`＝max(k×ATR, 10pips) で採用）、`obstacle`＝障害の定義（`a_both`＝TP1の障害に日次レベル7本＋H1高値群・安値群の両方〔ライブの規則〕、`b_forward`＝日次レベル7本＋進行方向側の群だけ）。2×2の4通りを別々に集計 |
 
 ## 口座の資金（Secrets／Variables）の設定方法と、資金を更新する手順
@@ -68,4 +68,16 @@
 - `log.csv` の切替前の XAUUSD の行はそのまま残ります（書き換えません）。採点待ちの行は今までどおり `log.csv` で採点されます。切替前から有効だった版（その計画日のもの）は、`plan.json` から外れる最初の実行（状態更新か設計）で、通常の取消の行が `log.csv` に追記されます（到達済みなら `取消(到達後)`。Issue に通知済みなら『案を取消しました』が出ます）。最後の設計③のあとに切り替えた場合などは、その計画日の版は有効期限後に `log.csv` で通常どおり採点されます。
 - **切替の日時**：マージ後に最初に動いた設計の時刻。`git log --reverse --format='%h %aI %s' --grep='^daytrade: design' <マージのコミット>..origin/main | head -1` で分かる。**実際の切替の日時：2026-11-09 22:05（設計③。PR #49 のマージ〔17:16 JST、コミット `572f6e74`〕後に最初に動いた設計。コミット `f091bcb4`、`daytrade-plan.json` の `generated_at` は 22:05:54 JST）**。この設計では `paper` は 0 件（XAUUSD の型Aは「届かない」で不採用）で、`xau_paper` の記録はまだ無い。マージ後の最初の実行は状態更新のことが多く、`daytrade-plan.json` の `paper_status` はそこで先に付く（実際は 18:05 JST、コミット `834db186`）。`xau_paper` の型Aの記録は最初の設計から始まる。
 - 集計：XAUUSD は `shadow-log.csv` の `variant=xau_paper` から、ライブ（`log.csv`）とは分けて見る。バックテスト（`backtest-*.md`）は XAUUSD を含めたまま。
+- 戻すかどうかは、ルール見直し（12/19 以降）で、並行記録の到達件数・勝率・実現R を見て相談する。
+
+## 型B×A案は発注の対象外（並行記録のみ）
+
+2026-11-21 の論点 b（本人決定）で、型BのA案（SL＝0.5×H1 ATR14）は発注の対象外になりました（`scripts/daytrade/evaluate.js` の `SCHEME_LIVE`。戻すときは該当の項目を消す〔または `live: true`〕1か所）。型BのB案と、型AのA案・B案はライブのままです。
+
+- 型B×A案はこれまでどおり同じ規則で作り、`shadow-log.csv` の **`variant=typeb_a_paper`** に記録・採点します（A案だけの版。B案の列とロットの列は空。版・取消・採点・損益の列は `log.csv` と同じ規則。XAUUSD の型Bは `xau_paper` だけに入り、ここには二重に入りません）。
+- ライブでは、型Bで A案・B案とも通った案は **B案だけの案**として出ます（`log.csv` の行は `sl_a`・`tp_a`・`rr_a`・`cost_cap_a`・`lot_cap_a_*` が空。B案の上限ロットは今までと同じ）。A案だけ通った型Bはライブに出ません。`daytrade-plan.json` の `candidates`・`daytrade-plan.txt` の候補・通知・`log.csv` に型B×A案の価格・ロットは出ません。
+- `daytrade-plan.json` の **`paper`** に案の一覧（価格あり・ロットなし。`variant` つき）、`paper_schemes` に状態が入ります。`daytrade-plan.txt` には候補の後に『参考：型B×A案は発注の対象外（並行記録のみ。今回 n 件記録）』の1行だけが出ます。
+- `log.csv` の切替前の型Bの行（11/20 まで）はそのまま残ります（書き換えません）。切替前に作った型Bの候補が、まだ有効なあいだに切り替わるときは、その版を `plan.json` から外す最初の実行で、元の版（A案つき）の取消の行と、B案だけの新しい版の行が `log.csv` に追記されます（元の版は取消後も有効期限まで採点されます）。
+- **切替の日時**：マージ後、最初に型Bの評価が動いた時刻（設計③、または JST 16:00〜21:59 の状態更新のうち最初のもの）。`git log --reverse --format='%h %aI %s' --grep='^daytrade: \(design\|status\)' <マージのコミット>..origin/main` で、コミットの題の時刻（JST）が 16:00〜21:59 の `daytrade: status`、または設計③（冬時間 22:00〜23:59／夏時間 21:00〜22:59）の `daytrade: design` のうち最初のものが分かる（マージ後に追記する）。
+- 集計：型B×A案は `shadow-log.csv` の `variant=typeb_a_paper` から、ライブ（`log.csv`）とは分けて見る。バックテスト（`backtest-*.md`）は型B×A案を含めたまま。
 - 戻すかどうかは、ルール見直し（12/19 以降）で、並行記録の到達件数・勝率・実現R を見て相談する。
