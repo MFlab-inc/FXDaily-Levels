@@ -30,6 +30,14 @@ const { pipValueJpy, costThresholdPips, tpMarginPips, lotRaw, lotCap } = require
  * opts は省略できる（undefined／null）。オブジェクト以外や、定義に無い値（空文字・0・null なども）は例外にする（ライブの定義に黙って落とさない）。
  */
 const SCHEMES = [{ name: "A", k: 0.5 }, { name: "B", k: 1.0 }];
+/**
+ * 型×SL案ごとの『ライブの対象』の設定（論点 b、2026-11-21 本人決定）。live:false の組み合わせは、同じ規則で評価・記録・採点するが、ライブの候補（plan.json の candidates・
+ * plan.txt の候補・通知・log.csv）には出さず、並行記録（shadow-log.csv の variant）にだけ記録する（上限ロットも出さない）。型Bで B案も通った案は、ライブには B案だけの案として出る。
+ * **ここ（項目を消す、または live:true）1か所を戻せば、元どおりのライブの出力になる。** evaluate() はこの設定を読まない（評価は変えない）。バックテスト（backtest.js）も読まない。
+ * 発注の対象外の銘柄（pairs.js の live:false。XAUUSD）の案は、案ごとには分けず、銘柄ごと variant=xau_paper に入る（二重に入れない）。
+ */
+const SCHEME_LIVE = [{ setup: "B", scheme: "A", live: false, variant: "typeb_a_paper" }];
+const paperSchemes = () => SCHEME_LIVE.filter((x) => x.live === false);
 const SL_MIN_PIPS = 10;
 const RR_MIN = 1.0;
 const RR_TARGET = 1.5;
@@ -183,4 +191,4 @@ function evaluate(ctx, setup, opts = {}) {
   };
 }
 
-module.exports = { evaluate, SCHEMES, REASONS, COUNTED, SL_MIN_PIPS, ADR_MAX_PCT, BAND_ATR, SL_FLOOR_OPTIONS, OBSTACLE_MODES };
+module.exports = { evaluate, SCHEMES, SCHEME_LIVE, paperSchemes, REASONS, COUNTED, SL_MIN_PIPS, ADR_MAX_PCT, BAND_ATR, SL_FLOOR_OPTIONS, OBSTACLE_MODES };

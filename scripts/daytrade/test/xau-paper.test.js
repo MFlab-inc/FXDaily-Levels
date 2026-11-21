@@ -17,6 +17,8 @@ const D = require("../notify/detect");
 const F = require("../notify/format");
 const { makeScenario } = require("./scenario");
 const { rm, setXauLive } = require("./helpers");
+// この試験は、型Bの案に A案・B案の両方が付く（型B×A案がライブの候補・log.csv に出る）前提で書かれているので、evaluate.js の SCHEME_LIVE を戻した状態（＝今までと同じ出力）で動かす（helpers.js の setSchemeLive）
+require("./helpers").setSchemeLive("B", "A", true);
 
 /**
  * XAUUSD を発注の対象外の並行記録に移す（2026-11-09 本人決定。論点 c）。pairs.js の XAUUSD は live:false が既定（この試験は既定のまま動かす）。

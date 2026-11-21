@@ -3,7 +3,7 @@ const { PAIRS, pairOf, isLive } = require("./pairs");
 const { atrWilder } = require("./indicators");
 const { h1Groups, DAILY_LEVELS } = require("./levels");
 const { tokyoRange } = require("./tokyo");
-const { evaluate, COUNTED, REASONS, SCHEMES } = require("./evaluate");
+const { evaluate, COUNTED, REASONS, SCHEMES, paperSchemes } = require("./evaluate");
 const { globalMtfStatus, symbolDirection } = require("./direction");
 const { calendarStatus, stopWindows, dayEvents } = require("./events");
 const { isBAddTime } = require("./typeb");
@@ -185,6 +185,7 @@ function summarize(results) {
     for (const s of SCHEMES) {
       const sc = r.schemes[s.name];
       if (!sc) continue;
+      if (sc.paper) continue; // 型×SL案ごとの対象外（evaluate.js の SCHEME_LIVE）で、並行記録にだけ出す案。ライブの『通った案』にも『不採用』にも数えない [Q97]
       if (sc.pass) { if (r.outcome !== "paper") pass[s.name] += 1; continue; }
       if (rejections[sc.reason] !== undefined) rejections[sc.reason] += 1;
       else if (extra[sc.reason] !== undefined) extra[sc.reason] += 1;
@@ -331,23 +332,82 @@ function levelReachedResult(res) {
   return { ...res, outcome: "rejected", schemes };
 }
 
-// 発注の対象外の銘柄（pairs.js の live:false）の案（plan.json の paper）。ロット・手数料は持たない（価格は持つ）[Q87]
-function paperOf(c) {
+// 並行記録にだけ出す案（plan.json の paper）。ロット・手数料は持たない（価格は持つ）。variant は、発注の対象外の銘柄なら xau_paper、型×SL案ごとの対象外ならその設定の variant [Q87・Q93]
+function paperOf(c, variant = L.PAPER_VARIANT) {
   const schemes = Object.fromEntries(Object.entries(c.schemes || {}).map(([n, sc]) => { const { lots, commission_jpy, ...rest } = sc; return [n, rest]; }));
-  return { ...c, variant: L.PAPER_VARIANT, schemes };
+  return { ...c, variant, schemes };
 }
 const paperSymbols = () => PAIRS.filter((p) => !isLive(p)).map((p) => p.code);
-// 並行記録（paper）の案の同方向の印は、ライブの案も含めて数える（今までのライブと同じ数え方）。ライブの案の印は変えない（clone に付ける）[Q89]
+const paperVariants = () => [L.PAPER_VARIANT, ...paperSchemes().map((x) => x.variant)];
+// 引き継いでよい paper か: xau_paper は今も発注の対象外の銘柄、型×SL案の variant は今もライブの銘柄で設定が対象外のまま（live を戻したあと・前の設定の paper は引き継がない）
+function paperKeep(c) {
+  const pair = pairOf(c.symbol);
+  if (!pair) return false;
+  if (c.variant === L.PAPER_VARIANT) return !isLive(pair);
+  return isLive(pair) && paperSchemes().some((x) => x.variant === c.variant && x.setup === c.setup);
+}
+
+/**
+ * 型×SL案ごとの対象外（evaluate.js の SCHEME_LIVE）: 評価のまま A案・B案を持つ候補 c を、ライブの見え方と並行記録の見え方に分ける [Q93]。
+ *  live … 対象外の案（通っていたもの）を『不採用（並行記録のみ）』にした候補。ライブの案が1つも通らなければ null。対象外の案が通っていなければ c そのもの。価格・ロットは載せない
+ *  papers … 対象外の案だけを持つ候補（設定ごとに1つ。variant つき・ロットなし）。無ければ []
+ * 発注の対象外の銘柄（pairs.js の live:false）の候補には使わない（銘柄ごと xau_paper に入る）。
+ */
+function splitBySchemeLive(c) {
+  const hit = paperSchemes().filter((x) => x.setup === c.setup && c.schemes?.[x.scheme]?.pass);
+  if (!hit.length) return { live: c, papers: [] };
+  const stub = (sc, reason, text) => ({ pass: false, reason, reason_text: text, k: sc.k, ...(reason === "paper_scheme" ? { paper: true } : {}) });
+  const hide = new Set(hit.map((x) => x.scheme));
+  const liveSchemes = Object.fromEntries(Object.entries(c.schemes).map(([n, sc]) => [n, hide.has(n) ? stub(sc, "paper_scheme", "並行記録のみ") : sc]));
+  const live = Object.values(liveSchemes).some((sc) => sc.pass) ? { ...c, schemes: liveSchemes } : null;
+  const papers = hit.map((x) => paperOf({ ...c, schemes: Object.fromEntries(Object.entries(c.schemes).map(([n, sc]) => [n, n === x.scheme ? sc : stub(sc, "paper_other", null)])) }, x.variant));
+  return { live, papers };
+}
+// 評価結果 res のうち、並行記録にだけ出す案に paper:true を付ける（ライブの『通った案』にも『不採用』にも数えない）。ライブの案が1つも通らなければ outcome は "paper"
+function markPaperSchemes(res, names) {
+  const schemes = { ...res.schemes };
+  for (const n of names) schemes[n] = { ...schemes[n], pass: false, paper: true };
+  const anyLive = Object.values(schemes).some((sc) => sc.pass);
+  return { ...res, schemes, outcome: res.outcome === "candidate" && !anyLive ? "paper" : res.outcome };
+}
+// ■3 で並行記録の案が『同じ水準は到達済み』で抑えられたとき: その案を『同じ水準は到達済み』として数える（paper の印を外す）
+function markSuppressedScheme(res, name) {
+  return { ...res, schemes: { ...res.schemes, [name]: { ...res.schemes[name], pass: false, paper: false, reason: "level_reached" } } };
+}
+
+// 並行記録（paper）の案の同方向の印は、ライブの案も含めて数える（今までのライブと同じ数え方）。ライブの案の印は変えない（clone で数える）。
+// variant ごとに数え直す。『その variant の案が、まだライブだった世界』と同じ数え方にする:
+//   xau_paper = ライブ + xau_paper + 型B×A案（後から対象外になった variant。XAUUSD の記録の値を、今までと変えない）
+//   typeb_a_paper = ライブ + typeb_a_paper だけ（XAUUSD は、型B×A案より前から対象外。ライブの型Bの案の数え方に XAUUSD は入っていなかった）
+// 同じ案（id が同じ。型Bで B案がライブ、A案が paper）は1つとして数え、印はライブの案と同じにする [Q89・Q96]
 function markPaperGroups(liveCands, paperCands, pairCur) {
   if (!paperCands.length) return;
-  markSameDirection([...liveCands.map((c) => ({ ...c })), ...paperCands], pairCur);
+  const order = paperVariants();
+  const liveIds = new Set(liveCands.map((c) => c.id));
+  order.forEach((v, i) => {
+    const mine = paperCands.filter((c) => c.variant === v);
+    if (!mine.length) return;
+    const world = [...liveCands, ...paperCands.filter((c) => order.indexOf(c.variant) >= i && !liveIds.has(c.id))].map((c) => ({ ...c }));
+    markSameDirection(world, pairCur);
+    const label = new Map(world.map((c) => [c.id, c.same_direction_group]));
+    for (const c of mine) c.same_direction_group = label.get(c.id) ?? "";
+  });
 }
 // recorded = この計画の paper の案のうち、shadow-log.csv に記録済みの数（今回追記する行を含む。読めないときは 0）。txt の『今回 n 件記録』はこの数 [Q87]
+function recordedCount(variant, sAll, paper, appended) {
+  const readable = sAll !== null && sAll !== undefined;
+  if (!readable) return 0;
+  const have = new Set([...L.forVariant(sAll, variant), ...appended.filter((r) => r.variant === variant && r.run !== "status")].map(L.keyOf));
+  return paper.filter((c) => c.variant === variant && have.has(L.keyOf(candRow(c, "design", c.generated_at)))).length;
+}
 function paperStatus(sAll, paper, appended = []) {
   const readable = sAll !== null && sAll !== undefined;
-  const have = new Set(readable ? [...L.forVariant(sAll, L.PAPER_VARIANT), ...appended.filter((r) => r.variant === L.PAPER_VARIANT && r.run !== "status")].map(L.keyOf) : []);
-  const recorded = readable ? paper.filter((c) => have.has(L.keyOf(candRow(c, "design", c.generated_at)))).length : 0;
-  return { variant: L.PAPER_VARIANT, symbols: paperSymbols(), recording: readable ? "ok" : "unreadable", recorded };
+  return { variant: L.PAPER_VARIANT, symbols: paperSymbols(), recording: readable ? "ok" : "unreadable", recorded: recordedCount(L.PAPER_VARIANT, sAll, paper, appended) };
+}
+// 型×SL案ごとの対象外（SCHEME_LIVE）の状態。設定ごとに1つ [Q95]
+function paperSchemeStatuses(sAll, paper, appended = []) {
+  const readable = sAll !== null && sAll !== undefined;
+  return paperSchemes().map((x) => ({ variant: x.variant, setup: x.setup, scheme: x.scheme, recording: readable ? "ok" : "unreadable", recorded: recordedCount(x.variant, sAll, paper, appended) }));
 }
 // 切替前から有効だった、発注の対象外の銘柄の版（log.csv のその計画日で、最後の行が design／design-b）。plan.json から外れる実行で、通常の取消の行を追記する [Q86]
 const staleNonLiveRows = (rows, planDate) => openRows(rows, planDate).filter((r) => { const p = pairOf(r.symbol); return p && !isLive(p); });
@@ -364,10 +424,12 @@ function buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows, shadowL
   const hist = V.reachedIdeas({ rows, planDate, barsByCode: inputs.h1, nowMs });
   const sHist = V.reachedIdeas({ rows: sAll, planDate, barsByCode: inputs.h1, nowMs, variant: L.SHADOW_VARIANT });
   const pHist = V.reachedIdeas({ rows: sAll, planDate, barsByCode: inputs.h1, nowMs, variant: L.PAPER_VARIANT });
+  // 型×SL案ごとの対象外（SCHEME_LIVE）の variant ごとの『同じ水準は到達済み』（ライブの log.csv・ほかの variant とは別に判定する）
+  const tHist = Object.fromEntries(paperSchemes().map((x) => [x.variant, V.reachedIdeas({ rows: sAll, planDate, barsByCode: inputs.h1, nowMs, variant: x.variant })]));
   const results = [];
   const cands = [];
   const shadowCands = [];
-  const paperNew = []; // 発注の対象外の銘柄の、今回の設計の案
+  const paperNew = []; // 並行記録にだけ出す、今回の設計の案（発注の対象外の銘柄 xau_paper・型×SL案ごとの対象外）
   let shadowPass = 0;
   for (const pair of PAIRS) {
     const live = isLive(pair);
@@ -386,8 +448,19 @@ function buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows, shadowL
       let cand = null;
       if (res.outcome === "candidate") {
         cand = mk(res);
-        // ■3: 同じ水準の出し直しを抑える。ライブは log.csv、発注の対象外の銘柄は xau_paper の行から、それぞれ独立に判定する
-        if ((live ? hist : pHist).suppresses(cand, versionKeyOf(cand))) { res = levelReachedResult(res); cand = null; }
+        if (live) {
+          // 型×SL案ごとの対象外（型B×A案）は、ライブの見え方（B案だけ）と並行記録の見え方（A案だけ）に分ける。評価は変えない [Q93]
+          const sp = splitBySchemeLive(cand);
+          const hidden = sp.papers.length ? paperSchemes().filter((x) => x.setup === setup && cand.schemes[x.scheme]?.pass).map((x) => x.scheme) : [];
+          if (hidden.length) res = markPaperSchemes(res, hidden);
+          cand = sp.live;
+          // ■3: 同じ水準の出し直しを抑える。ライブは log.csv、並行記録の案は自分の variant の行から、それぞれ独立に判定する
+          if (cand && hist.suppresses(cand, versionKeyOf(cand))) { res = levelReachedResult(res); cand = null; }
+          for (const pc of sp.papers) {
+            if (tHist[pc.variant].suppresses(pc, versionKeyOf(pc))) { const x = paperSchemes().find((y) => y.variant === pc.variant); res = markSuppressedScheme(res, x.scheme); }
+            else paperNew.push(pc);
+          }
+        } else if (pHist.suppresses(cand, versionKeyOf(cand))) { res = levelReachedResult(res); cand = null; } // ■3: 発注の対象外の銘柄は xau_paper の行から判定する
       }
       if (live) {
         results.push(res);
@@ -409,12 +482,15 @@ function buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows, shadowL
   }
   const sameDay = prevPlan && prevPlan.plan_date === planDate;
   // 設計①②は型Aだけを再設計する。状態更新で追加した型Bは、取消さずにそのまま引き継ぐ（型Bを再設計するのは設計③）。発注の対象外の銘柄の案は、ライブの候補に引き継がない
-  if (setups.length === 1 && sameDay && Array.isArray(prevPlan.candidates)) cands.push(...prevPlan.candidates.filter((c) => c.setup === "B" && isLive(pairOf(c.symbol))));
+  // 切替前の候補に型B×A案が通っていたものは、ライブの見え方（B案だけ）にして引き継ぐ（B案が通っていなければ外す。log.csv は下で取消す）[Q94]
+  if (setups.length === 1 && sameDay && Array.isArray(prevPlan.candidates)) {
+    for (const c of prevPlan.candidates) { if (c.setup !== "B" || !isLive(pairOf(c.symbol))) continue; const sp = splitBySchemeLive(c); if (sp.live) cands.push(sp.live); }
+  }
   markSameDirection(cands, pairCur);
   rankCandidates(cands);
   const paper = [...paperNew];
   // 前の計画日の paper・今はライブの銘柄（live を戻したとき）の paper は引き継がない
-  if (setups.length === 1 && sameDay && Array.isArray(prevPlan.paper)) paper.push(...prevPlan.paper.filter((c) => c.setup === "B" && !isLive(pairOf(c.symbol))));
+  if (setups.length === 1 && sameDay && Array.isArray(prevPlan.paper)) paper.push(...prevPlan.paper.filter((c) => c.setup === "B" && paperKeep(c)));
   markPaperGroups(cands, paper, pairCur);
 
   const ok = inputsOk(inputs, mtfSt);
@@ -430,7 +506,7 @@ function buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows, shadowL
     banners: baseHeader(inputs, nowMs, calSt, mtfSt),
     design_missing: false,
     candidates: cands,
-    paper, paper_status: null, // 発注の対象外の銘柄の案（価格あり・ロットなし）。candidates とは別。paper_status は下で入れる [Q87]
+    paper, paper_status: null, // 並行記録にだけ出す案（価格あり・ロットなし。variant つき）。candidates とは別。paper_status・paper_schemes（設定があるときだけ）は下で入れる [Q87・Q95]
     summary,
   };
   // ライブ（log.csv）。前の設計にあって今回消えた版は取消す。切替の前から有効だった発注の対象外の銘柄の版（log.csv の最後の行が design）も、ここで取消す [Q86]
@@ -443,8 +519,10 @@ function buildDesign({ inputs, riskFeed, nowMs, slot, prevPlan, logRows, shadowL
     cands: cs, prevRows: openRows(sAll, planDate, variant).filter((r) => setups.length === 2 || r.setup === "A"),
     rows: sAll, generatedAt: plan.generated_at, nowMs, barsByCode: inputs.h1, variant,
   });
-  const shadowAppend = [...track(L.SHADOW_VARIANT, shadowCands), ...track(L.PAPER_VARIANT, paperNew)];
+  const shadowAppend = [...track(L.SHADOW_VARIANT, shadowCands), ...paperVariants().flatMap((v) => track(v, paperNew.filter((c) => c.variant === v)))];
   plan.paper_status = paperStatus(shadowReadable ? sAll : null, paper, shadowAppend);
+  const pss = paperSchemeStatuses(shadowReadable ? sAll : null, paper, shadowAppend);
+  if (pss.length) plan.paper_schemes = pss; // 設定を戻したときは項目ごと無い（plan.json も今までと同じ）
   return { plan, logAppend, shadowAppend };
 }
 
@@ -483,7 +561,8 @@ function trackLogRows({ cands, prevRows, rows, generatedAt, nowMs, barsByCode, v
   const out = [];
   const newKeys = new Set();
   for (const c of cands) {
-    const row = candRow(c, "design", generatedAt);
+    // 設計の行の時刻は案の設計時刻（引き継いだ案が切り替わったときも、元の設計時刻のまま。新しい案は generatedAt と同じ）。状態更新で追加した型Bは design-b
+    const row = candRow(c, c.run === "design-b" ? "design-b" : "design", c.generated_at ?? generatedAt);
     const key = L.keyOf(row);
     newKeys.add(key);
     const last = latest.get(key);
@@ -517,8 +596,9 @@ function typeBAdditions({ inputs, nowMs, planDate, mtfSt, calSt, pairCur, cands,
   for (const r of rows) if (r.plan_date === planDate && r.setup === "B") existing.add(`${r.symbol}|${r.side}`);
   const sExisting = new Set();
   for (const r of L.forVariant(sAll || [], L.SHADOW_VARIANT)) if (r.plan_date === planDate && r.setup === "B") sExisting.add(`${r.symbol}|${r.side}`);
-  const pExisting = new Set(paperCands.filter((c) => c.setup === "B").map((c) => `${c.symbol}|${c.side}`));
-  for (const r of L.forVariant(sAll || [], L.PAPER_VARIANT)) if (r.plan_date === planDate && r.setup === "B") pExisting.add(`${r.symbol}|${r.side}`);
+  // 並行記録（paper）の variant ごとに、自分の行と plan.json の paper だけで『同じ日・銘柄・向きの型Bは1回』を判定する
+  const pExisting = Object.fromEntries(paperVariants().map((v) => [v, new Set(paperCands.filter((c) => c.variant === v && c.setup === "B").map((c) => `${c.symbol}|${c.side}`))]));
+  for (const v of paperVariants()) for (const r of L.forVariant(sAll || [], v)) if (r.plan_date === planDate && r.setup === "B") pExisting[v].add(`${r.symbol}|${r.side}`);
   const out = { added: [], shadowAdded: [], shadowPass: 0, paperAdded: [] };
   for (const pair of PAIRS) {
     if (!inputs.raw.intraday?.pairs?.[pair.code]) continue;
@@ -529,8 +609,15 @@ function typeBAdditions({ inputs, nowMs, planDate, mtfSt, calSt, pairCur, cands,
     const mk = (r) => toCandidate(r, pair, { planDate, nowMs, slot: null, calOk: calSt.ok, windows, ctx, commissionPerLot: inputs.commissionPerLotJpy, run: "design-b" });
     if (res.outcome === "candidate") {
       const k = `${pair.code}|${res.side}`;
-      if (live) { if (!existing.has(k)) { existing.add(k); out.added.push(mk(res)); } }
-      else if (sAll && !pExisting.has(k)) { pExisting.add(k); out.paperAdded.push(paperOf(mk(res))); }
+      const full = mk(res);
+      if (!live) {
+        if (sAll && !pExisting[L.PAPER_VARIANT].has(k)) { pExisting[L.PAPER_VARIANT].add(k); out.paperAdded.push(paperOf(full)); }
+      } else {
+        // 型×SL案ごとの対象外（型B×A案）は、ライブには B案だけ、並行記録には A案だけ（variant ごとに自分の重複判定）[Q93・Q98]
+        const sp = splitBySchemeLive(full);
+        if (sp.live && !existing.has(k)) { existing.add(k); out.added.push(sp.live); }
+        if (sAll) for (const pc of sp.papers) if (!pExisting[pc.variant].has(k)) { pExisting[pc.variant].add(k); out.paperAdded.push(pc); }
+      }
     }
     const sh = sAll ? shadowOf(res, evaluateShadow(ctx, "B")) : null;
     if (sh) {
@@ -559,9 +646,20 @@ function buildStatus({ inputs, riskFeed, nowMs, prevPlan, logRows, shadowLogRows
   const ok = inputsOk(inputs, mtfSt);
 
   // 発注の対象外の銘柄（pairs.js の live:false）の案は、ライブの候補に載せない（切替前の plan.json に残っていても外す）。paper は別の一覧として引き継ぐ [Q86・Q87]
-  const base = same && Array.isArray(prevPlan.candidates) ? prevPlan.candidates.filter((c) => isLive(pairOf(c.symbol))) : [];
-  const cands = base.map((c) => updateCandidate(c, inputs, nowMs, planDate, pairCur, calSt));
-  const paper = (same && Array.isArray(prevPlan.paper) ? prevPlan.paper.filter((c) => !isLive(pairOf(c.symbol))) : []).map((c) => updateCandidate(c, inputs, nowMs, planDate, pairCur, calSt));
+  // 切替前の候補に型B×A案が通っていたものは、ライブの見え方（B案だけ）に変える（B案が通っていなければ外す）。log.csv は下で、元の版を取消して新しい版を追記する [Q94]
+  const base = [], oldRows = [], converted = [];
+  if (same && Array.isArray(prevPlan.candidates)) {
+    for (const c of prevPlan.candidates) {
+      if (!isLive(pairOf(c.symbol))) continue;
+      const sp = splitBySchemeLive(c);
+      if (sp.live === c) { base.push(c); continue; }
+      oldRows.push(candRow(c, c.run === "design-b" ? "design-b" : "design", c.generated_at));
+      if (sp.live) { base.push(sp.live); converted.push(sp.live); }
+    }
+  }
+  const updateAll = (list) => list.map((c) => updateCandidate(c, inputs, nowMs, planDate, pairCur, calSt));
+  const cands = updateAll(base);
+  const paper = (same && Array.isArray(prevPlan.paper) ? prevPlan.paper.filter(paperKeep) : []).map((c) => updateCandidate(c, inputs, nowMs, planDate, pairCur, calSt));
   const { added: additions, shadowAdded, shadowPass, paperAdded } = typeBAdditions({ inputs, nowMs, planDate, mtfSt, calSt, pairCur, cands, rows, shadowRows: sAll, paperCands: paper });
   cands.push(...additions);
   paper.push(...paperAdded);
@@ -582,13 +680,15 @@ function buildStatus({ inputs, riskFeed, nowMs, prevPlan, logRows, shadowLogRows
     additions_b: additions.map((c) => c.id),
   };
   // 切替前から有効だった発注の対象外の銘柄の版は、plan.json から外れるこの実行で取消す（plan.json・Issue の取消の通知・log.csv が同じ実行で切り替わる。通知に『到達済み…』を添えられる）[Q86]
-  const cancels = trackLogRows({ cands: [], prevRows: staleNonLiveRows(rows, planDate), rows, generatedAt: jstIso(nowMs), nowMs, barsByCode: inputs.h1 });
+  const cancels = trackLogRows({ cands: updateAll(converted), prevRows: [...staleNonLiveRows(rows, planDate), ...oldRows], rows, generatedAt: jstIso(nowMs), nowMs, barsByCode: inputs.h1 });
   const logAppend = [...cancels, ...additions.map((c) => candRow(c, "design-b", c.generated_at))];
   const shadowAppend = [
     ...shadowAdded.map((c) => ({ variant: L.SHADOW_VARIANT, ...candRow(c, "design-b", c.generated_at) })),
-    ...paperAdded.map((c) => ({ variant: L.PAPER_VARIANT, ...candRow(c, "design-b", c.generated_at) })),
+    ...paperAdded.map((c) => ({ variant: c.variant, ...candRow(c, "design-b", c.generated_at) })),
   ];
   plan.paper_status = paperStatus(sAll, paper, shadowAppend);
+  const pss = paperSchemeStatuses(sAll, paper, shadowAppend);
+  if (pss.length) plan.paper_schemes = pss;
   return { plan, logAppend, shadowAppend };
 }
 
@@ -617,4 +717,4 @@ function updateCandidate(c, inputs, nowMs, planDate, pairCur, calSt) {
   };
 }
 
-module.exports = { SCHEMA_VERSION, buildDesign, buildStatus, buildCtx, toCandidate, candRow, markSameDirection, rankCandidates, summarize, entryStateOf, pipsOf, typeBAdditions, inputsWaiting, versionKeyOf, openRows, trackLogRows };
+module.exports = { SCHEMA_VERSION, buildDesign, buildStatus, buildCtx, toCandidate, candRow, markSameDirection, markPaperGroups, splitBySchemeLive, rankCandidates, summarize, entryStateOf, pipsOf, typeBAdditions, inputsWaiting, versionKeyOf, openRows, trackLogRows };

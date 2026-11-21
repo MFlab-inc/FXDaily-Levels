@@ -22,7 +22,7 @@ const LEGACY_COLUMNS = [
 // 末尾の6列は採点の行（reached=到達／取消(到達後)）だけに入る案ごとの損益（週次の集計用）。exit=決済の価格、pips=最悪Entry 基準・コスト0、r=pips÷SL幅。円の金額は書かない
 const PNL_COLUMNS = ["exit_a", "exit_b", "pips_a", "pips_b", "r_a", "r_b"];
 const COLUMNS = [...LEGACY_COLUMNS, ...PNL_COLUMNS];
-// 並行記録 data/daytrade/shadow-log.csv（SL下限 (b) の参考の案 variant=sl_floor_b と、発注の対象外の銘柄 XAUUSD の案 variant=xau_paper。どちらも発注の対象外）。列は log.csv と同じで、先頭に variant を足す
+// 並行記録 data/daytrade/shadow-log.csv（SL下限 (b) の参考の案 variant=sl_floor_b と、発注の対象外の銘柄 XAUUSD の案 variant=xau_paper と、型B×A案 variant=typeb_a_paper。いずれも発注の対象外）。列は log.csv と同じで、先頭に variant を足す
 const SHADOW_VARIANT = "sl_floor_b";
 // 発注の対象外の銘柄（pairs.js の live:false。今は XAUUSD）の案。ライブと同じ規則（SL下限(a)・障害(a)）で作る
 const PAPER_VARIANT = "xau_paper";
@@ -70,7 +70,7 @@ function appendedText(existingText, newRows, columns = COLUMNS) {
 }
 
 /**
- * variant ごとに行を分ける。log.csv の行は variant を持たない（空として扱う）。shadow-log.csv は variant（sl_floor_b・xau_paper）ごとに、版・取消・採点・
+ * variant ごとに行を分ける。log.csv の行は variant を持たない（空として扱う）。shadow-log.csv は variant（sl_floor_b・xau_paper・typeb_a_paper）ごとに、版・取消・採点・
  * 『同じ水準は到達済み』・型Bの重複の判定を独立に行う。版の鍵（keyOf）には variant が入っていないので、同じ版が複数の variant に入り得る。
  * 版を扱う関数（versions.js・plan.js・score.js）は、必ず variant を指定してこの関数で行を絞ってから見る（既定は log.csv＝variant なし）[Q85]。
  */

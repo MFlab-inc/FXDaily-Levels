@@ -3,6 +3,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { pairOf, PAIRS } = require("../pairs");
+const { SCHEME_LIVE } = require("../evaluate");
 const { jstAt, parseIso, HR, jstIso } = require("../jst");
 
 /**
@@ -65,4 +66,17 @@ function setXauLive(live) {
   return () => { if (had) p.live = prev; else delete p.live; };
 }
 
-module.exports = { tmpDir, rm, DAILY, NO_GROUPS, OK_DIR, evalCtx, stairBars, toH1Json, jstAt, parseIso, HR, setXauLive };
+/**
+ * 型×SL案ごとの対象外（evaluate.js の SCHEME_LIVE。今は型B×A案）をライブに戻す／対象外にする（試験用。直接書き換えるのは設定の1項目だけ）。
+ * 型Bの A案がライブの候補・log.csv に出る前提（型Bの案に A案・B案の両方が付く）で書かれた試験は、ファイルの先頭で setSchemeLive("B", "A", true) として、今までと同じ出力で動かす。
+ * その状態で今までの期待値が変わらないことが、『設定を戻せば元どおり』の確認を兼ねる。既定（型B×A案は対象外）の動きは typeb-a-paper.test.js。元に戻す関数を返す。
+ */
+function setSchemeLive(setup, scheme, live) {
+  const x = SCHEME_LIVE.find((y) => y.setup === setup && y.scheme === scheme);
+  if (!x) throw new Error(`SCHEME_LIVE に ${setup}×${scheme} がありません`);
+  const prev = x.live;
+  x.live = Boolean(live);
+  return () => { x.live = prev; };
+}
+
+module.exports = { tmpDir, rm, DAILY, NO_GROUPS, OK_DIR, evalCtx, stairBars, toH1Json, jstAt, parseIso, HR, setXauLive, setSchemeLive };

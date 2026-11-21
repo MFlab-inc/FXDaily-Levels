@@ -40,7 +40,7 @@ async function main(argv = process.argv.slice(2), env = process.env, io = { log:
   // log.csv が壊れていても生成は止めない（追記だけ行わず、バナーで知らせる）。壊れたファイルを上書きしない
   let logRows = [], logBroken = null;
   try { logRows = logText ? L.parseLog(logText) : []; } catch (e) { logBroken = String(e.message || e).slice(0, 160); }
-  // 並行記録（参考。SL下限 (b) の案 sl_floor_b と、発注の対象外の XAUUSD の案 xau_paper）も同じ。読めなければ追記だけ行わず、ライブの計画・log.csv には影響させない
+  // 並行記録（参考。SL下限 (b) の案 sl_floor_b と、発注の対象外の XAUUSD の案 xau_paper と、型B×A案 typeb_a_paper）も同じ。読めなければ追記だけ行わず、ライブの計画・log.csv には影響させない
   const shadowPath = path.join(dataDir, "daytrade", "shadow-log.csv");
   const shadowText = fs.existsSync(shadowPath) ? fs.readFileSync(shadowPath, "utf8") : "";
   let shadowRows = [], shadowBroken = null;
