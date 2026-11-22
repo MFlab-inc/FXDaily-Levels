@@ -5,50 +5,39 @@
     "note": "未確定の判断はありません（確定した解釈は docs/daytrade-plan-spec.md 10節、経緯は docs/daytrade-plan-impl-notes.md）"
   },
   "plan_date": "2026-11-23",
-  "run": "design",
-  "status_updated_at": "2026-11-23T07:05:58+09:00",
+  "run": "status",
+  "status_updated_at": "2026-11-23T08:05:59+09:00",
   "expires_at": "2026-11-24T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-11-23T07:05:22+09:00",
+        "as_of": "2026-11-23T08:05:23+09:00",
         "age_min": 1,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-11-23T07:05:27+09:00",
+        "as_of": "2026-11-23T08:05:27+09:00",
         "age_min": 1,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-11-23T07:05:27+09:00",
+        "as_of": "2026-11-23T08:05:27+09:00",
         "age_min": 1,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-11-21 06:45",
-      "newest_last_closed": "2026-11-21 06:45",
-      "not_ok": [
-        "USDJPY:DEGRADED",
-        "EURUSD:DEGRADED",
-        "GBPUSD:DEGRADED",
-        "EURJPY:DEGRADED",
-        "AUDUSD:DEGRADED",
-        "EURGBP:DEGRADED",
-        "USDCAD:DEGRADED",
-        "USDCHF:DEGRADED",
-        "NZDUSD:DEGRADED",
-        "XAUUSD:DEGRADED"
-      ]
+      "oldest_last_closed": "2026-11-23 07:45",
+      "newest_last_closed": "2026-11-23 07:45",
+      "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-11-21 06:00",
-      "newest": "2026-11-21 06:00"
+      "oldest": "2026-11-23 07:00",
+      "newest": "2026-11-23 07:00"
     },
     "stale": false,
     "daily": {
@@ -78,7 +67,7 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-11-23T07:05:22+09:00",
+    "as_of": "2026-11-23T08:05:23+09:00",
     "date": "2026-11-23",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
@@ -604,7 +593,7 @@
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-11-23T07:05:27+09:00",
+      "as_of": "2026-11-23T08:05:27+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "TRADE_OK",
@@ -623,7 +612,7 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-11-23T07:04:11+09:00",
+        "generated_intraday": "2026-11-23T08:04:15+09:00",
         "age_min": 2
       },
       "pairs": {
@@ -633,7 +622,7 @@
             "range_today": 0.245,
             "range_vs_adr": 0.278,
             "spike_flag": false,
-            "updated_at": "2026-11-23T07:04:11+09:00"
+            "updated_at": "2026-11-23T08:04:15+09:00"
           }
         },
         "EURUSD": {
@@ -642,7 +631,7 @@
             "range_today": 0.00277,
             "range_vs_adr": 0.419,
             "spike_flag": false,
-            "updated_at": "2026-11-23T07:04:11+09:00"
+            "updated_at": "2026-11-23T08:04:15+09:00"
           }
         },
         "GBPUSD": {
@@ -651,10 +640,10 @@
         "AUDUSD": {
           "state": "ok",
           "items": {
-            "range_today": 0.00119,
-            "range_vs_adr": 0.22,
+            "range_today": 0.00146,
+            "range_vs_adr": 0.27,
             "spike_flag": false,
-            "updated_at": "2026-11-23T07:04:11+09:00"
+            "updated_at": "2026-11-23T08:04:15+09:00"
           }
         },
         "NZDUSD": {
@@ -663,10 +652,10 @@
         "USDCAD": {
           "state": "ok",
           "items": {
-            "range_today": 0.00112,
-            "range_vs_adr": 0.17,
+            "range_today": 0.00167,
+            "range_vs_adr": 0.254,
             "spike_flag": false,
-            "updated_at": "2026-11-23T07:04:11+09:00"
+            "updated_at": "2026-11-23T08:04:15+09:00"
           }
         },
         "USDCHF": {
@@ -681,16 +670,16 @@
             "range_today": 0.00187,
             "range_vs_adr": 0.663,
             "spike_flag": false,
-            "updated_at": "2026-11-23T07:04:11+09:00"
+            "updated_at": "2026-11-23T08:04:15+09:00"
           }
         },
         "XAUUSD": {
           "state": "ok",
           "items": {
-            "range_today": 0.39,
-            "range_vs_adr": 0.004,
+            "range_today": 55.68,
+            "range_vs_adr": 0.573,
             "spike_flag": false,
-            "updated_at": "2026-11-23T07:04:11+09:00"
+            "updated_at": "2026-11-23T08:04:15+09:00"
           }
         }
       }
@@ -742,15 +731,6 @@
   "banners": [],
   "design_missing": false,
   "candidates": [],
-  "paper": [],
-  "paper_status": {
-    "variant": "xau_paper",
-    "symbols": [
-      "XAUUSD"
-    ],
-    "recording": "ok",
-    "recorded": 0
-  },
   "summary": {
     "candidate_rows": 0,
     "scheme_pass": {
@@ -1459,5 +1439,15 @@
     "sl_floor_b": {
       "pass": 0
     }
-  }
+  },
+  "paper": [],
+  "paper_status": {
+    "variant": "xau_paper",
+    "symbols": [
+      "XAUUSD"
+    ],
+    "recording": "ok",
+    "recorded": 0
+  },
+  "additions_b": []
 }
