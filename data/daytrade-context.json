@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-23T17:50:32+09:00",
+  "as_of": "2026-11-23T18:05:26+09:00",
   "timezone": "Asia/Tokyo",
   "note": "事実データと機械判定のみ。売買推奨は含まない。gateはイベント時間ルール(config/daytrade-rules.json)による判定。",
   "rules_summary": {
@@ -24,13 +24,13 @@
   },
   "pairs": {
     "USDJPY": {
-      "price": 159.168,
-      "price_time_jst": "2026-11-23 17:45",
-      "bar_age_min": 1,
+      "price": 159.18,
+      "price_time_jst": "2026-11-23 18:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-23 07:00",
-        "high": 159.184,
+        "high": 159.185,
         "low": 158.527
       },
       "sessions_today": {
@@ -41,7 +41,7 @@
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": 159.184,
+          "high": 159.185,
           "low": 158.991,
           "status": "open",
           "window_jst": "17:00-02:00"
@@ -75,17 +75,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-23 17:30",
-          "o": 159.078,
-          "h": 159.164,
-          "l": 159.059,
-          "c": 159.153,
+          "time_jst": "2026-11-23 17:45",
+          "o": 159.138,
+          "h": 159.184,
+          "l": 159.138,
+          "c": 159.167,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 17:30",
+          "time_jst": "2026-11-23 17:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -102,17 +102,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-23 16:00",
-          "o": 158.971,
-          "h": 159.039,
-          "l": 158.888,
-          "c": 158.999,
+          "time_jst": "2026-11-23 17:00",
+          "o": 158.994,
+          "h": 159.184,
+          "l": 158.991,
+          "c": 159.167,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 16:00",
+          "time_jst": "2026-11-23 17:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -135,9 +135,9 @@
       }
     },
     "EURUSD": {
-      "price": 1.09968,
-      "price_time_jst": "2026-11-23 17:45",
-      "bar_age_min": 1,
+      "price": 1.09864,
+      "price_time_jst": "2026-11-23 18:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-23 07:00",
@@ -153,7 +153,7 @@
         },
         "london": {
           "high": 1.10011,
-          "low": 1.09878,
+          "low": 1.09861,
           "status": "open",
           "window_jst": "17:00-02:00"
         },
@@ -186,17 +186,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-23 17:30",
-          "o": 1.09903,
-          "h": 1.10011,
-          "l": 1.09897,
-          "c": 1.09982,
+          "time_jst": "2026-11-23 17:45",
+          "o": 1.09989,
+          "h": 1.10005,
+          "l": 1.099,
+          "c": 1.09902,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 17:30",
+          "time_jst": "2026-11-23 17:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -207,23 +207,23 @@
           "time_jst": "2026-11-23 16:45"
         },
         "swing_low": {
-          "price": 1.09779,
-          "time_jst": "2026-11-23 13:30"
+          "price": 1.09878,
+          "time_jst": "2026-11-23 17:15"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-23 16:00",
-          "o": 1.09991,
-          "h": 1.10055,
-          "l": 1.09965,
-          "c": 1.09979,
+          "time_jst": "2026-11-23 17:00",
+          "o": 1.09976,
+          "h": 1.10011,
+          "l": 1.09878,
+          "c": 1.09902,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 16:00",
+          "time_jst": "2026-11-23 17:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -241,17 +241,14 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [
-          "17:30 [EUR] German Flash Manufacturing PMI（Medium・参考）",
-          "17:30 [EUR] German Flash Services PMI（Medium・参考）"
-        ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "GBPUSD": {
-      "price": 1.31418,
-      "price_time_jst": "2026-11-23 17:45",
-      "bar_age_min": 1,
+      "price": 1.31292,
+      "price_time_jst": "2026-11-23 18:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-23 07:00",
@@ -300,17 +297,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-23 17:30",
-          "o": 1.31262,
-          "h": 1.31437,
-          "l": 1.31262,
-          "c": 1.31431,
+          "time_jst": "2026-11-23 17:45",
+          "o": 1.3143,
+          "h": 1.31457,
+          "l": 1.31328,
+          "c": 1.31342,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 17:30",
+          "time_jst": "2026-11-23 17:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -327,17 +324,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-23 16:00",
-          "o": 1.31286,
-          "h": 1.31325,
-          "l": 1.3122,
-          "c": 1.31223,
+          "time_jst": "2026-11-23 17:00",
+          "o": 1.31229,
+          "h": 1.31457,
+          "l": 1.31171,
+          "c": 1.31342,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 16:00",
+          "time_jst": "2026-11-23 17:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -355,14 +352,17 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [],
+        "warnings": [
+          "18:30 [GBP] Flash Manufacturing PMI（Medium・参考）",
+          "18:30 [GBP] Flash Services PMI（Medium・参考）"
+        ],
         "next_gated_event": null
       }
     },
     "EURJPY": {
-      "price": 175.036,
-      "price_time_jst": "2026-11-23 17:45",
-      "bar_age_min": 1,
+      "price": 174.875,
+      "price_time_jst": "2026-11-23 18:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-23 07:00",
@@ -411,17 +411,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-23 17:30",
-          "o": 174.834,
-          "h": 175.042,
-          "l": 174.811,
-          "c": 175.04,
+          "time_jst": "2026-11-23 17:45",
+          "o": 175.03,
+          "h": 175.058,
+          "l": 174.922,
+          "c": 174.926,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 17:30",
+          "time_jst": "2026-11-23 17:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -432,23 +432,23 @@
           "time_jst": "2026-11-23 16:15"
         },
         "swing_low": {
-          "price": 174.536,
-          "time_jst": "2026-11-23 13:45"
+          "price": 174.795,
+          "time_jst": "2026-11-23 17:15"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-23 16:00",
-          "o": 174.855,
-          "h": 174.978,
-          "l": 174.815,
-          "c": 174.86,
+          "time_jst": "2026-11-23 17:00",
+          "o": 174.856,
+          "h": 175.058,
+          "l": 174.795,
+          "c": 174.926,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 16:00",
+          "time_jst": "2026-11-23 17:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -466,17 +466,14 @@
       "gate": {
         "state": "TRADE_OK",
         "reasons": [],
-        "warnings": [
-          "17:30 [EUR] German Flash Manufacturing PMI（Medium・参考）",
-          "17:30 [EUR] German Flash Services PMI（Medium・参考）"
-        ],
+        "warnings": [],
         "next_gated_event": null
       }
     },
     "AUDUSD": {
-      "price": 0.66522,
-      "price_time_jst": "2026-11-23 17:45",
-      "bar_age_min": 1,
+      "price": 0.66508,
+      "price_time_jst": "2026-11-23 18:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-23 07:00",
@@ -525,17 +522,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-23 17:30",
-          "o": 0.66475,
-          "h": 0.66543,
-          "l": 0.66471,
-          "c": 0.66526,
+          "time_jst": "2026-11-23 17:45",
+          "o": 0.66528,
+          "h": 0.66528,
+          "l": 0.665,
+          "c": 0.66502,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 17:30",
+          "time_jst": "2026-11-23 17:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -546,23 +543,23 @@
           "time_jst": "2026-11-23 16:45"
         },
         "swing_low": {
-          "price": 0.6642,
-          "time_jst": "2026-11-23 15:30"
+          "price": 0.66459,
+          "time_jst": "2026-11-23 17:15"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-23 16:00",
-          "o": 0.6645,
-          "h": 0.66529,
-          "l": 0.66448,
-          "c": 0.66478,
+          "time_jst": "2026-11-23 17:00",
+          "o": 0.66483,
+          "h": 0.66543,
+          "l": 0.66459,
+          "c": 0.66502,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 16:00",
+          "time_jst": "2026-11-23 17:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -585,14 +582,14 @@
       }
     },
     "EURGBP": {
-      "price": 0.83672,
-      "price_time_jst": "2026-11-23 17:45",
-      "bar_age_min": 1,
+      "price": 0.83677,
+      "price_time_jst": "2026-11-23 18:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-23 07:00",
         "high": 0.83882,
-        "low": 0.83661
+        "low": 0.83646
       },
       "sessions_today": {
         "tokyo": {
@@ -603,7 +600,7 @@
         },
         "london": {
           "high": 0.83816,
-          "low": 0.83661,
+          "low": 0.83646,
           "status": "open",
           "window_jst": "17:00-02:00"
         },
@@ -636,17 +633,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-23 17:30",
-          "o": 0.83729,
-          "h": 0.83747,
-          "l": 0.83676,
-          "c": 0.8368,
+          "time_jst": "2026-11-23 17:45",
+          "o": 0.83686,
+          "h": 0.83699,
+          "l": 0.83646,
+          "c": 0.83678,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 17:30",
+          "time_jst": "2026-11-23 17:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -663,17 +660,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-23 16:00",
-          "o": 0.8378,
-          "h": 0.83848,
-          "l": 0.83767,
-          "c": 0.83808,
+          "time_jst": "2026-11-23 17:00",
+          "o": 0.83804,
+          "h": 0.83816,
+          "l": 0.83646,
+          "c": 0.83678,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 16:00",
+          "time_jst": "2026-11-23 17:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -692,16 +689,16 @@
         "state": "TRADE_OK",
         "reasons": [],
         "warnings": [
-          "17:30 [EUR] German Flash Manufacturing PMI（Medium・参考）",
-          "17:30 [EUR] German Flash Services PMI（Medium・参考）"
+          "18:30 [GBP] Flash Manufacturing PMI（Medium・参考）",
+          "18:30 [GBP] Flash Services PMI（Medium・参考）"
         ],
         "next_gated_event": null
       }
     },
     "USDCAD": {
-      "price": 1.43175,
-      "price_time_jst": "2026-11-23 17:45",
-      "bar_age_min": 1,
+      "price": 1.43233,
+      "price_time_jst": "2026-11-23 18:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-23 07:00",
@@ -750,25 +747,25 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-23 17:30",
-          "o": 1.43231,
-          "h": 1.43231,
-          "l": 1.43129,
-          "c": 1.43173,
+          "time_jst": "2026-11-23 17:45",
+          "o": 1.43168,
+          "h": 1.43215,
+          "l": 1.43164,
+          "c": 1.43211,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 17:30",
+          "time_jst": "2026-11-23 17:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
           "complete": true
         },
         "swing_high": {
-          "price": 1.43377,
-          "time_jst": "2026-11-23 12:30"
+          "price": 1.43237,
+          "time_jst": "2026-11-23 17:15"
         },
         "swing_low": {
           "price": 1.43124,
@@ -777,17 +774,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-23 16:00",
-          "o": 1.43167,
-          "h": 1.43206,
-          "l": 1.43124,
-          "c": 1.43167,
+          "time_jst": "2026-11-23 17:00",
+          "o": 1.43156,
+          "h": 1.43237,
+          "l": 1.43129,
+          "c": 1.43211,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 16:00",
+          "time_jst": "2026-11-23 17:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -810,9 +807,9 @@
       }
     },
     "USDCHF": {
-      "price": 0.83792,
-      "price_time_jst": "2026-11-23 17:45",
-      "bar_age_min": 1,
+      "price": 0.83887,
+      "price_time_jst": "2026-11-23 18:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-23 07:00",
@@ -827,7 +824,7 @@
           "window_jst": "09:00-17:00"
         },
         "london": {
-          "high": 0.83853,
+          "high": 0.8389,
           "low": 0.83676,
           "status": "open",
           "window_jst": "17:00-02:00"
@@ -861,17 +858,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-23 17:30",
-          "o": 0.83792,
-          "h": 0.83794,
-          "l": 0.83676,
-          "c": 0.83781,
+          "time_jst": "2026-11-23 17:45",
+          "o": 0.83772,
+          "h": 0.83862,
+          "l": 0.83768,
+          "c": 0.83851,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 17:30",
+          "time_jst": "2026-11-23 17:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -888,17 +885,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-23 16:00",
-          "o": 0.83876,
-          "h": 0.83929,
-          "l": 0.83729,
-          "c": 0.83792,
+          "time_jst": "2026-11-23 17:00",
+          "o": 0.83788,
+          "h": 0.83862,
+          "l": 0.83676,
+          "c": 0.83851,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 16:00",
+          "time_jst": "2026-11-23 17:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -921,9 +918,9 @@
       }
     },
     "NZDUSD": {
-      "price": 0.54797,
-      "price_time_jst": "2026-11-23 17:45",
-      "bar_age_min": 1,
+      "price": 0.54766,
+      "price_time_jst": "2026-11-23 18:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-23 07:00",
@@ -972,17 +969,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-23 17:30",
-          "o": 0.54741,
-          "h": 0.54813,
-          "l": 0.54732,
-          "c": 0.54798,
+          "time_jst": "2026-11-23 17:45",
+          "o": 0.548,
+          "h": 0.54806,
+          "l": 0.54776,
+          "c": 0.54777,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 17:30",
+          "time_jst": "2026-11-23 17:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -999,17 +996,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-23 16:00",
-          "o": 0.54775,
-          "h": 0.54791,
-          "l": 0.54702,
-          "c": 0.54735,
+          "time_jst": "2026-11-23 17:00",
+          "o": 0.54739,
+          "h": 0.54813,
+          "l": 0.5472,
+          "c": 0.54777,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 16:00",
+          "time_jst": "2026-11-23 17:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -1032,9 +1029,9 @@
       }
     },
     "AUDNZD": {
-      "price": 1.21404,
-      "price_time_jst": "2026-11-23 17:45",
-      "bar_age_min": 1,
+      "price": 1.21442,
+      "price_time_jst": "2026-11-23 18:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-23 07:00",
@@ -1083,17 +1080,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-23 17:30",
-          "o": 1.21435,
-          "h": 1.2144,
-          "l": 1.21356,
-          "c": 1.21395,
+          "time_jst": "2026-11-23 17:45",
+          "o": 1.21402,
+          "h": 1.21408,
+          "l": 1.21361,
+          "c": 1.21406,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 17:30",
+          "time_jst": "2026-11-23 17:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1110,17 +1107,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-23 16:00",
-          "o": 1.21314,
-          "h": 1.21542,
-          "l": 1.21281,
-          "c": 1.21436,
+          "time_jst": "2026-11-23 17:00",
+          "o": 1.21451,
+          "h": 1.2152,
+          "l": 1.21356,
+          "c": 1.21406,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 16:00",
+          "time_jst": "2026-11-23 17:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -1131,8 +1128,8 @@
           "time_jst": "2026-11-23 11:00"
         },
         "swing_low": {
-          "price": 1.20868,
-          "time_jst": "2026-11-21 04:00"
+          "price": 1.21261,
+          "time_jst": "2026-11-23 15:00"
         }
       },
       "gate": {
@@ -1143,9 +1140,9 @@
       }
     },
     "XAUUSD": {
-      "price": 3613.25,
-      "price_time_jst": "2026-11-23 17:45",
-      "bar_age_min": 1,
+      "price": 3611.5,
+      "price_time_jst": "2026-11-23 18:00",
+      "bar_age_min": 0,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-23 07:00",
@@ -1194,17 +1191,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-23 17:30",
-          "o": 3607.7,
-          "h": 3613.11,
-          "l": 3605.52,
-          "c": 3612.73,
+          "time_jst": "2026-11-23 17:45",
+          "o": 3611.92,
+          "h": 3614.58,
+          "l": 3610.92,
+          "c": 3614.47,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 17:30",
+          "time_jst": "2026-11-23 17:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1215,23 +1212,23 @@
           "time_jst": "2026-11-23 16:15"
         },
         "swing_low": {
-          "price": 3613.52,
-          "time_jst": "2026-11-23 15:15"
+          "price": 3601.01,
+          "time_jst": "2026-11-23 17:15"
         }
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-23 16:00",
-          "o": 3623.71,
-          "h": 3636.76,
-          "l": 3618.86,
-          "c": 3619.09,
+          "time_jst": "2026-11-23 17:00",
+          "o": 3619.53,
+          "h": 3620.56,
+          "l": 3601.01,
+          "c": 3614.47,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 16:00",
+          "time_jst": "2026-11-23 17:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
@@ -1254,14 +1251,14 @@
       }
     },
     "USOIL": {
-      "price": 82.86,
-      "price_time_jst": "2026-11-23 17:40",
-      "bar_age_min": 6,
+      "price": 82.63,
+      "price_time_jst": "2026-11-23 17:55",
+      "bar_age_min": 5,
       "data_status": "OK",
       "today": {
         "session_start_jst": "2026-11-23 07:00",
         "high": 83.94,
-        "low": 82.57
+        "low": 82.53
       },
       "sessions_today": {
         "tokyo": {
@@ -1272,7 +1269,7 @@
         },
         "london": {
           "high": 83.39,
-          "low": 82.57,
+          "low": 82.53,
           "status": "open",
           "window_jst": "17:00-02:00"
         },
@@ -1305,17 +1302,17 @@
       },
       "m15": {
         "last_closed": {
-          "time_jst": "2026-11-23 17:30",
-          "o": 82.8,
-          "h": 82.9,
-          "l": 82.57,
-          "c": 82.86,
+          "time_jst": "2026-11-23 17:45",
+          "o": 82.94,
+          "h": 83.01,
+          "l": 82.53,
+          "c": 82.63,
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 17:30",
+          "time_jst": "2026-11-23 17:45",
           "source_m5_count": 3,
           "expected_m5_count": 3,
           "missing_m5_times": [],
@@ -1332,17 +1329,17 @@
       },
       "h1": {
         "last_closed": {
-          "time_jst": "2026-11-23 16:00",
-          "o": 83.16,
-          "h": 83.26,
-          "l": 82.8,
-          "c": 83.06,
+          "time_jst": "2026-11-23 17:00",
+          "o": 83.03,
+          "h": 83.39,
+          "l": 82.53,
+          "c": 82.63,
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "complete": true
         },
         "latest_expected_bucket": {
-          "time_jst": "2026-11-23 16:00",
+          "time_jst": "2026-11-23 17:00",
           "source_m5_count": 12,
           "expected_m5_count": 12,
           "missing_m5_times": [],
