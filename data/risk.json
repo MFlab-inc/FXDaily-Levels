@@ -1,13 +1,13 @@
 {
   "schema": "fxdaily-levels/risk/v1",
-  "as_of": "2026-11-24T11:19:23+09:00",
+  "as_of": "2026-11-24T11:29:31+09:00",
   "timezone": "Asia/Tokyo",
   "vix": {
-    "date": "2026-11-20",
-    "rank_pct": 100,
-    "count_le": 252,
+    "date": "2026-11-23",
+    "rank_pct": 95.6,
+    "count_le": 241,
     "window": 252,
-    "window_start": "2025-11-20",
+    "window_start": "2025-11-21",
     "threshold_pct": 70,
     "over_threshold": true,
     "excluded_closed_days": [
@@ -23,14 +23,10 @@
     "warnings": [],
     "source": {
       "url": "https://cdn-api.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",
-      "last_modified": "Sat, 21 Nov 2026 02:10:52 GMT",
-      "fetched_at": "2026-11-24T11:19:23+09:00"
+      "last_modified": "Tue, 24 Nov 2026 02:20:44 GMT",
+      "fetched_at": "2026-11-24T11:29:31+09:00"
     },
     "history": [
-      {
-        "date": "2026-08-28",
-        "rank_pct": 3.6
-      },
       {
         "date": "2026-08-31",
         "rank_pct": 8.7
@@ -266,6 +262,10 @@
       {
         "date": "2026-11-20",
         "rank_pct": 100
+      },
+      {
+        "date": "2026-11-23",
+        "rank_pct": 95.6
       }
     ]
   },
@@ -286,8 +286,8 @@
   },
   "trial": {
     "note": "試し運転（記事にはまだ使わない）。MOVE の代わりの候補を、GPT経由の値と比べるために計算している。",
-    "fetched_at": "2026-11-24T11:19:23+09:00",
-    "attempts": 8,
+    "fetched_at": "2026-11-24T11:29:31+09:00",
+    "attempts": 9,
     "attempts_for": "us:2026-11-23",
     "rates_vol": {
       "date": "2026-11-23",
@@ -616,7 +616,7 @@
     "status": "ok",
     "errors": [],
     "warnings": [],
-    "run_url": "https://github.com/MFlab-inc/FXDaily-Levels/actions/runs/45311487506"
+    "run_url": "https://github.com/MFlab-inc/FXDaily-Levels/actions/runs/45312723128"
   },
   "citations": {
     "vix": "出典：Cboe「VIX Index Historical Data」（https://www.cboe.com/tradable_products/vix/vix_historical_data）の日次終値。過去1年（252営業日）での順位はMFlab-inc／FXDaily-Levelsが計算",
