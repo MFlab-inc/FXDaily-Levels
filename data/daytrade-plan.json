@@ -6,38 +6,38 @@
   },
   "plan_date": "2026-11-24",
   "run": "status",
-  "status_updated_at": "2026-11-24T23:06:04+09:00",
+  "status_updated_at": "2026-11-25T00:06:00+09:00",
   "expires_at": "2026-11-25T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-11-24T23:05:29+09:00",
+        "as_of": "2026-11-25T00:05:28+09:00",
         "age_min": 1,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-11-24T23:05:33+09:00",
-        "age_min": 1,
+        "as_of": "2026-11-25T00:05:33+09:00",
+        "age_min": 0,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-11-24T23:05:33+09:00",
-        "age_min": 1,
+        "as_of": "2026-11-25T00:05:33+09:00",
+        "age_min": 0,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-11-24 22:45",
-      "newest_last_closed": "2026-11-24 22:45",
+      "oldest_last_closed": "2026-11-24 23:45",
+      "newest_last_closed": "2026-11-24 23:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-11-24 22:00",
-      "newest": "2026-11-24 22:00"
+      "oldest": "2026-11-24 23:00",
+      "newest": "2026-11-24 23:00"
     },
     "stale": false,
     "daily": {
@@ -67,12 +67,137 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-11-24T23:05:29+09:00",
-    "date": "2026-11-24",
+    "as_of": "2026-11-25T00:05:28+09:00",
+    "date": "2026-11-25",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
   },
-  "events_today": [],
+  "events_today": [
+    {
+      "time_jst": "00:00",
+      "datetime_jst": "2026-11-25T00:00:00+09:00",
+      "currency": "USD",
+      "impact": "Medium",
+      "event": "CB Consumer Confidence",
+      "start": "2026-11-24T23:45:00+09:00",
+      "end": "2026-11-25T00:30:00+09:00",
+      "symbols": [
+        "USDJPY",
+        "EURUSD",
+        "GBPUSD",
+        "AUDUSD",
+        "NZDUSD",
+        "USDCAD",
+        "USDCHF",
+        "XAUUSD"
+      ]
+    },
+    {
+      "time_jst": "02:25",
+      "datetime_jst": "2026-11-25T02:25:00+09:00",
+      "currency": "CAD",
+      "impact": "Medium",
+      "event": "BOC Gov Macklem Speaks",
+      "start": "2026-11-25T02:10:00+09:00",
+      "end": "2026-11-25T02:55:00+09:00",
+      "symbols": [
+        "USDCAD"
+      ]
+    },
+    {
+      "time_jst": "09:30",
+      "datetime_jst": "2026-11-25T09:30:00+09:00",
+      "currency": "AUD",
+      "impact": "High",
+      "event": "CPI m/m",
+      "start": "2026-11-25T09:15:00+09:00",
+      "end": "2026-11-25T10:00:00+09:00",
+      "symbols": [
+        "AUDUSD"
+      ]
+    },
+    {
+      "time_jst": "09:30",
+      "datetime_jst": "2026-11-25T09:30:00+09:00",
+      "currency": "AUD",
+      "impact": "High",
+      "event": "CPI y/y",
+      "start": "2026-11-25T09:15:00+09:00",
+      "end": "2026-11-25T10:00:00+09:00",
+      "symbols": [
+        "AUDUSD"
+      ]
+    },
+    {
+      "time_jst": "09:30",
+      "datetime_jst": "2026-11-25T09:30:00+09:00",
+      "currency": "AUD",
+      "impact": "High",
+      "event": "Trimmed Mean CPI m/m",
+      "start": "2026-11-25T09:15:00+09:00",
+      "end": "2026-11-25T10:00:00+09:00",
+      "symbols": [
+        "AUDUSD"
+      ]
+    },
+    {
+      "time_jst": "22:30",
+      "datetime_jst": "2026-11-25T22:30:00+09:00",
+      "currency": "USD",
+      "impact": "High",
+      "event": "Core PCE Price Index m/m",
+      "start": "2026-11-25T22:15:00+09:00",
+      "end": "2026-11-25T23:00:00+09:00",
+      "symbols": [
+        "USDJPY",
+        "EURUSD",
+        "GBPUSD",
+        "AUDUSD",
+        "NZDUSD",
+        "USDCAD",
+        "USDCHF",
+        "XAUUSD"
+      ]
+    },
+    {
+      "time_jst": "22:30",
+      "datetime_jst": "2026-11-25T22:30:00+09:00",
+      "currency": "USD",
+      "impact": "High",
+      "event": "Prelim GDP q/q",
+      "start": "2026-11-25T22:15:00+09:00",
+      "end": "2026-11-25T23:00:00+09:00",
+      "symbols": [
+        "USDJPY",
+        "EURUSD",
+        "GBPUSD",
+        "AUDUSD",
+        "NZDUSD",
+        "USDCAD",
+        "USDCHF",
+        "XAUUSD"
+      ]
+    },
+    {
+      "time_jst": "22:30",
+      "datetime_jst": "2026-11-25T22:30:00+09:00",
+      "currency": "USD",
+      "impact": "Medium",
+      "event": "Prelim GDP Price Index q/q",
+      "start": "2026-11-25T22:15:00+09:00",
+      "end": "2026-11-25T23:00:00+09:00",
+      "symbols": [
+        "USDJPY",
+        "EURUSD",
+        "GBPUSD",
+        "AUDUSD",
+        "NZDUSD",
+        "USDCAD",
+        "USDCHF",
+        "XAUUSD"
+      ]
+    }
+  ],
   "mtf": {
     "ok": true,
     "reason": null,
@@ -193,20 +318,316 @@
     }
   },
   "stop_windows": {
-    "USDJPY": [],
-    "EURUSD": [],
-    "GBPUSD": [],
-    "AUDUSD": [],
-    "NZDUSD": [],
-    "USDCAD": [],
-    "USDCHF": [],
+    "USDJPY": [
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "CB Consumer Confidence",
+        "start": "2026-11-24T23:45:00+09:00",
+        "end": "2026-11-25T00:30:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "High",
+        "event": "Core PCE Price Index m/m",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "High",
+        "event": "Prelim GDP q/q",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim GDP Price Index q/q",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      }
+    ],
+    "EURUSD": [
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "CB Consumer Confidence",
+        "start": "2026-11-24T23:45:00+09:00",
+        "end": "2026-11-25T00:30:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "High",
+        "event": "Core PCE Price Index m/m",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "High",
+        "event": "Prelim GDP q/q",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim GDP Price Index q/q",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      }
+    ],
+    "GBPUSD": [
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "CB Consumer Confidence",
+        "start": "2026-11-24T23:45:00+09:00",
+        "end": "2026-11-25T00:30:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "High",
+        "event": "Core PCE Price Index m/m",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "High",
+        "event": "Prelim GDP q/q",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim GDP Price Index q/q",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      }
+    ],
+    "AUDUSD": [
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "CB Consumer Confidence",
+        "start": "2026-11-24T23:45:00+09:00",
+        "end": "2026-11-25T00:30:00+09:00"
+      },
+      {
+        "time_jst": "09:30",
+        "currency": "AUD",
+        "impact": "High",
+        "event": "CPI m/m",
+        "start": "2026-11-25T09:15:00+09:00",
+        "end": "2026-11-25T10:00:00+09:00"
+      },
+      {
+        "time_jst": "09:30",
+        "currency": "AUD",
+        "impact": "High",
+        "event": "CPI y/y",
+        "start": "2026-11-25T09:15:00+09:00",
+        "end": "2026-11-25T10:00:00+09:00"
+      },
+      {
+        "time_jst": "09:30",
+        "currency": "AUD",
+        "impact": "High",
+        "event": "Trimmed Mean CPI m/m",
+        "start": "2026-11-25T09:15:00+09:00",
+        "end": "2026-11-25T10:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "High",
+        "event": "Core PCE Price Index m/m",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "High",
+        "event": "Prelim GDP q/q",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim GDP Price Index q/q",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      }
+    ],
+    "NZDUSD": [
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "CB Consumer Confidence",
+        "start": "2026-11-24T23:45:00+09:00",
+        "end": "2026-11-25T00:30:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "High",
+        "event": "Core PCE Price Index m/m",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "High",
+        "event": "Prelim GDP q/q",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim GDP Price Index q/q",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      }
+    ],
+    "USDCAD": [
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "CB Consumer Confidence",
+        "start": "2026-11-24T23:45:00+09:00",
+        "end": "2026-11-25T00:30:00+09:00"
+      },
+      {
+        "time_jst": "02:25",
+        "currency": "CAD",
+        "impact": "Medium",
+        "event": "BOC Gov Macklem Speaks",
+        "start": "2026-11-25T02:10:00+09:00",
+        "end": "2026-11-25T02:55:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "High",
+        "event": "Core PCE Price Index m/m",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "High",
+        "event": "Prelim GDP q/q",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim GDP Price Index q/q",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      }
+    ],
+    "USDCHF": [
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "CB Consumer Confidence",
+        "start": "2026-11-24T23:45:00+09:00",
+        "end": "2026-11-25T00:30:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "High",
+        "event": "Core PCE Price Index m/m",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "High",
+        "event": "Prelim GDP q/q",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim GDP Price Index q/q",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      }
+    ],
     "EURJPY": [],
     "EURGBP": [],
-    "XAUUSD": []
+    "XAUUSD": [
+      {
+        "time_jst": "00:00",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "CB Consumer Confidence",
+        "start": "2026-11-24T23:45:00+09:00",
+        "end": "2026-11-25T00:30:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "High",
+        "event": "Core PCE Price Index m/m",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "High",
+        "event": "Prelim GDP q/q",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      },
+      {
+        "time_jst": "22:30",
+        "currency": "USD",
+        "impact": "Medium",
+        "event": "Prelim GDP Price Index q/q",
+        "start": "2026-11-25T22:15:00+09:00",
+        "end": "2026-11-25T23:00:00+09:00"
+      }
+    ]
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-11-24T23:05:33+09:00",
+      "as_of": "2026-11-25T00:05:33+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "TRADE_OK",
@@ -225,7 +646,7 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-11-24T23:04:10+09:00",
+        "generated_intraday": "2026-11-25T00:04:17+09:00",
         "age_min": 2
       },
       "pairs": {
@@ -235,16 +656,16 @@
             "range_today": 0.83,
             "range_vs_adr": 0.936,
             "spike_flag": false,
-            "updated_at": "2026-11-24T23:04:10+09:00"
+            "updated_at": "2026-11-25T00:04:17+09:00"
           }
         },
         "EURUSD": {
           "state": "ok",
           "items": {
-            "range_today": 0.0074,
-            "range_vs_adr": 1.065,
+            "range_today": 0.0086,
+            "range_vs_adr": 1.237,
             "spike_flag": false,
-            "updated_at": "2026-11-24T23:04:10+09:00"
+            "updated_at": "2026-11-25T00:04:17+09:00"
           }
         },
         "GBPUSD": {
@@ -253,10 +674,10 @@
         "AUDUSD": {
           "state": "ok",
           "items": {
-            "range_today": 0.00295,
-            "range_vs_adr": 0.528,
+            "range_today": 0.00361,
+            "range_vs_adr": 0.646,
             "spike_flag": false,
-            "updated_at": "2026-11-24T23:04:10+09:00"
+            "updated_at": "2026-11-25T00:04:17+09:00"
           }
         },
         "NZDUSD": {
@@ -265,10 +686,10 @@
         "USDCAD": {
           "state": "ok",
           "items": {
-            "range_today": 0.00533,
-            "range_vs_adr": 0.802,
+            "range_today": 0.00863,
+            "range_vs_adr": 1.298,
             "spike_flag": false,
-            "updated_at": "2026-11-24T23:04:10+09:00"
+            "updated_at": "2026-11-25T00:04:17+09:00"
           }
         },
         "USDCHF": {
@@ -280,10 +701,10 @@
         "EURGBP": {
           "state": "ok",
           "items": {
-            "range_today": 0.00146,
-            "range_vs_adr": 0.52,
+            "range_today": 0.00185,
+            "range_vs_adr": 0.658,
             "spike_flag": false,
-            "updated_at": "2026-11-24T23:04:10+09:00"
+            "updated_at": "2026-11-25T00:04:17+09:00"
           }
         },
         "XAUUSD": {
@@ -292,7 +713,7 @@
             "range_today": 73.56,
             "range_vs_adr": 0.714,
             "spike_flag": false,
-            "updated_at": "2026-11-24T23:04:10+09:00"
+            "updated_at": "2026-11-25T00:04:17+09:00"
           }
         }
       }
