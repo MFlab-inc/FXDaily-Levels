@@ -1,73 +1,81 @@
 # デイトレプラン（自動生成）
-plan_date: 2026-11-25 / run: status（直近の設計: 設計2） / 設計: 2026-11-25 15:06 / 状態更新: 2026-11-25 21:05 / 有効期限: 2026-11-26 03:00
+plan_date: 2026-11-25 / run: design（直近の設計: 設計3） / 設計: 2026-11-25 22:05 / 状態更新: 2026-11-25 22:05 / 有効期限: 2026-11-26 03:00
 発注可否: 発注可（鮮度は20分以内）
 
 == 1. データ鮮度 ==
   Feed生成時刻と鮮度（基準: 生成から20分以内）
-    Intraday : intraday.json as_of 2026-11-25 21:05（1分前） ＝基準内
-    H1       : h1-bars.json as_of 2026-11-25 21:05（0分前） ＝基準内 ／ 最終確定足（開始）最古 2026-11-25 20:00・最新 2026-11-25 20:00
-    M15      : daytrade-context.json as_of 2026-11-25 21:05（0分前） ＝基準内 ／ 確定M15の最終足 最古 2026-11-25 20:45・最新 2026-11-25 20:45（M15の最終足は発注可否には使わない）
+    Intraday : intraday.json as_of 2026-11-25 22:05（1分前） ＝基準内
+    H1       : h1-bars.json as_of 2026-11-25 22:05（1分前） ＝基準内 ／ 最終確定足（開始）最古 2026-11-25 21:00・最新 2026-11-25 21:00
+    M15      : daytrade-context.json as_of 2026-11-25 22:05（1分前） ＝基準内 ／ 確定M15の最終足 最古 2026-11-25 21:45・最新 2026-11-25 21:45（M15の最終足は発注可否には使わない）
     Daily    : daily-levels.json as_of 2026-11-25 07:20 ／ 最終確定の営業日 session_date 2026-11-24（直近に確定した営業日 2026-11-24） ＝基準内
   口座: A（daytrade） 本日の損失上限 9,154円（1.5%） ／ B（swing_daytrade） 本日の損失上限 70,238円（1.5%）
 
 == 2. 候補（1件。順位は 方向の強さ → 銘柄の優先 → RR）==
-[1] 買い USDCAD 型B  MTF 2/3 Up（月・週・日 →↑↑）  ※型Bの追加（状態更新 16:05）
-    Entry帯 1.42783〜1.42794（最悪Entry 1.42794） ／ 現在値 1.42733 距離 6.1pips（H1 ATR14 11.2pips、ADR消化 48.4%・残り 36.1pips） ／ 有効期限 2026-11-26 03:00
+[1] 買い USDCAD 型A  MTF 2/3 Up（月・週・日 →↑↑）
+    Entry帯 1.42321〜1.42334（最悪Entry 1.42334） ／ 現在値 1.42561 距離 22.7pips（H1 ATR14 13pips、ADR消化 59.1%・残り 28.6pips） ／ 有効期限 2026-11-26 03:00
     A案(0.5×ATR): 不採用（SL幅不足）
-    B案(1.0×ATR): SL 1.42680 TP1 1.43010 ／ 損切り幅 11.4pips 利益幅 21.6pips RR 1.89 追加コスト上限 1.8pips（閾値 1.6） ／ 上限ロット A=0.23（往復手数料 233円） / B=1.78（往復手数料 1,803円）
-    状態: 到達（17:00の足） ／ 新規可
-    確認条件（執行時に本人が見る）: 帯に到達したあと、M15がレンジ高値（1.42794）より上で陽線確定
+    B案(1.0×ATR): SL 1.42200 TP1 1.42625 ／ 損切り幅 13.4pips 利益幅 29.1pips RR 2.17 追加コスト上限 3.6pips（閾値 1.6） ／ 上限ロット A=0.19（往復手数料 192円） / B=1.51（往復手数料 1,530円）
+    状態: 未到達 ／ 新規可
+    確認条件（執行時に本人が見る）: 帯に到達したあと、M15が基準価格（1.42334）より上で陽線確定
 
   参考：XAUUSD は発注の対象外（並行記録のみ。今回 0 件記録）
 
 == 3. 不採用の理由（1案1行。単位=型×銘柄×A/B案）==
   USDJPY 型A A案: 方向根拠なし: 監視のみ（1/3 Up）
   USDJPY 型A B案: 方向根拠なし: 監視のみ（1/3 Up）
-  EURUSD 型A A案: SL幅不足（SL幅 4.7p ＜ 10p、ATR14 9.3p）
-  EURUSD 型A B案: SL幅不足（SL幅 9.7p ＜ 10p、ATR14 9.3p）
-  GBPUSD 型A A案: SL幅不足（SL幅 6.2p ＜ 10p、ATR14 11.7p）
-  GBPUSD 型A B案: RR不足（利益幅 3.8p ＜ SL幅 11.7p、RR 0.32）
-  AUDUSD 型A A案: 届かない（基準まで 44.5p ＞ ADR残り 0p）
-  AUDUSD 型A B案: 届かない（基準まで 44.5p ＞ ADR残り 0p）
-  NZDUSD 型A A案: SL幅不足（SL幅 4.5p ＜ 10p、ATR14 8.5p）
-  NZDUSD 型A B案: SL幅不足（SL幅 9p ＜ 10p、ATR14 8.5p）
-  USDCAD 型A A案: SL幅不足（SL幅 6.2p ＜ 10p、ATR14 11.4p）
-  USDCAD 型A B案: RR不足（利益幅 1.3p ＜ SL幅 11.7p、RR 0.11）
-  USDCHF 型A A案: SL幅不足（SL幅 5p ＜ 10p、ATR14 10p）
-  USDCHF 型A B案: RR不足（利益幅 4p ＜ SL幅 10p、RR 0.4）
-  EURJPY 型A A案: RR不足（利益幅 5p ＜ SL幅 10p、RR 0.5）
-  EURJPY 型A B案: RR不足（利益幅 5p ＜ SL幅 20p、RR 0.25）
-  EURGBP 型A A案: SL幅不足（SL幅 2.9p ＜ 10p、ATR14 5.5p）
-  EURGBP 型A B案: SL幅不足（SL幅 5.9p ＜ 10p、ATR14 5.5p）
-  XAUUSD 型A A案: RR不足（利益幅 48.2p ＜ SL幅 93.8p、RR 0.51）
-  XAUUSD 型A B案: RR不足（利益幅 48.2p ＜ SL幅 187.3p、RR 0.26）
+  EURUSD 型A A案: SL幅不足（SL幅 5.7p ＜ 10p、ATR14 10.5p）
+  EURUSD 型A B案: RR不足（利益幅 0.8p ＜ SL幅 10.7p、RR 0.07）
+  EURUSD 型B A案: SL幅不足（SL幅 5.4p ＜ 10p、ATR14 10.5p）
+  EURUSD 型B B案: RR不足（利益幅 2.6p ＜ SL幅 10.9p、RR 0.24）
+  GBPUSD 型A A案: 届かない（基準まで 18.7p ＞ ADR残り 17.6p）
+  GBPUSD 型A B案: 届かない（基準まで 18.7p ＞ ADR残り 17.6p）
+  GBPUSD 型B A案: SL幅不足（SL幅 7.3p ＜ 10p、ATR14 14.2p）
+  GBPUSD 型B B案: RR不足（利益幅 13.7p ＜ SL幅 14.3p、RR 0.96）
+  AUDUSD 型A A案: 届かない（基準まで 7.3p ＞ ADR残り 0p）
+  AUDUSD 型A B案: 届かない（基準まで 7.3p ＞ ADR残り 0p）
+  AUDUSD 型B A案: 届かない（基準まで 18p ＞ ADR残り 0p）
+  AUDUSD 型B B案: 届かない（基準まで 18p ＞ ADR残り 0p）
+  NZDUSD 型A A案: SL幅不足（SL幅 4.6p ＜ 10p、ATR14 9p）
+  NZDUSD 型A B案: SL幅不足（SL幅 9.1p ＜ 10p、ATR14 9p）
+  NZDUSD 型B A案: SL幅不足（SL幅 4.8p ＜ 10p、ATR14 9p）
+  NZDUSD 型B B案: SL幅不足（SL幅 9.3p ＜ 10p、ATR14 9p）
+  USDCAD 型A A案: SL幅不足（SL幅 6.9p ＜ 10p、ATR14 13p）
+  USDCHF 型A A案: 届かない（基準まで 7.6p ＞ ADR残り 0p）
+  USDCHF 型A B案: 届かない（基準まで 7.6p ＞ ADR残り 0p）
+  EURJPY 型A A案: RR不足（利益幅 9.9p ＜ SL幅 11.6p、RR 0.85）
+  EURJPY 型A B案: RR不足（利益幅 9.9p ＜ SL幅 23.6p、RR 0.42）
+  EURGBP 型A A案: SL幅不足（SL幅 3.9p ＜ 10p、ATR14 7p）
+  EURGBP 型A B案: SL幅不足（SL幅 7.4p ＜ 10p、ATR14 7p）
+  XAUUSD 型A A案: 届かない（基準まで 246.4p ＞ ADR残り 145.4p）
+  XAUUSD 型A B案: 届かない（基準まで 246.4p ＞ ADR残り 145.4p）
+  XAUUSD 型B A案: RR不足（利益幅 48.7p ＜ SL幅 106.8p、RR 0.46）
+  XAUUSD 型B B案: RR不足（利益幅 48.7p ＜ SL幅 213.3p、RR 0.23）
   ── 参考情報 ──
   候補数: 1件（A案を通った案 0、B案を通った案 1）
-  不採用の内訳（件数）: 方向根拠なし 2 ／ 届かない 2 ／ SL幅不足 9 ／ RR不足 7 ／ コスト不足 0 ／ ADR消化超過 0
+  不採用の内訳（件数）: 方向根拠なし 2 ／ 届かない 10 ／ SL幅不足 10 ／ RR不足 7 ／ コスト不足 0 ／ ADR消化超過 0
     6分類に数えない理由: 基準水準なし 0 ／ 障害なし 0 ／ 入力欠落 0 ／ 同じ水準は到達済み 0
-  型B（未成立。不採用に数えない）: なし ／ 状態更新で追加した型B 1件（候補欄を参照）（型Bは設計③と、16:00〜21:59の状態更新で追加される。追加時に門で不採用だった型Bは一覧しない）
-  ボラの状態（risk-feed ok、生成 2026-11-25 21:04・2分前）:
-    USDJPY: 当日レンジ 0.491 ／ ADR比 0.545 ／ 急変フラグ false ／ 更新 21:04
-    EURUSD: 当日レンジ 0.0037 ／ ADR比 0.518 ／ 急変フラグ false ／ 更新 21:04
+  型B（未成立。不採用に数えない）: USDJPY（MTFの向きなし（監視のみ（1/3 Up））） ／ USDCAD（同日に両方向へブレイク） ／ USDCHF（ブレイク方向（下）がMTFの向きと不一致） ／ EURJPY（ブレイク後に価格がレンジ内へ戻り済み） ／ EURGBP（ブレイク方向（上）がMTFの向きと不一致）
+  ボラの状態（risk-feed ok、生成 2026-11-25 22:04・2分前）:
+    USDJPY: 当日レンジ 0.491 ／ ADR比 0.545 ／ 急変フラグ false ／ 更新 22:04
+    EURUSD: 当日レンジ 0.0037 ／ ADR比 0.518 ／ 急変フラグ false ／ 更新 22:04
     GBPUSD: 未収録
-    AUDUSD: 当日レンジ 0.01079 ／ ADR比 1.92 ／ 急変フラグ true ／ 更新 21:04
+    AUDUSD: 当日レンジ 0.01079 ／ ADR比 1.92 ／ 急変フラグ true ／ 更新 22:04
     NZDUSD: 未収録
-    USDCAD: 当日レンジ 0.00338 ／ ADR比 0.484 ／ 急変フラグ false ／ 更新 21:04
+    USDCAD: 当日レンジ 0.00413 ／ ADR比 0.592 ／ 急変フラグ false ／ 更新 22:04
     USDCHF: 未収録
     EURJPY: 未収録
-    EURGBP: 当日レンジ 0.00224 ／ ADR比 0.792 ／ 急変フラグ false ／ 更新 21:04
-    XAUUSD: 当日レンジ 91.2 ／ ADR比 0.865 ／ 急変フラグ false ／ 更新 21:04
-  参考：既存ゲート（gate.state。2026-11-25 21:05 時点のスナップショット。停止判定には使わない）: USDJPY TRADE_OK ／ EURUSD TRADE_OK ／ GBPUSD TRADE_OK ／ AUDUSD TRADE_OK ／ NZDUSD TRADE_OK ／ USDCAD TRADE_OK ／ USDCHF TRADE_OK ／ EURJPY TRADE_OK ／ EURGBP TRADE_OK ／ XAUUSD TRADE_OK
-  参考：SL下限(b)なら通る案 3件（発注対象外）
+    EURGBP: 当日レンジ 0.00224 ／ ADR比 0.792 ／ 急変フラグ false ／ 更新 22:04
+    XAUUSD: 当日レンジ 91.2 ／ ADR比 0.865 ／ 急変フラグ false ／ 更新 22:04
+  参考：既存ゲート（gate.state。2026-11-25 22:05 時点のスナップショット。停止判定には使わない）: USDJPY WAIT ／ EURUSD WAIT ／ GBPUSD WAIT ／ AUDUSD WAIT ／ NZDUSD WAIT ／ USDCAD WAIT ／ USDCHF WAIT ／ EURJPY TRADE_OK ／ EURGBP TRADE_OK ／ XAUUSD WAIT
+  参考：SL下限(b)なら通る案 1件（発注対象外）
 
 == 4. 価格根拠（Entry・SL・TP1 の元になった実在の水準）==
-  [1] USDCAD 買い 型B
-    Entry: 基準水準 1.42794（東京レンジ高値）→ 帯 1.42783〜1.42794（水準から0.1×ATR）
-    SL(B案): 1.42680 = 基準水準 − 1.0×H1 ATR14（11.2pips）を0.5pip単位で外側へ丸め（11.4pips）
-    TP1: 1.43010 = 最初の障害 Pivot 1.43016 の手前 0.6pips（利益幅 21.6pips）
+  [1] USDCAD 買い 型A
+    Entry: 基準水準 1.42334（S1）→ 帯 1.42321〜1.42334（水準から0.1×ATR）
+    SL(B案): 1.42200 = 基準水準 − 1.0×H1 ATR14（13pips）を0.5pip単位で外側へ丸め（13.4pips）
+    TP1: 1.42625 = 最初の障害 H1安値群 1.42634 の手前 0.9pips（利益幅 29.1pips）
     日次レベル: Pivot 1.43016 ／ R1 1.43380 ／ R2 1.44062 ／ S1 1.42334 ／ S2 1.41970 ／ 前日高値 1.43699 ／ 前日安値 1.42653
-    H1高値群（直近24本）: 1.42710〜1.42794（12本）、1.43631〜1.43646（2本） ／ H1安値群: 1.42634〜1.42669（8本）、1.42692〜1.42693（2本）、1.42767〜1.42778（2本）、1.43244〜1.43259（2本）、1.43516〜1.43529（2本）
-    東京レンジ（9:00〜15:00のH1）: 高値 1.42794 安値 1.42606
+    H1高値群（直近24本）: 1.42710〜1.42794（13本）、1.42846〜1.42857（2本）、1.42917〜1.42944（4本） ／ H1安値群: 1.42634〜1.42719（12本）、1.42755〜1.42778（5本）
 
 == 5. イベント（日本時間。economic-calendar.json の当日分。停止時間: 前15分〜後30分、新規のみ禁止）==
   00:00 [USD/Medium] CB Consumer Confidence → 停止 23:45〜00:30（対象: USDJPY、EURUSD、GBPUSD、AUDUSD、NZDUSD、USDCAD、USDCHF、XAUUSD）
@@ -87,8 +95,8 @@ plan_date: 2026-11-25 / run: status（直近の設計: 設計2） / 設計: 2026
 
 == 7. 出典 ==
   MTF: mtf-feed.json 生成 2026-11-25 07:20 ／ data_base_date 2026-11-24 ／ status ok
-  Feed: intraday.json 2026-11-25 21:05 ／ h1-bars.json 2026-11-25 21:05 ／ daytrade-context.json 2026-11-25 21:05 ／ daily-levels.json 2026-11-25 07:20（session_date 2026-11-24）
-  H1: h1-bars.json の最終確定足（開始）最新 2026-11-25 20:00 ／ M15: daytrade-context.json の確定M15の最終足 最新 2026-11-25 20:45
-  カレンダー: economic-calendar.json as_of 2026-11-25 21:05 ／ date 2026-11-25 ／ Forex Factory calendar feed
-  risk-feed: https://mflab-inc.github.io/EA-Risk-Monitor/data/risk-feed.json generated_intraday 2026-11-25 21:04
-  設計の履歴: 設計1 2026-11-25 07:22 ／ 設計2 2026-11-25 15:06
+  Feed: intraday.json 2026-11-25 22:05 ／ h1-bars.json 2026-11-25 22:05 ／ daytrade-context.json 2026-11-25 22:05 ／ daily-levels.json 2026-11-25 07:20（session_date 2026-11-24）
+  H1: h1-bars.json の最終確定足（開始）最新 2026-11-25 21:00 ／ M15: daytrade-context.json の確定M15の最終足 最新 2026-11-25 21:45
+  カレンダー: economic-calendar.json as_of 2026-11-25 22:05 ／ date 2026-11-25 ／ Forex Factory calendar feed
+  risk-feed: https://mflab-inc.github.io/EA-Risk-Monitor/data/risk-feed.json generated_intraday 2026-11-25 22:04
+  設計の履歴: 設計1 2026-11-25 07:22 ／ 設計2 2026-11-25 15:06 ／ 設計3 2026-11-25 22:05
