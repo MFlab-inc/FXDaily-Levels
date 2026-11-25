@@ -5,39 +5,39 @@
     "note": "未確定の判断はありません（確定した解釈は docs/daytrade-plan-spec.md 10節、経緯は docs/daytrade-plan-impl-notes.md）"
   },
   "plan_date": "2026-11-25",
-  "run": "design",
-  "status_updated_at": "2026-11-25T15:06:02+09:00",
+  "run": "status",
+  "status_updated_at": "2026-11-25T16:05:59+09:00",
   "expires_at": "2026-11-26T03:00:00+09:00",
   "freshness": {
     "limit_min": 20,
     "feeds": [
       {
         "name": "intraday.json",
-        "as_of": "2026-11-25T15:05:26+09:00",
+        "as_of": "2026-11-25T16:05:27+09:00",
         "age_min": 1,
         "stale": false
       },
       {
         "name": "daytrade-context.json",
-        "as_of": "2026-11-25T15:05:30+09:00",
-        "age_min": 1,
+        "as_of": "2026-11-25T16:05:31+09:00",
+        "age_min": 0,
         "stale": false
       },
       {
         "name": "h1-bars.json",
-        "as_of": "2026-11-25T15:05:30+09:00",
-        "age_min": 1,
+        "as_of": "2026-11-25T16:05:31+09:00",
+        "age_min": 0,
         "stale": false
       }
     ],
     "ctx_m15": {
-      "oldest_last_closed": "2026-11-25 14:45",
-      "newest_last_closed": "2026-11-25 14:45",
+      "oldest_last_closed": "2026-11-25 15:45",
+      "newest_last_closed": "2026-11-25 15:45",
       "not_ok": []
     },
     "h1_last_closed": {
-      "oldest": "2026-11-25 14:00",
-      "newest": "2026-11-25 14:00"
+      "oldest": "2026-11-25 15:00",
+      "newest": "2026-11-25 15:00"
     },
     "stale": false,
     "daily": {
@@ -67,7 +67,7 @@
   "events": {
     "status": "ok",
     "reason": null,
-    "as_of": "2026-11-25T15:05:26+09:00",
+    "as_of": "2026-11-25T16:05:27+09:00",
     "date": "2026-11-25",
     "source": "Forex Factory calendar feed",
     "note": "カレンダーは当日（JST）分のみ。翌日0:00〜3:00のイベントは未取得で、日付が変わった後の状態更新で拾う"
@@ -627,7 +627,7 @@
   },
   "reference": {
     "existing_gate": {
-      "as_of": "2026-11-25T15:05:30+09:00",
+      "as_of": "2026-11-25T16:05:31+09:00",
       "note": "参考：既存ゲート（daytrade.js）。停止判定には使わない。生成時点のスナップショット",
       "states": {
         "USDJPY": "TRADE_OK",
@@ -646,7 +646,7 @@
       "risk_feed": {
         "status": "ok",
         "reason": null,
-        "generated_intraday": "2026-11-25T15:04:10+09:00",
+        "generated_intraday": "2026-11-25T16:04:12+09:00",
         "age_min": 2
       },
       "pairs": {
@@ -656,16 +656,16 @@
             "range_today": 0.391,
             "range_vs_adr": 0.434,
             "spike_flag": false,
-            "updated_at": "2026-11-25T15:04:10+09:00"
+            "updated_at": "2026-11-25T16:04:12+09:00"
           }
         },
         "EURUSD": {
           "state": "ok",
           "items": {
-            "range_today": 0.00283,
-            "range_vs_adr": 0.396,
+            "range_today": 0.00368,
+            "range_vs_adr": 0.515,
             "spike_flag": false,
-            "updated_at": "2026-11-25T15:04:10+09:00"
+            "updated_at": "2026-11-25T16:04:12+09:00"
           }
         },
         "GBPUSD": {
@@ -674,10 +674,10 @@
         "AUDUSD": {
           "state": "ok",
           "items": {
-            "range_today": 0.00783,
-            "range_vs_adr": 1.393,
-            "spike_flag": false,
-            "updated_at": "2026-11-25T15:04:10+09:00"
+            "range_today": 0.00904,
+            "range_vs_adr": 1.609,
+            "spike_flag": true,
+            "updated_at": "2026-11-25T16:04:12+09:00"
           }
         },
         "NZDUSD": {
@@ -686,10 +686,10 @@
         "USDCAD": {
           "state": "ok",
           "items": {
-            "range_today": 0.00195,
-            "range_vs_adr": 0.279,
+            "range_today": 0.00253,
+            "range_vs_adr": 0.362,
             "spike_flag": false,
-            "updated_at": "2026-11-25T15:04:10+09:00"
+            "updated_at": "2026-11-25T16:04:12+09:00"
           }
         },
         "USDCHF": {
@@ -704,16 +704,16 @@
             "range_today": 0.0008,
             "range_vs_adr": 0.283,
             "spike_flag": false,
-            "updated_at": "2026-11-25T15:04:10+09:00"
+            "updated_at": "2026-11-25T16:04:12+09:00"
           }
         },
         "XAUUSD": {
           "state": "ok",
           "items": {
-            "range_today": 58.05,
-            "range_vs_adr": 0.55,
+            "range_today": 63.27,
+            "range_vs_adr": 0.6,
             "spike_flag": false,
-            "updated_at": "2026-11-25T15:04:10+09:00"
+            "updated_at": "2026-11-25T16:04:12+09:00"
           }
         }
       }
@@ -769,21 +769,208 @@
   "order_ok": true,
   "banners": [],
   "design_missing": false,
-  "candidates": [],
-  "paper": [],
-  "paper_status": {
-    "variant": "xau_paper",
-    "symbols": [
-      "XAUUSD"
-    ],
-    "recording": "ok",
-    "recorded": 0
-  },
+  "candidates": [
+    {
+      "id": "2026-11-25:B:USDCAD:buy",
+      "plan_date": "2026-11-25",
+      "setup": "B",
+      "symbol": "USDCAD",
+      "side": "buy",
+      "strength": 2,
+      "alignment": "2/3 Up",
+      "dirs": [
+        "→",
+        "↑",
+        "↑"
+      ],
+      "note": null,
+      "ref": {
+        "label": "東京レンジ高値",
+        "price": 1.42794
+      },
+      "band": {
+        "low": 1.42783,
+        "high": 1.42794
+      },
+      "worst_entry": 1.42794,
+      "price": 1.42858,
+      "distance_pips": 6.4,
+      "atr_pips": 11.2,
+      "adr_used_pct": 36.2,
+      "adr_remaining_pips": 44.6,
+      "obstacle": {
+        "label": "Pivot",
+        "price": 1.43016
+      },
+      "pip_value_jpy": 1115,
+      "schemes": {
+        "A": {
+          "pass": false,
+          "reason": "sl_narrow",
+          "reason_text": "SL幅不足",
+          "k": 0.5,
+          "sl": 1.42735,
+          "sl_pips": 5.9,
+          "tp1": 1.4301,
+          "profit_pips": 21.6,
+          "rr": 3.66,
+          "cost_cap_pips": 5.1,
+          "cost_threshold_pips": 1.6,
+          "lots": {
+            "A": 0.46,
+            "B": 3.56
+          },
+          "commission_jpy": {
+            "A": 466,
+            "B": 3606
+          }
+        },
+        "B": {
+          "pass": true,
+          "reason": null,
+          "reason_text": null,
+          "k": 1,
+          "sl": 1.4268,
+          "sl_pips": 11.4,
+          "tp1": 1.4301,
+          "profit_pips": 21.6,
+          "rr": 1.89,
+          "cost_cap_pips": 1.8,
+          "cost_threshold_pips": 1.6,
+          "lots": {
+            "A": 0.23,
+            "B": 1.78
+          },
+          "commission_jpy": {
+            "A": 233,
+            "B": 1803
+          }
+        }
+      },
+      "levels": {
+        "daily": {
+          "Pivot": 1.43016,
+          "R1": 1.4338,
+          "R2": 1.44062,
+          "S1": 1.42334,
+          "S2": 1.4197,
+          "前日高値": 1.43699,
+          "前日安値": 1.42653
+        },
+        "h1_high_groups": [
+          {
+            "min": 1.4271,
+            "max": 1.42794,
+            "count": 12
+          },
+          {
+            "min": 1.43631,
+            "max": 1.43646,
+            "count": 2
+          }
+        ],
+        "h1_low_groups": [
+          {
+            "min": 1.42634,
+            "max": 1.42669,
+            "count": 8
+          },
+          {
+            "min": 1.42692,
+            "max": 1.42693,
+            "count": 2
+          },
+          {
+            "min": 1.42767,
+            "max": 1.42778,
+            "count": 2
+          },
+          {
+            "min": 1.43244,
+            "max": 1.43259,
+            "count": 2
+          },
+          {
+            "min": 1.43516,
+            "max": 1.43529,
+            "count": 2
+          }
+        ],
+        "h1_window": 24,
+        "atr_pips": 11.2,
+        "tokyo": {
+          "high": 1.42794,
+          "low": 1.42606
+        }
+      },
+      "confirm": "帯に到達したあと、M15がレンジ高値（1.42794）より上で陽線確定",
+      "run": "design-b",
+      "added_by": "status",
+      "generated_at": "2026-11-25T16:05:59+09:00",
+      "design_slot": null,
+      "expires_at": "2026-11-26T03:00:00+09:00",
+      "entry_state": {
+        "ok": true,
+        "reasons": []
+      },
+      "stops": [
+        {
+          "time_jst": "00:00",
+          "currency": "USD",
+          "impact": "Medium",
+          "event": "CB Consumer Confidence",
+          "start": "2026-11-24T23:45:00+09:00",
+          "end": "2026-11-25T00:30:00+09:00"
+        },
+        {
+          "time_jst": "02:25",
+          "currency": "CAD",
+          "impact": "Medium",
+          "event": "BOC Gov Macklem Speaks",
+          "start": "2026-11-25T02:10:00+09:00",
+          "end": "2026-11-25T02:55:00+09:00"
+        },
+        {
+          "time_jst": "22:30",
+          "currency": "USD",
+          "impact": "High",
+          "event": "Core PCE Price Index m/m",
+          "start": "2026-11-25T22:15:00+09:00",
+          "end": "2026-11-25T23:00:00+09:00"
+        },
+        {
+          "time_jst": "22:30",
+          "currency": "USD",
+          "impact": "High",
+          "event": "Prelim GDP q/q",
+          "start": "2026-11-25T22:15:00+09:00",
+          "end": "2026-11-25T23:00:00+09:00"
+        },
+        {
+          "time_jst": "22:30",
+          "currency": "USD",
+          "impact": "Medium",
+          "event": "Prelim GDP Price Index q/q",
+          "start": "2026-11-25T22:15:00+09:00",
+          "end": "2026-11-25T23:00:00+09:00"
+        }
+      ],
+      "calendar_ok": true,
+      "state": {
+        "reached": "未到達",
+        "reached_at": null,
+        "expired": false,
+        "price_in_band": false
+      },
+      "same_direction_group": "",
+      "rank": 1
+    }
+  ],
   "summary": {
-    "candidate_rows": 0,
+    "candidate_rows": 1,
     "scheme_pass": {
       "A": 0,
-      "B": 0
+      "B": 1
     },
     "rejections": {
       "no_direction": 2,
@@ -1485,7 +1672,19 @@
     "no_basis": [],
     "not_formed": [],
     "sl_floor_b": {
-      "pass": 0
+      "pass": 3
     }
-  }
+  },
+  "paper": [],
+  "paper_status": {
+    "variant": "xau_paper",
+    "symbols": [
+      "XAUUSD"
+    ],
+    "recording": "ok",
+    "recorded": 0
+  },
+  "additions_b": [
+    "2026-11-25:B:USDCAD:buy"
+  ]
 }
