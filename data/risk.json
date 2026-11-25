@@ -1,13 +1,13 @@
 {
   "schema": "fxdaily-levels/risk/v1",
-  "as_of": "2026-11-25T11:29:11+09:00",
+  "as_of": "2026-11-25T11:34:14+09:00",
   "timezone": "Asia/Tokyo",
   "vix": {
-    "date": "2026-11-23",
-    "rank_pct": 95.6,
-    "count_le": 241,
+    "date": "2026-11-24",
+    "rank_pct": 95.2,
+    "count_le": 240,
     "window": 252,
-    "window_start": "2025-11-21",
+    "window_start": "2025-11-24",
     "threshold_pct": 70,
     "over_threshold": true,
     "excluded_closed_days": [
@@ -23,14 +23,10 @@
     "warnings": [],
     "source": {
       "url": "https://cdn-api.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv",
-      "last_modified": "Tue, 24 Nov 2026 02:20:44 GMT",
-      "fetched_at": "2026-11-25T11:29:11+09:00"
+      "last_modified": "Wed, 25 Nov 2026 02:11:05 GMT",
+      "fetched_at": "2026-11-25T11:34:14+09:00"
     },
     "history": [
-      {
-        "date": "2026-08-31",
-        "rank_pct": 8.7
-      },
       {
         "date": "2026-09-01",
         "rank_pct": 32.9
@@ -266,6 +262,10 @@
       {
         "date": "2026-11-23",
         "rank_pct": 95.6
+      },
+      {
+        "date": "2026-11-24",
+        "rank_pct": 95.2
       }
     ]
   },
@@ -286,8 +286,8 @@
   },
   "trial": {
     "note": "試し運転（記事にはまだ使わない）。MOVE の代わりの候補を、GPT経由の値と比べるために計算している。",
-    "fetched_at": "2026-11-25T11:29:11+09:00",
-    "attempts": 11,
+    "fetched_at": "2026-11-25T11:34:14+09:00",
+    "attempts": 12,
     "attempts_for": "us:2026-11-24",
     "rates_vol": {
       "date": "2026-11-24",
@@ -608,18 +608,15 @@
         "10 Yr",
         "30 Yr"
       ],
-      "source": "https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics",
-      "last_error": "米国債の値動き：タイムアウト（20秒） (treasury:csv:2026)"
+      "source": "https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics"
     },
-    "warnings": [
-      "米国債の値動き：タイムアウト（20秒） (treasury:csv:2026)"
-    ]
+    "warnings": []
   },
   "generation": {
     "status": "ok",
     "errors": [],
     "warnings": [],
-    "run_url": "https://github.com/MFlab-inc/FXDaily-Levels/actions/runs/45533252059"
+    "run_url": "https://github.com/MFlab-inc/FXDaily-Levels/actions/runs/45533867628"
   },
   "citations": {
     "vix": "出典：Cboe「VIX Index Historical Data」（https://www.cboe.com/tradable_products/vix/vix_historical_data）の日次終値。過去1年（252営業日）での順位はMFlab-inc／FXDaily-Levelsが計算",
